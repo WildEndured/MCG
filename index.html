@@ -3,155 +3,565 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Генератор Персонажей: Раса + Стиль</title>
+    <title>Генератор Персонажей v2.0</title>
     <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --container-bg: #16213e;
+            --accent-color: #e94560;
+            --text-color: #fff;
+            --secondary-bg: #0f3460;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1a1a2e;
-            color: #fff;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
             display: flex;
             justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            text-align: center;
+            min-height: 100vh;
         }
 
-        .container {
-            background-color: #16213e;
-            padding: 2rem;
+        .app-container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--container-bg);
             border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            max-width: 500px;
-            width: 90%;
-            border: 1px solid #0f3460;
-        }
-
-        h1 {
-            font-size: 1.5rem;
-            margin-bottom: 1.5rem;
-            color: #e94560;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .result-box {
-            background-color: #0f3460;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 25px;
-            min-height: 80px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            height: fit-content;
         }
 
-        .race-text {
-            font-size: 1.2rem;
-            color: #a8a8a8;
-            margin-bottom: 5px;
+        /* Вкладки */
+        .tabs {
+            display: flex;
+            background-color: #0d1b2a;
         }
 
-        .style-text {
-            font-size: 1.8rem;
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.3s;
             font-weight: bold;
-            color: #fff;
-            text-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
+            border-bottom: 3px solid transparent;
         }
 
-        .plus {
-            font-size: 1.5rem;
-            color: #e94560;
-            margin: 5px 0;
+        .tab-btn.active {
+            color: var(--text-color);
+            border-bottom: 3px solid var(--accent-color);
+            background-color: var(--container-bg);
         }
 
-        button {
-            background-color: #e94560;
+        .tab-btn:hover {
+            color: var(--text-color);
+        }
+
+        /* Контент */
+        .tab-content {
+            padding: 20px;
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Генератор */
+        .result-box {
+            background-color: var(--secondary-bg);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .race-text { font-size: 1.2rem; color: #a8a8a8; margin-bottom: 5px; }
+        .style-text { font-size: 2rem; font-weight: bold; color: #fff; text-shadow: 0 0 10px rgba(233, 69, 96, 0.5); }
+        .plus { font-size: 1.5rem; color: var(--accent-color); margin: 5px 0; }
+
+        .btn-main {
+            background-color: var(--accent-color);
             color: white;
             border: none;
             padding: 15px 30px;
             font-size: 1rem;
             border-radius: 50px;
             cursor: pointer;
-            transition: transform 0.2s, background 0.2s;
+            transition: 0.2s;
             font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            width: 100%;
+            margin-bottom: 15px;
         }
 
-        button:hover {
-            background-color: #ff2e63;
-            transform: scale(1.05);
+        .btn-main:hover { background-color: #ff2e63; transform: scale(1.02); }
+
+        .btn-secondary {
+            background-color: var(--secondary-bg);
+            color: white;
+            border: 1px solid #555;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+        .btn-secondary:hover { background-color: #1a4a7a; }
+
+        /* История */
+        .history-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
         }
 
-        button:active {
-            transform: scale(0.95);
+        .search-input {
+            flex-grow: 1;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #333;
+            background-color: #0d1b2a;
+            color: white;
         }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            background-color: #0d1b2a;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid var(--secondary-bg);
+            transition: 0.2s;
+        }
+
+        .history-item.favorite {
+            border-left-color: gold;
+        }
+
+        .history-info {
+            flex-grow: 1;
+        }
+
+        .history-text {
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .history-date {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .history-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 5px;
+            opacity: 0.6;
+            transition: 0.2s;
+        }
+
+        .icon-btn:hover { opacity: 1; transform: scale(1.1); }
+        .icon-btn.fav-active { opacity: 1; color: gold; }
+
+        /* Редактор списков */
+        .editor-section {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .editor-column {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .editor-list {
+            background-color: #0d1b2a;
+            padding: 10px;
+            border-radius: 8px;
+            max-height: 250px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+
+        .editor-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #1a1a2e;
+        }
+
+        .editor-input-group {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .editor-input-group input {
+            flex-grow: 1;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #333;
+            background-color: #1a1a2e;
+            color: white;
+        }
+
+        .editor-input-group button {
+            padding: 8px 15px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Уведомление */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            opacity: 0;
+            transition: 0.3s;
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Генератор Персонажей</h1>
-        
+<div class="app-container">
+    <!-- Вкладки -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('generator')">Генератор</button>
+        <button class="tab-btn" onclick="switchTab('history')">История</button>
+        <button class="tab-btn" onclick="switchTab('editor')">Списки</button>
+    </div>
+
+    <!-- Вкладка 1: Генератор -->
+    <div id="tab-generator" class="tab-content active">
         <div class="result-box">
             <div class="race-text" id="raceDisplay">Нажмите кнопку</div>
             <div class="plus">+</div>
             <div class="style-text" id="styleDisplay">...</div>
         </div>
-
-        <button onclick="generateCharacter()">Сгенерировать!</button>
+        <button class="btn-main" onclick="generateCharacter()">Сгенерировать!</button>
+        <button class="btn-secondary" style="width: 100%;" onclick="copyResult()">📋 Скопировать результат</button>
     </div>
 
-    <script>
-        // --- СПИСОК РАС (из второго скриншота) ---
-        const races = [
-            "Angel girl", "Arapaima girl", "Bat girl", "Bird girl", "Chimera", 
-            "Crocodile girl", "Crow girl", "Cat girl", "Cow girl", "Capybara girl", 
-            "Chicken girl", "Demon girl", "Doll girl", "Dragon girl", "Deer girl", 
-            "Elf", "Fish girl", "Fox girl", "Gargoyle girl", "Ghost girl", 
-            "Horse girl", "Insect girl", "Jackal girl", "Kitsune girl", "Mimic", 
-            "Orca girl", "Program girl", "Panda girl", "Rat girl", "Rabbit girl", 
-            "Reptile girl", "Snake girl", "Slime girl", "Serval girl", "Shark girl", 
-            "Succubus", "Sheep girl", "Tiger girl", "Vampire girl", "Wolf girl", 
-            "Wyrm girl", "Zombie girl"
-        ];
+    <!-- Вкладка 2: История -->
+    <div id="tab-history" class="tab-content">
+        <div class="history-controls">
+            <input type="text" id="searchInput" class="search-input" placeholder="Поиск по истории..." oninput="renderHistory()">
+            <button class="btn-secondary" onclick="clearHistory()">🗑 Удалить всё</button>
+        </div>
+        <div class="history-list" id="historyList">
+            <!-- Сюда рендерится история -->
+        </div>
+    </div>
 
-        // --- СПИСОК СТИЛЕЙ (из первого скриншота) ---
-        const styles = [
-            "Ancient Egyptian", "Boho-chic", "Casual", "Gyaru", "Grunge", 
-            "Gothic Lolita", "Jester", "Japanese clothes", "Jirai key", 
-            "Maid", "Nun", "Naval", "Punk", "Prison", "Rags", 
-            "Sportswear", "Swimsuit", "Streetwear", "Techwear", "Witch", 
-            "Winter clothes", "Y2K"
-        ];
+    <!-- Вкладка 3: Редактор списков -->
+    <div id="tab-editor" class="tab-content">
+        <div class="editor-section">
+            <!-- Редактор Рас -->
+            <div class="editor-column">
+                <h3>Расы</h3>
+                <div class="editor-input-group">
+                    <input type="text" id="newRace" placeholder="Новая раса...">
+                    <button onclick="addItem('races')">+</button>
+                </div>
+                <div class="editor-list" id="raceList"></div>
+            </div>
+            <!-- Редактор Стилей -->
+            <div class="editor-column">
+                <h3>Стили</h3>
+                <div class="editor-input-group">
+                    <input type="text" id="newStyle" placeholder="Новый стиль...">
+                    <button onclick="addItem('styles')">+</button>
+                </div>
+                <div class="editor-list" id="styleList"></div>
+            </div>
+        </div>
+    </div>
+</div>
 
-        function getRandomItem(arr) {
-            return arr[Math.floor(Math.random() * arr.length)];
+<div id="toast" class="toast">Скопировано!</div>
+
+<script>
+    // --- БАЗОВЫЕ ДАННЫЕ ---
+    const DEFAULT_RACES = [
+        "Angel girl", "Arapaima girl", "Bat girl", "Bird girl", "Chimera", "Crocodile girl", 
+        "Crow girl", "Cat girl", "Cow girl", "Capybara girl", "Chicken girl", "Demon girl", 
+        "Doll girl", "Dragon girl", "Deer girl", "Elf", "Fish girl", "Fox girl", "Gargoyle girl", 
+        "Ghost girl", "Horse girl", "Insect girl", "Jackal girl", "Kitsune girl", "Mimic", 
+        "Orca girl", "Program girl", "Panda girl", "Rat girl", "Rabbit girl", "Reptile girl", 
+        "Snake girl", "Slime girl", "Serval girl", "Shark girl", "Succubus", "Sheep girl", 
+        "Tiger girl", "Vampire girl", "Wolf girl", "Wyrm girl", "Zombie girl"
+    ];
+
+    const DEFAULT_STYLES = [
+        "Ancient Egyptian", "Boho-chic", "Casual", "Gyaru", "Grunge", "Gothic Lolita", 
+        "Jester", "Japanese clothes", "Jirai key", "Maid", "Nun", "Naval", "Punk", 
+        "Prison", "Rags", "Sportswear", "Swimsuit", "Streetwear", "Techwear", 
+        "Witch", "Winter clothes", "Y2K"
+    ];
+
+    // --- СОСТОЯНИЕ ПРИЛОЖЕНИЯ ---
+    let state = {
+        races: [],
+        styles: [],
+        history: [], // { id, race, style, date, favorite }
+        currentResult: { race: '', style: '' }
+    };
+
+    // --- ИНИЦИАЛИЗАЦИЯ ---
+    function init() {
+        // Загрузка из LocalStorage или дефолт
+        const savedRaces = localStorage.getItem('cg_races');
+        const savedStyles = localStorage.getItem('cg_styles');
+        const savedHistory = localStorage.getItem('cg_history');
+
+        state.races = savedRaces ? JSON.parse(savedRaces) : [...DEFAULT_RACES];
+        state.styles = savedStyles ? JSON.parse(savedStyles) : [...DEFAULT_STYLES];
+        state.history = savedHistory ? JSON.parse(savedHistory) : [];
+
+        // Если списки пустые (пользователь все удалил), восстанавливаем дефолт для безопасности
+        if (state.races.length === 0) state.races = [...DEFAULT_RACES];
+        if (state.styles.length === 0) state.styles = [...DEFAULT_STYLES];
+
+        saveData();
+        renderEditor();
+        renderHistory();
+        generateCharacter(); // Первая генерация
+    }
+
+    function saveData() {
+        localStorage.setItem('cg_races', JSON.stringify(state.races));
+        localStorage.setItem('cg_styles', JSON.stringify(state.styles));
+        localStorage.setItem('cg_history', JSON.stringify(state.history));
+    }
+
+    // --- НАВИГАЦИЯ ---
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(`tab-${tabName}`).classList.add('active');
+        // Находим кнопку по тексту (костыль, но работает)
+        const btns = document.querySelectorAll('.tab-btn');
+        if(tabName === 'generator') btns[0].classList.add('active');
+        if(tabName === 'history') btns[1].classList.add('active');
+        if(tabName === 'editor') btns[2].classList.add('active');
+
+        if (tabName === 'history') renderHistory();
+    }
+
+    // --- ГЕНЕРАЦИЯ ---
+    function getRandomItem(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function generateCharacter() {
+        const race = getRandomItem(state.races);
+        const style = getRandomItem(state.styles);
+        
+        state.currentResult = { race, style };
+
+        // Анимация
+        const raceEl = document.getElementById('raceDisplay');
+        const styleEl = document.getElementById('styleDisplay');
+        raceEl.style.opacity = 0;
+        styleEl.style.opacity = 0;
+
+        setTimeout(() => {
+            raceEl.textContent = race;
+            styleEl.textContent = style;
+            raceEl.style.opacity = 1;
+            styleEl.style.opacity = 1;
+        }, 150);
+
+        // Добавляем в историю
+        addToHistory(race, style);
+    }
+
+    function addToHistory(race, style) {
+        const newItem = {
+            id: Date.now(), // Уникальный ID
+            race: race,
+            style: style,
+            date: new Date().toLocaleString('ru-RU'),
+            favorite: false
+        };
+        // Добавляем в начало массива
+        state.history.unshift(newItem);
+        // Ограничим историю 100 записями, чтобы не переполнять память
+        if (state.history.length > 100) state.history.pop();
+        
+        saveData();
+    }
+
+    function copyResult() {
+        const text = `${state.currentResult.race} + ${state.currentResult.style}`;
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('Скопировано в буфер обмена!');
+        });
+    }
+
+    // --- ИСТОРИЯ ---
+    function renderHistory() {
+        const list = document.getElementById('historyList');
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        
+        list.innerHTML = '';
+
+        const filtered = state.history.filter(item => 
+            item.race.toLowerCase().includes(query) || 
+            item.style.toLowerCase().includes(query)
+        );
+
+        if (filtered.length === 0) {
+            list.innerHTML = '<p style="text-align:center; color:#666;">История пуста или ничего не найдено.</p>';
+            return;
         }
 
-        function generateCharacter() {
-            const randomRace = getRandomItem(races);
-            const randomStyle = getRandomItem(styles);
-
-            // Анимация смены текста (небольшой эффект)
-            const raceEl = document.getElementById('raceDisplay');
-            const styleEl = document.getElementById('styleDisplay');
+        filtered.forEach(item => {
+            const div = document.createElement('div');
+            div.className = `history-item ${item.favorite ? 'favorite' : ''}`;
             
-            raceEl.style.opacity = 0;
-            styleEl.style.opacity = 0;
+            div.innerHTML = `
+                <div class="history-info">
+                    <div class="history-text">${item.race} + ${item.style}</div>
+                    <div class="history-date">${item.date}</div>
+                </div>
+                <div class="history-actions">
+                    <button class="icon-btn ${item.favorite ? 'fav-active' : ''}" onclick="toggleFavorite(${item.id})" title="В избранное">
+                        ${item.favorite ? '★' : '☆'}
+                    </button>
+                    <button class="icon-btn" onclick="copyHistoryItem(${item.id})" title="Копировать">📋</button>
+                    <button class="icon-btn" onclick="deleteHistoryItem(${item.id})" title="Удалить">❌</button>
+                </div>
+            `;
+            list.appendChild(div);
+        });
+    }
 
-            setTimeout(() => {
-                raceEl.textContent = randomRace;
-                styleEl.textContent = randomStyle;
-                raceEl.style.opacity = 1;
-                styleEl.style.opacity = 1;
-            }, 150);
+    function toggleFavorite(id) {
+        const item = state.history.find(i => i.id === id);
+        if (item) {
+            item.favorite = !item.favorite;
+            saveData();
+            renderHistory();
         }
+    }
 
-        // Генерируем персонажа сразу при загрузке страницы
-        window.onload = generateCharacter;
-    </script>
+    function deleteHistoryItem(id) {
+        state.history = state.history.filter(i => i.id !== id);
+        saveData();
+        renderHistory();
+    }
+
+    function clearHistory() {
+        if (confirm('Вы уверены, что хотите удалить всю историю?')) {
+            state.history = [];
+            saveData();
+            renderHistory();
+        }
+    }
+
+    function copyHistoryItem(id) {
+        const item = state.history.find(i => i.id === id);
+        if (item) {
+            navigator.clipboard.writeText(`${item.race} + ${item.style}`);
+            showToast('Скопировано!');
+        }
+    }
+
+    // --- РЕДАКТОР СПИСКОВ ---
+    function renderEditor() {
+        renderList('races', 'raceList');
+        renderList('styles', 'styleList');
+    }
+
+    function renderList(type, elementId) {
+        const container = document.getElementById(elementId);
+        container.innerHTML = '';
+        state[type].forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'editor-item';
+            div.innerHTML = `
+                <span>${item}</span>
+                <button class="icon-btn" onclick="removeItem('${type}', ${index})">❌</button>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function addItem(type) {
+        const inputId = type === 'races' ? 'newRace' : 'newStyle';
+        const input = document.getElementById(inputId);
+        const value = input.value.trim();
+
+        if (value) {
+            state[type].push(value);
+            input.value = '';
+            saveData();
+            renderEditor();
+        }
+    }
+
+    function removeItem(type, index) {
+        state[type].splice(index, 1);
+        saveData();
+        renderEditor();
+        // Если удалили все элементы, предупреждаем
+        if (state[type].length === 0) {
+            alert('Внимание! Список пуст. Генерация может не работать. Добавьте элементы.');
+        }
+    }
+
+    // --- ВСПОМОГАТЕЛЬНЫЕ ---
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    // Запуск
+    window.onload = init;
+</script>
 
 </body>
 </html>
