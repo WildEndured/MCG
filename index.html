@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Генератор Персонажей v2.0</title>
+    <title>Генератор Персонажей v3.0</title>
     <style>
         :root {
             --bg-color: #1a1a2e;
@@ -11,6 +11,7 @@
             --accent-color: #e94560;
             --text-color: #fff;
             --secondary-bg: #0f3460;
+            --disabled-color: #555;
         }
 
         body {
@@ -26,7 +27,7 @@
 
         .app-container {
             width: 100%;
-            max-width: 800px;
+            max-width: 900px;
             background-color: var(--container-bg);
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -61,9 +62,7 @@
             background-color: var(--container-bg);
         }
 
-        .tab-btn:hover {
-            color: var(--text-color);
-        }
+        .tab-btn:hover { color: var(--text-color); }
 
         /* Контент */
         .tab-content {
@@ -71,9 +70,7 @@
             display: none;
         }
 
-        .tab-content.active {
-            display: block;
-        }
+        .tab-content.active { display: block; }
 
         /* Генератор */
         .result-box {
@@ -154,29 +151,13 @@
             transition: 0.2s;
         }
 
-        .history-item.favorite {
-            border-left-color: gold;
-        }
+        .history-item.favorite { border-left-color: gold; }
 
-        .history-info {
-            flex-grow: 1;
-        }
+        .history-info { flex-grow: 1; }
+        .history-text { font-size: 1rem; font-weight: bold; }
+        .history-date { font-size: 0.75rem; color: #888; margin-top: 5px; }
 
-        .history-text {
-            font-size: 1rem;
-            font-weight: bold;
-        }
-
-        .history-date {
-            font-size: 0.75rem;
-            color: #888;
-            margin-top: 5px;
-        }
-
-        .history-actions {
-            display: flex;
-            gap: 5px;
-        }
+        .history-actions { display: flex; gap: 5px; }
 
         .icon-btn {
             background: none;
@@ -186,12 +167,26 @@
             padding: 5px;
             opacity: 0.6;
             transition: 0.2s;
+            color: white;
         }
 
         .icon-btn:hover { opacity: 1; transform: scale(1.1); }
         .icon-btn.fav-active { opacity: 1; color: gold; }
 
         /* Редактор списков */
+        .editor-toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .editor-toolbar button {
+            padding: 8px 15px;
+            font-size: 0.85rem;
+        }
+
         .editor-section {
             display: flex;
             gap: 20px;
@@ -200,29 +195,83 @@
 
         .editor-column {
             flex: 1;
-            min-width: 250px;
+            min-width: 300px;
+            background-color: #0d1b2a;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .editor-counter {
+            font-size: 0.8rem;
+            color: #888;
         }
 
         .editor-list {
-            background-color: #0d1b2a;
-            padding: 10px;
-            border-radius: 8px;
-            max-height: 250px;
+            max-height: 350px;
             overflow-y: auto;
             margin-top: 10px;
+            padding-right: 5px;
         }
 
         .editor-item {
             display: flex;
             justify-content: space-between;
-            padding: 5px 0;
+            align-items: center;
+            padding: 6px 0;
             border-bottom: 1px solid #1a1a2e;
+            gap: 10px;
+        }
+
+        .editor-item.disabled {
+            opacity: 0.4;
+            text-decoration: line-through;
+        }
+
+        .editor-item-text {
+            flex-grow: 1;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            transition: 0.2s;
+        }
+
+        .editor-item-text:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .editor-item-text.editing {
+            background-color: #1a1a2e;
+            outline: 1px solid var(--accent-color);
+        }
+
+        .editor-item input[type="text"] {
+            flex-grow: 1;
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid var(--accent-color);
+            background-color: #1a1a2e;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .editor-item input[type="checkbox"] {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent-color);
         }
 
         .editor-input-group {
             display: flex;
             gap: 5px;
-            margin-bottom: 10px;
+            margin-top: 10px;
         }
 
         .editor-input-group input {
@@ -241,6 +290,7 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            font-weight: bold;
         }
 
         /* Уведомление */
@@ -256,6 +306,7 @@
             opacity: 0;
             transition: 0.3s;
             pointer-events: none;
+            z-index: 1000;
         }
         .toast.show { opacity: 1; }
     </style>
@@ -287,28 +338,40 @@
             <input type="text" id="searchInput" class="search-input" placeholder="Поиск по истории..." oninput="renderHistory()">
             <button class="btn-secondary" onclick="clearHistory()">🗑 Удалить всё</button>
         </div>
-        <div class="history-list" id="historyList">
-            <!-- Сюда рендерится история -->
-        </div>
+        <div class="history-list" id="historyList"></div>
     </div>
 
     <!-- Вкладка 3: Редактор списков -->
     <div id="tab-editor" class="tab-content">
+        
+        <!-- Панель инструментов -->
+        <div class="editor-toolbar">
+            <button class="btn-secondary" onclick="sortLists()">🔤 Сортировать А-Я</button>
+            <button class="btn-secondary" onclick="resetLists()">↺ Сбросить к стандартным</button>
+            <span style="font-size:0.8rem; color:#888; margin-left:auto;">Клик по тексту — редактировать</span>
+        </div>
+
         <div class="editor-section">
             <!-- Редактор Рас -->
             <div class="editor-column">
-                <h3>Расы</h3>
+                <div class="editor-header">
+                    <h3 style="margin:0;">Расы</h3>
+                    <span class="editor-counter" id="raceCounter">Активно: 0 / 0</span>
+                </div>
                 <div class="editor-input-group">
-                    <input type="text" id="newRace" placeholder="Новая раса...">
+                    <input type="text" id="newRace" placeholder="Новая раса..." onkeydown="if(event.key==='Enter') addItem('races')">
                     <button onclick="addItem('races')">+</button>
                 </div>
                 <div class="editor-list" id="raceList"></div>
             </div>
             <!-- Редактор Стилей -->
             <div class="editor-column">
-                <h3>Стили</h3>
+                <div class="editor-header">
+                    <h3 style="margin:0;">Стили</h3>
+                    <span class="editor-counter" id="styleCounter">Активно: 0 / 0</span>
+                </div>
                 <div class="editor-input-group">
-                    <input type="text" id="newStyle" placeholder="Новый стиль...">
+                    <input type="text" id="newStyle" placeholder="Новый стиль..." onkeydown="if(event.key==='Enter') addItem('styles')">
                     <button onclick="addItem('styles')">+</button>
                 </div>
                 <div class="editor-list" id="styleList"></div>
@@ -338,38 +401,48 @@
         "Witch", "Winter clothes", "Y2K"
     ];
 
-    // --- СОСТОЯНИЕ ПРИЛОЖЕНИЯ ---
+    // --- СОСТОЯНИЕ ---
+    // Теперь элементы хранятся как объекты: { text: "Cat girl", enabled: true }
     let state = {
         races: [],
         styles: [],
-        history: [], // { id, race, style, date, favorite }
+        history: [],
         currentResult: { race: '', style: '' }
     };
 
     // --- ИНИЦИАЛИЗАЦИЯ ---
     function init() {
-        // Загрузка из LocalStorage или дефолт
-        const savedRaces = localStorage.getItem('cg_races');
-        const savedStyles = localStorage.getItem('cg_styles');
+        const savedRaces = localStorage.getItem('cg_races_v3');
+        const savedStyles = localStorage.getItem('cg_styles_v3');
         const savedHistory = localStorage.getItem('cg_history');
 
-        state.races = savedRaces ? JSON.parse(savedRaces) : [...DEFAULT_RACES];
-        state.styles = savedStyles ? JSON.parse(savedStyles) : [...DEFAULT_STYLES];
+        if (savedRaces) {
+            state.races = JSON.parse(savedRaces);
+        } else {
+            state.races = DEFAULT_RACES.map(text => ({ text, enabled: true }));
+        }
+
+        if (savedStyles) {
+            state.styles = JSON.parse(savedStyles);
+        } else {
+            state.styles = DEFAULT_STYLES.map(text => ({ text, enabled: true }));
+        }
+
         state.history = savedHistory ? JSON.parse(savedHistory) : [];
 
-        // Если списки пустые (пользователь все удалил), восстанавливаем дефолт для безопасности
-        if (state.races.length === 0) state.races = [...DEFAULT_RACES];
-        if (state.styles.length === 0) state.styles = [...DEFAULT_STYLES];
+        // Защита от пустых списков
+        if (state.races.length === 0) state.races = DEFAULT_RACES.map(text => ({ text, enabled: true }));
+        if (state.styles.length === 0) state.styles = DEFAULT_STYLES.map(text => ({ text, enabled: true }));
 
         saveData();
         renderEditor();
         renderHistory();
-        generateCharacter(); // Первая генерация
+        generateCharacter();
     }
 
     function saveData() {
-        localStorage.setItem('cg_races', JSON.stringify(state.races));
-        localStorage.setItem('cg_styles', JSON.stringify(state.styles));
+        localStorage.setItem('cg_races_v3', JSON.stringify(state.races));
+        localStorage.setItem('cg_styles_v3', JSON.stringify(state.styles));
         localStorage.setItem('cg_history', JSON.stringify(state.history));
     }
 
@@ -379,7 +452,6 @@
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
         
         document.getElementById(`tab-${tabName}`).classList.add('active');
-        // Находим кнопку по тексту (костыль, но работает)
         const btns = document.querySelectorAll('.tab-btn');
         if(tabName === 'generator') btns[0].classList.add('active');
         if(tabName === 'history') btns[1].classList.add('active');
@@ -389,17 +461,27 @@
     }
 
     // --- ГЕНЕРАЦИЯ ---
+    // Теперь учитываем только enabled: true
     function getRandomItem(arr) {
-        return arr[Math.floor(Math.random() * arr.length)];
+        const activeItems = arr.filter(item => item.enabled);
+        if (activeItems.length === 0) return { text: "???" }; // Заглушка, если все выключены
+        return activeItems[Math.floor(Math.random() * activeItems.length)];
     }
 
     function generateCharacter() {
-        const race = getRandomItem(state.races);
-        const style = getRandomItem(state.styles);
+        const raceObj = getRandomItem(state.races);
+        const styleObj = getRandomItem(state.styles);
         
+        const race = raceObj.text;
+        const style = styleObj.text;
+
+        if (race === "???" || style === "???") {
+            showToast("Ошибка: Все элементы отключены!");
+            return;
+        }
+
         state.currentResult = { race, style };
 
-        // Анимация
         const raceEl = document.getElementById('raceDisplay');
         const styleEl = document.getElementById('styleDisplay');
         raceEl.style.opacity = 0;
@@ -412,38 +494,31 @@
             styleEl.style.opacity = 1;
         }, 150);
 
-        // Добавляем в историю
         addToHistory(race, style);
     }
 
     function addToHistory(race, style) {
         const newItem = {
-            id: Date.now(), // Уникальный ID
+            id: Date.now(),
             race: race,
             style: style,
             date: new Date().toLocaleString('ru-RU'),
             favorite: false
         };
-        // Добавляем в начало массива
         state.history.unshift(newItem);
-        // Ограничим историю 100 записями, чтобы не переполнять память
         if (state.history.length > 100) state.history.pop();
-        
         saveData();
     }
 
     function copyResult() {
         const text = `${state.currentResult.race} + ${state.currentResult.style}`;
-        navigator.clipboard.writeText(text).then(() => {
-            showToast('Скопировано в буфер обмена!');
-        });
+        navigator.clipboard.writeText(text).then(() => showToast('Скопировано!'));
     }
 
     // --- ИСТОРИЯ ---
     function renderHistory() {
         const list = document.getElementById('historyList');
         const query = document.getElementById('searchInput').value.toLowerCase();
-        
         list.innerHTML = '';
 
         const filtered = state.history.filter(item => 
@@ -459,18 +534,15 @@
         filtered.forEach(item => {
             const div = document.createElement('div');
             div.className = `history-item ${item.favorite ? 'favorite' : ''}`;
-            
             div.innerHTML = `
                 <div class="history-info">
                     <div class="history-text">${item.race} + ${item.style}</div>
                     <div class="history-date">${item.date}</div>
                 </div>
                 <div class="history-actions">
-                    <button class="icon-btn ${item.favorite ? 'fav-active' : ''}" onclick="toggleFavorite(${item.id})" title="В избранное">
-                        ${item.favorite ? '★' : '☆'}
-                    </button>
-                    <button class="icon-btn" onclick="copyHistoryItem(${item.id})" title="Копировать">📋</button>
-                    <button class="icon-btn" onclick="deleteHistoryItem(${item.id})" title="Удалить">❌</button>
+                    <button class="icon-btn ${item.favorite ? 'fav-active' : ''}" onclick="toggleFavorite(${item.id})">${item.favorite ? '★' : '☆'}</button>
+                    <button class="icon-btn" onclick="copyHistoryItem(${item.id})">📋</button>
+                    <button class="icon-btn" onclick="deleteHistoryItem(${item.id})">❌</button>
                 </div>
             `;
             list.appendChild(div);
@@ -479,53 +551,107 @@
 
     function toggleFavorite(id) {
         const item = state.history.find(i => i.id === id);
-        if (item) {
-            item.favorite = !item.favorite;
-            saveData();
-            renderHistory();
-        }
+        if (item) { item.favorite = !item.favorite; saveData(); renderHistory(); }
     }
 
     function deleteHistoryItem(id) {
         state.history = state.history.filter(i => i.id !== id);
-        saveData();
-        renderHistory();
+        saveData(); renderHistory();
     }
 
     function clearHistory() {
-        if (confirm('Вы уверены, что хотите удалить всю историю?')) {
-            state.history = [];
-            saveData();
-            renderHistory();
+        if (confirm('Удалить всю историю?')) {
+            state.history = []; saveData(); renderHistory();
         }
     }
 
     function copyHistoryItem(id) {
         const item = state.history.find(i => i.id === id);
-        if (item) {
-            navigator.clipboard.writeText(`${item.race} + ${item.style}`);
-            showToast('Скопировано!');
-        }
+        if (item) { navigator.clipboard.writeText(`${item.race} + ${item.style}`); showToast('Скопировано!'); }
     }
 
-    // --- РЕДАКТОР СПИСКОВ ---
+    // --- РЕДАКТОР СПИСКОВ (ОБНОВЛЕНО) ---
     function renderEditor() {
         renderList('races', 'raceList');
         renderList('styles', 'styleList');
+        updateCounters();
+    }
+
+    function updateCounters() {
+        const activeRaces = state.races.filter(i => i.enabled).length;
+        const totalRaces = state.races.length;
+        const activeStyles = state.styles.filter(i => i.enabled).length;
+        const totalStyles = state.styles.length;
+
+        document.getElementById('raceCounter').textContent = `Активно: ${activeRaces} / ${totalRaces}`;
+        document.getElementById('styleCounter').textContent = `Активно: ${activeStyles} / ${totalStyles}`;
     }
 
     function renderList(type, elementId) {
         const container = document.getElementById(elementId);
         container.innerHTML = '';
+        
         state[type].forEach((item, index) => {
             const div = document.createElement('div');
-            div.className = 'editor-item';
-            div.innerHTML = `
-                <span>${item}</span>
-                <button class="icon-btn" onclick="removeItem('${type}', ${index})">❌</button>
-            `;
+            div.className = `editor-item ${item.enabled ? '' : 'disabled'}`;
+            
+            // Чекбокс (включение/отключение)
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = item.enabled;
+            checkbox.onchange = () => toggleItem(type, index);
+            
+            // Текст (с возможностью редактирования)
+            const textSpan = document.createElement('span');
+            textSpan.className = 'editor-item-text';
+            textSpan.textContent = item.text;
+            textSpan.onclick = () => startEdit(type, index, textSpan);
+            
+            // Кнопка удаления
+            const delBtn = document.createElement('button');
+            delBtn.className = 'icon-btn';
+            delBtn.textContent = '❌';
+            delBtn.onclick = () => removeItem(type, index);
+
+            div.appendChild(checkbox);
+            div.appendChild(textSpan);
+            div.appendChild(delBtn);
             container.appendChild(div);
         });
+    }
+
+    // Включение/Отключение
+    function toggleItem(type, index) {
+        state[type][index].enabled = !state[type][index].enabled;
+        saveData();
+        renderEditor(); // Перерисовываем, чтобы обновить зачеркивание
+    }
+
+    // Редактирование (Inline)
+    function startEdit(type, index, spanElement) {
+        const currentText = state[type][index].text;
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = currentText;
+        
+        // Заменяем span на input
+        spanElement.replaceWith(input);
+        input.focus();
+
+        const finishEdit = () => {
+            const newText = input.value.trim();
+            if (newText && newText !== currentText) {
+                state[type][index].text = newText;
+                saveData();
+            }
+            renderEditor(); // Перерисовываем список
+        };
+
+        input.onblur = finishEdit;
+        input.onkeydown = (e) => {
+            if (e.key === 'Enter') finishEdit();
+            if (e.key === 'Escape') renderEditor(); // Отмена
+        };
     }
 
     function addItem(type) {
@@ -534,7 +660,13 @@
         const value = input.value.trim();
 
         if (value) {
-            state[type].push(value);
+            // Проверка на дубликат (без учета регистра)
+            const exists = state[type].some(item => item.text.toLowerCase() === value.toLowerCase());
+            if (exists) {
+                showToast('Такой элемент уже есть!');
+                return;
+            }
+            state[type].push({ text: value, enabled: true });
             input.value = '';
             saveData();
             renderEditor();
@@ -545,9 +677,25 @@
         state[type].splice(index, 1);
         saveData();
         renderEditor();
-        // Если удалили все элементы, предупреждаем
-        if (state[type].length === 0) {
-            alert('Внимание! Список пуст. Генерация может не работать. Добавьте элементы.');
+    }
+
+    // Сортировка списков
+    function sortLists() {
+        state.races.sort((a, b) => a.text.localeCompare(b.text));
+        state.styles.sort((a, b) => a.text.localeCompare(b.text));
+        saveData();
+        renderEditor();
+        showToast('Списки отсортированы');
+    }
+
+    // Сброс к стандартным
+    function resetLists() {
+        if (confirm('Сбросить списки к стандартным? Ваши изменения будут потеряны.')) {
+            state.races = DEFAULT_RACES.map(text => ({ text, enabled: true }));
+            state.styles = DEFAULT_STYLES.map(text => ({ text, enabled: true }));
+            saveData();
+            renderEditor();
+            showToast('Списки сброшены');
         }
     }
 
@@ -559,7 +707,6 @@
         setTimeout(() => toast.classList.remove('show'), 2000);
     }
 
-    // Запуск
     window.onload = init;
 </script>
 
