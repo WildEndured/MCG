@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Генератор Персонажей v3 + Модули</title>
+<title>Генератор Персонажей</title>
 <style>
 :root {
     --bg: #1a1a2e;
@@ -12,6 +12,10 @@
     --text: #fff;
     --secondary: #0f3460;
     --header: #0d1b2a;
+    --appearance: #e94560;
+    --clothes: #4a90d9;
+    --race: #d9a441;
+    --lists: #5cb85c;
 }
 * { box-sizing: border-box; }
 body {
@@ -21,7 +25,7 @@ body {
     display: flex; justify-content: center; min-height: 100vh;
 }
 .app {
-    width: 100%; max-width: 900px;
+    width: 100%; max-width: 950px;
     background: var(--container);
     border-radius: 15px; overflow: hidden;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -29,8 +33,8 @@ body {
 }
 .tabs { display: flex; background: var(--header); }
 .tab-btn {
-    flex: 1; padding: 15px; background: none; border: none;
-    color: #888; font-size: 1rem; cursor: pointer; font-weight: bold;
+    flex: 1; padding: 14px 8px; background: none; border: none;
+    color: #888; font-size: 0.9rem; cursor: pointer; font-weight: bold;
     border-bottom: 3px solid transparent; transition: 0.3s;
 }
 .tab-btn.active {
@@ -44,17 +48,17 @@ body {
 .result-box {
     background: var(--secondary); padding: 20px;
     border-radius: 10px; margin-bottom: 20px;
-    max-height: 450px; overflow-y: auto;
-    text-align: center;
+    max-height: 500px; overflow-y: auto;
 }
 .result-line {
     display: flex; justify-content: space-between;
-    padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);
-    font-size: 0.95rem; gap: 15px;
+    padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.1);
+    font-size: 0.9rem; gap: 15px;
 }
 .result-line:last-child { border-bottom: none; }
-.result-cat { color: #888; font-weight: bold; font-size: 0.85rem; }
+.result-cat { color: #888; font-weight: bold; font-size: 0.82rem; }
 .result-val { color: #fff; font-weight: bold; text-align: right; }
+.result-line.main .result-val { color: var(--accent); font-size: 1.05rem; }
 
 .btn-main {
     background: var(--accent); color: white; border: none;
@@ -65,8 +69,8 @@ body {
 .btn-main:hover { background: #ff2e63; transform: scale(1.02); }
 .btn-secondary {
     background: var(--secondary); color: white;
-    border: 1px solid #555; padding: 10px 20px;
-    border-radius: 5px; cursor: pointer; font-size: 0.9rem;
+    border: 1px solid #555; padding: 9px 18px;
+    border-radius: 5px; cursor: pointer; font-size: 0.85rem;
     transition: 0.2s;
 }
 .btn-secondary:hover { background: #1a4a7a; }
@@ -79,86 +83,63 @@ body {
 }
 .history-list {
     display: flex; flex-direction: column; gap: 10px;
-    max-height: 500px; overflow-y: auto;
+    max-height: 550px; overflow-y: auto;
 }
 .history-item {
-    background: #0d1b2a; padding: 15px;
+    background: #0d1b2a; padding: 12px 15px;
     border-radius: 8px; border-left: 4px solid var(--secondary);
 }
 .history-item.fav { border-left-color: gold; }
 .history-header {
     display: flex; justify-content: space-between;
-    align-items: center; margin-bottom: 8px;
+    align-items: center; margin-bottom: 6px;
 }
-.history-date { font-size: 0.75rem; color: #888; }
-.history-details { font-size: 0.85rem; color: #ccc; line-height: 1.5; }
-.history-actions { display: flex; gap: 5px; }
+.history-date { font-size: 0.72rem; color: #888; }
+.history-details { font-size: 0.83rem; color: #ccc; line-height: 1.5; }
+.history-actions { display: flex; gap: 4px; }
 .icon-btn {
     background: none; border: none; cursor: pointer;
-    font-size: 1.1rem; padding: 3px; opacity: 0.6;
+    font-size: 1.05rem; padding: 3px; opacity: 0.6;
     color: white; transition: 0.2s;
 }
 .icon-btn:hover { opacity: 1; transform: scale(1.1); }
 .icon-btn.fav-active { opacity: 1; color: gold; }
 
-/* Модули */
+/* Списки */
 .toolbar {
     display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;
+    align-items: center;
 }
-.group-title {
-    font-size: 1rem; font-weight: bold;
-    padding: 10px 15px; margin-top: 15px;
-    border-radius: 8px; color: white;
-    background: linear-gradient(90deg, var(--accent), transparent);
-    cursor: pointer; user-select: none;
-    display: flex; justify-content: space-between; align-items: center;
+.list-block {
+    background: #0d1b2a; border-radius: 10px;
+    margin-bottom: 15px; overflow: hidden;
+    border-left: 3px solid var(--lists);
 }
-.group-clothes { background: linear-gradient(90deg, #4a90d9, transparent); }
-.group-race { background: linear-gradient(90deg, #d9a441, transparent); }
-
-.group-body { padding-left: 8px; }
-.group-body.collapsed { display: none; }
-
-.module {
-    background: #0d1b2a; border-radius: 8px;
-    margin-top: 8px; overflow: hidden;
-    border-left: 3px solid var(--accent);
-}
-.module.disabled { opacity: 0.5; }
-
-.module-header {
+.list-block.disabled { opacity: 0.5; }
+.list-header {
     display: flex; justify-content: space-between;
-    align-items: center; padding: 10px 15px;
-    background: var(--header); cursor: pointer;
-    user-select: none;
+    align-items: center; padding: 12px 15px;
+    background: var(--header); cursor: pointer; user-select: none;
 }
-.module-header h4 { margin: 0; font-size: 0.9rem; }
-.module-counter { font-size: 0.7rem; color: #888; }
-.module-controls { display: flex; gap: 8px; align-items: center; }
-
-.module-body { padding: 10px 15px 15px; display: none; }
-.module.open .module-body { display: block; }
-.module.open .module-toggle { transform: rotate(180deg); }
-
-.module-toggle {
-    background: none; border: none; color: white;
-    font-size: 1rem; cursor: pointer; padding: 3px;
-    transition: 0.2s;
-}
+.list-header h3 { margin: 0; font-size: 1rem; }
+.list-counter { font-size: 0.72rem; color: #888; }
+.list-controls { display: flex; gap: 8px; align-items: center; }
+.list-body { padding: 12px 15px; display: none; }
+.list-block.open .list-body { display: block; }
 
 .add-row { display: flex; gap: 5px; margin-bottom: 10px; }
 .add-row input {
     flex-grow: 1; padding: 6px 10px; border-radius: 5px;
     border: 1px solid #333; background: #1a1a2e;
-    color: white; font-size: 0.8rem;
+    color: white; font-size: 0.85rem;
 }
 .add-row button {
     padding: 6px 12px; background: var(--accent);
     color: white; border: none; border-radius: 5px;
-    cursor: pointer; font-size: 0.8rem;
+    cursor: pointer; font-size: 0.85rem;
 }
 
-.item-list { max-height: 200px; overflow-y: auto; }
+.item-list { max-height: 300px; overflow-y: auto; }
 .item {
     display: flex; align-items: center; gap: 8px;
     padding: 4px 0; border-bottom: 1px solid #1a1a2e;
@@ -180,6 +161,66 @@ body {
     accent-color: var(--accent);
 }
 
+/* Модули */
+.group-title {
+    font-size: 1rem; font-weight: bold;
+    padding: 11px 15px; margin-top: 15px;
+    border-radius: 8px; color: white;
+    cursor: pointer; user-select: none;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.group-appearance { background: linear-gradient(90deg, var(--appearance), transparent); }
+.group-clothes { background: linear-gradient(90deg, var(--clothes), transparent); }
+.group-race { background: linear-gradient(90deg, var(--race), transparent); }
+.group-body { padding-left: 8px; }
+.group-body.collapsed { display: none; }
+
+.module {
+    background: #0d1b2a; border-radius: 8px;
+    margin-top: 8px; overflow: hidden;
+    border-left: 3px solid var(--accent);
+}
+.module.disabled { opacity: 0.5; }
+.module-header {
+    display: flex; justify-content: space-between;
+    align-items: center; padding: 10px 15px;
+    background: var(--header); cursor: pointer; user-select: none;
+}
+.module-header h4 { margin: 0; font-size: 0.9rem; }
+.module-counter { font-size: 0.7rem; color: #888; }
+.module-controls { display: flex; gap: 8px; align-items: center; }
+.module-body { padding: 10px 15px 15px; display: none; }
+.module.open .module-body { display: block; }
+.module-toggle {
+    background: none; border: none; color: white;
+    font-size: 1rem; cursor: pointer; padding: 3px;
+    transition: 0.2s;
+}
+.module.open .module-toggle { transform: rotate(180deg); }
+
+/* Модальное окно */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.8); z-index: 1000;
+    display: none; justify-content: center; align-items: center;
+    padding: 20px;
+}
+.modal-overlay.active { display: flex; }
+.modal {
+    background: var(--container); padding: 25px;
+    border-radius: 12px; max-width: 500px; width: 100%;
+}
+.modal h3 { margin-top: 0; }
+.modal textarea {
+    width: 100%; height: 200px; padding: 10px;
+    background: #0d1b2a; color: white;
+    border: 1px solid #333; border-radius: 8px;
+    font-family: inherit; font-size: 0.9rem; resize: vertical;
+}
+.modal-actions {
+    display: flex; gap: 10px; margin-top: 15px; justify-content: flex-end;
+}
+
 .toast {
     position: fixed; bottom: 20px; left: 50%;
     transform: translateX(-50%); background: #333;
@@ -193,18 +234,20 @@ body {
 
 <div class="app">
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('gen')">🎲 Генератор</button>
-        <button class="tab-btn" onclick="switchTab('hist')">📜 История</button>
-        <button class="tab-btn" onclick="switchTab('mod')">⚙️ Модули</button>
+        <button class="tab-btn active" onclick="switchTab('gen', this)">🎲 Генератор</button>
+        <button class="tab-btn" onclick="switchTab('hist', this)">📜 История</button>
+        <button class="tab-btn" onclick="switchTab('lists', this)">📋 Списки</button>
+        <button class="tab-btn" onclick="switchTab('mod', this)">⚙️ Модули</button>
     </div>
 
     <!-- ГЕНЕРАТОР -->
     <div id="tab-gen" class="tab-content active">
         <div class="result-box" id="resultBox">
-            <p style="color:#888;">Нажмите «Сгенерировать»</p>
+            <p style="text-align:center; color:#888;">Нажмите «Сгенерировать»</p>
         </div>
         <button class="btn-main" onclick="generate()">Сгенерировать!</button>
-        <button class="btn-secondary" style="width:100%;" onclick="copyResult()">📋 Скопировать</button>
+        <button class="btn-secondary" style="width:100%; margin-bottom:8px;" onclick="copyResult()">📋 Скопировать промпт</button>
+        <button class="btn-secondary" style="width:100%;" onclick="copyShort()">📋 Скопировать кратко</button>
     </div>
 
     <!-- ИСТОРИЯ -->
@@ -216,13 +259,33 @@ body {
         <div class="history-list" id="historyList"></div>
     </div>
 
+    <!-- СПИСКИ -->
+    <div id="tab-lists" class="tab-content">
+        <div class="toolbar">
+            <button class="btn-secondary" onclick="sortLists()">🔤 Сортировать</button>
+        </div>
+        <div id="listsContainer"></div>
+    </div>
+
     <!-- МОДУЛИ -->
     <div id="tab-mod" class="tab-content">
         <div class="toolbar">
-            <button class="btn-secondary" onclick="sortAll()">🔤 Сортировать</button>
-            <button class="btn-secondary" onclick="resetAll()">↺ Сброс</button>
+            <button class="btn-secondary" onclick="sortModules()">🔤 Сортировать</button>
         </div>
         <div id="modulesContainer"></div>
+    </div>
+</div>
+
+<!-- МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal">
+        <h3 id="editTitle">Редактирование</h3>
+        <p style="color:#888; font-size:0.85rem;">Один элемент на строку (или через запятую).</p>
+        <textarea id="editTextarea"></textarea>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeEdit()">Отмена</button>
+            <button class="btn-main" style="width:auto; margin:0;" onclick="saveEdit()">Сохранить</button>
+        </div>
     </div>
 </div>
 
@@ -230,22 +293,53 @@ body {
 
 <script>
 // ============================================================
-// СТРУКТУРА: ГРУППЫ → МОДУЛИ (подкатегории) → ЗНАЧЕНИЯ
+// ДЕФОЛТНЫЕ ДАННЫЕ
 // ============================================================
-const DEFAULT = {
+
+// Два отдельных списка (вкладка «Списки»)
+const DEFAULT_LISTS = {
+    races: {
+        name: "🧬 Расы",
+        enabled: true,
+        expanded: true,
+        items: [
+            "Angel girl", "Arapaima girl", "Bat girl", "Bird girl", "Chimera",
+            "Crocodile girl", "Crow girl", "Cat girl", "Cow girl", "Capybara girl",
+            "Chicken girl", "Demon girl", "Doll girl", "Dragon girl", "Deer girl",
+            "Elf", "Fish girl", "Fox girl", "Gargoyle girl", "Ghost girl",
+            "Horse girl", "Insect girl", "Jackal girl", "Kitsune girl", "Mimic",
+            "Orca girl", "Program girl", "Panda girl", "Rat girl", "Rabbit girl",
+            "Reptile girl", "Snake girl", "Slime girl", "Serval girl", "Shark girl",
+            "Succubus", "Sheep girl", "Tiger girl", "Vampire girl", "Wolf girl",
+            "Wyrm girl", "Zombie girl"
+        ]
+    },
+    styles: {
+        name: "👗 Стили одежды",
+        enabled: true,
+        expanded: true,
+        items: [
+            "Ancient Egyptian", "Boho-chic", "Casual", "Gyaru", "Grunge",
+            "Gothic Lolita", "Jester", "Japanese clothes", "Jirai key", "Maid",
+            "Nun", "Naval", "Punk", "Prison", "Rags", "Sportswear",
+            "Swimsuit", "Streetwear", "Techwear", "Witch", "Winter clothes", "Y2K"
+        ]
+    }
+};
+
+// Модули (вкладка «Модули») — 3 группы, внутри каждой модули со своими значениями
+const DEFAULT_MODULES = {
     appearance: {
         name: "🎨 Модуль базовой внешности",
-        groupClass: "",
+        groupClass: "group-appearance",
         expanded: true,
         modules: {
             bangs:      { name: "Bangs",           enabled: true, items: ["Прямая", "Косая", "Рваная"] },
             sidelocks:  { name: "Sidelocks",       enabled: true, items: ["Короткие", "Длинные"] },
             backHair:   { name: "Back hair",       enabled: true, items: ["Хвост", "Косички", "Распущенные"] },
             addHair:    { name: "Additional hair", enabled: true, items: ["Ахоге", "Пучок"] },
-            eyeShape:   { name: "Форма глаз",      enabled: true, items: ["Большие", "Узкие", "Круглые"] },
-            eyeColor:   { name: "Цвет глаз",       enabled: true, items: ["Голубые", "Карие", "Зелёные", "Красные"] },
-            breastSize: { name: "Размер груди",    enabled: true, items: ["Плоская", "Средняя", "Большая"] },
-            skinColor:  { name: "Цвет кожи",       enabled: true, items: ["Бледная", "Загорелая", "Тёмная"] }
+            eyeShape:   { name: "Форма глаз",      enabled: true, items: ["Большие", "Узкие", "Круглые", "Закрытые"] },
+            skinColor:  { name: "Цвет кожи",       enabled: true, items: ["Бледная", "Загорелая", "Тёмная", "Оливковая"] }
         }
     },
     clothes: {
@@ -253,18 +347,18 @@ const DEFAULT = {
         groupClass: "group-clothes",
         expanded: true,
         modules: {
-            style:      { name: "Стиль одежды",   enabled: true, items: ["Casual", "Streetwear", "Punk", "Y2K", "Gothic"] },
-            headwear:   { name: "Headwear",       enabled: true, items: ["Шляпа", "Капюшон", "Ободок", "Отсутствует"] },
-            neckwear:   { name: "Neckwear",       enabled: true, items: ["Чокер", "Шарф", "Ожерелье", "Отсутствует"] },
-            topwear:    { name: "Topwear",        enabled: true, items: ["Футболка", "Худи", "Кроп-топ", "Куртка", "Отсутствует"] },
-            bottomwear: { name: "Bottomwear",     enabled: true, items: ["Юбка", "Джинсы", "Шорты", "Карго", "Отсутствует"] },
-            legwear:    { name: "Legwear",        enabled: true, items: ["Чулки", "Носки", "Колготки", "Отсутствует"] },
-            footwear:   { name: "Footwear",       enabled: true, items: ["Кроссовки", "Ботинки", "Каблуки", "Отсутствует"] },
-            acc1:       { name: "Accessory 1",    enabled: true, items: ["Серьги", "Очки", "Браслет", "Отсутствует"] },
-            acc2:       { name: "Accessory 2",    enabled: true, items: ["Сумка", "Зонт", "Оружие", "Отсутствует"] },
-            acc3:       { name: "Accessory 3",    enabled: true, items: ["Шарф", "Платок", "Пояс", "Отсутствует"] },
-            acc4:       { name: "Accessory 4",    enabled: true, items: ["Перчатки", "Часы", "Кольцо", "Отсутствует"] },
-            acc5:       { name: "Accessory 5",    enabled: true, items: ["Корона", "Вуаль", "Маска", "Отсутствует"] }
+            headwear:   { name: "Headwear",     enabled: true, items: ["Шляпа", "Капюшон", "Ободок", "Шапка"] },
+            neckwear:   { name: "Neckwear",     enabled: true, items: ["Чокер", "Шарф", "Ожерелье"] },
+            handwear:   { name: "Handwear",     enabled: true, items: ["Перчатки", "Митенки", "Кольца"] },
+            topwear1:   { name: "Topwear 1",    enabled: true, items: ["Футболка", "Худи", "Кроп-топ", "Куртка", "Свитер"] },
+            bottomwear: { name: "Bottomwear",   enabled: true, items: ["Юбка", "Джинсы", "Шорты", "Карго"] },
+            legwear:    { name: "Legwear",      enabled: true, items: ["Чулки", "Носки", "Колготки"] },
+            footwear:   { name: "Footwear",     enabled: true, items: ["Кроссовки", "Ботинки", "Каблуки", "Сандалии"] },
+            acc1:       { name: "Accessory 1",  enabled: true, items: ["Серьги", "Очки", "Браслет"] },
+            acc2:       { name: "Accessory 2",  enabled: true, items: ["Сумка", "Зонт", "Оружие"] },
+            acc3:       { name: "Accessory 3",  enabled: true, items: ["Шарф", "Платок", "Пояс"] },
+            acc4:       { name: "Accessory 4",  enabled: true, items: ["Часы", "Кольцо", "Брошь"] },
+            acc5:       { name: "Accessory 5",  enabled: true, items: ["Корона", "Вуаль", "Маска"] }
         }
     },
     race: {
@@ -272,51 +366,62 @@ const DEFAULT = {
         groupClass: "group-race",
         expanded: true,
         modules: {
-            race:    { name: "Раса",          enabled: true, items: ["Cat girl", "Elf", "Demon girl", "Dragon girl", "Vampire girl", "Slime girl", "Zombie girl"] },
-            raceT1:  { name: "Расовая черта 1", enabled: true, items: ["Animal ears", "Horns", "Tail", "Wings", "Halos"] },
-            raceT2:  { name: "Расовая черта 2", enabled: true, items: ["Fangs", "Claws", "Glowing eyes", "Scales"] },
-            raceT3:  { name: "Расовая черта 3", enabled: true, items: ["Magic aura", "Tattoos", "Freckles", "Scars"] },
-            raceT4:  { name: "Расовая черта 4", enabled: true, items: ["Отсутствует"] },
-            raceT5:  { name: "Расовая черта 5", enabled: true, items: ["Отсутствует"] },
-            raceT6:  { name: "Расовая черта 6", enabled: true, items: ["Отсутствует"] },
-            raceT7:  { name: "Расовая черта 7", enabled: true, items: ["Отсутствует"] }
+            trait1: { name: "Расовая черта 1", enabled: true, items: ["Animal ears", "Horns", "Tail", "Wings", "Halos"] },
+            trait2: { name: "Расовая черта 2", enabled: true, items: ["Fangs", "Claws", "Glowing eyes", "Scales"] },
+            trait3: { name: "Расовая черта 3", enabled: true, items: ["Magic aura", "Tattoos", "Freckles", "Scars"] },
+            trait4: { name: "Расовая черта 4", enabled: true, items: ["Отсутствует"] },
+            trait5: { name: "Расовая черта 5", enabled: true, items: ["Отсутствует"] },
+            trait6: { name: "Расовая черта 6", enabled: true, items: ["Отсутствует"] },
+            trait7: { name: "Расовая черта 7", enabled: true, items: ["Отсутствует"] }
         }
     }
 };
 
+// ============================================================
+// СОСТОЯНИЕ
+// ============================================================
 let state = {
-    data: null,
+    lists: null,
+    modules: null,
     history: [],
-    current: {},
+    current: {},   // { path: value }
     currentPaths: []
 };
+
+let editContext = null;
 
 // ============================================================
 // INIT
 // ============================================================
 function init() {
-    const saved = localStorage.getItem('cg_data_v8');
-    const hist = localStorage.getItem('cg_hist_v8');
-    state.data = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(DEFAULT));
-    state.history = hist ? JSON.parse(hist) : [];
+    const savedLists = localStorage.getItem('cg_lists');
+    const savedModules = localStorage.getItem('cg_modules');
+    const savedHist = localStorage.getItem('cg_history');
+
+    state.lists = savedLists ? JSON.parse(savedLists) : JSON.parse(JSON.stringify(DEFAULT_LISTS));
+    state.modules = savedModules ? JSON.parse(savedModules) : JSON.parse(JSON.stringify(DEFAULT_MODULES));
+    state.history = savedHist ? JSON.parse(savedHist) : [];
+
     save();
+    renderLists();
     renderModules();
     renderHistory();
 }
 
 function save() {
-    localStorage.setItem('cg_data_v8', JSON.stringify(state.data));
-    localStorage.setItem('cg_hist_v8', JSON.stringify(state.history));
+    localStorage.setItem('cg_lists', JSON.stringify(state.lists));
+    localStorage.setItem('cg_modules', JSON.stringify(state.modules));
+    localStorage.setItem('cg_history', JSON.stringify(state.history));
 }
 
-function switchTab(name) {
+// ============================================================
+// НАВИГАЦИЯ
+// ============================================================
+function switchTab(name, btn) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
     document.getElementById(`tab-${name}`).classList.add('active');
-    const btns = document.querySelectorAll('.tab-btn');
-    if (name === 'gen')  btns[0].classList.add('active');
-    if (name === 'hist') btns[1].classList.add('active');
-    if (name === 'mod')  btns[2].classList.add('active');
+    btn.classList.add('active');
     if (name === 'hist') renderHistory();
 }
 
@@ -333,11 +438,21 @@ function generate() {
     const result = {};
     const paths = [];
 
-    // Порядок: сначала раса, потом внешность, потом одежда
-    const groupOrder = ['race', 'appearance', 'clothes'];
+    // 1. Раса (из вкладки «Списки»)
+    if (state.lists.races.enabled) {
+        const race = randItem(state.lists.races.items);
+        if (race) { result['list.races'] = race; paths.push('list.races'); }
+    }
 
-    for (const gKey of groupOrder) {
-        const group = state.data[gKey];
+    // 2. Стиль (из вкладки «Списки»)
+    if (state.lists.styles.enabled) {
+        const style = randItem(state.lists.styles.items);
+        if (style) { result['list.styles'] = style; paths.push('list.styles'); }
+    }
+
+    // 3. Все модули
+    for (const gKey in state.modules) {
+        const group = state.modules[gKey];
         for (const mKey in group.modules) {
             const mod = group.modules[mKey];
             if (!mod.enabled) continue;
@@ -350,7 +465,7 @@ function generate() {
         }
     }
 
-    if (paths.length === 0) { showToast("Все модули отключены!"); return; }
+    if (paths.length === 0) { showToast("Все списки и модули отключены!"); return; }
 
     state.current = result;
     state.currentPaths = paths;
@@ -358,15 +473,23 @@ function generate() {
     addHistory(result, paths);
 }
 
+function getPathName(path) {
+    if (path.startsWith('list.')) {
+        return state.lists[path.split('.')[1]].name;
+    }
+    const [g, m] = path.split('.');
+    return state.modules[g].modules[m].name;
+}
+
 function renderResult(result, paths) {
     const box = document.getElementById('resultBox');
     box.innerHTML = '';
     paths.forEach(path => {
-        const [g, m] = path.split('.');
-        const mod = state.data[g].modules[m];
+        const name = getPathName(path);
+        const isMain = path === 'list.races' || path === 'list.styles';
         const line = document.createElement('div');
-        line.className = 'result-line';
-        line.innerHTML = `<span class="result-cat">${mod.name}</span><span class="result-val">${result[path]}</span>`;
+        line.className = `result-line ${isMain ? 'main' : ''}`;
+        line.innerHTML = `<span class="result-cat">${name}</span><span class="result-val">${result[path]}</span>`;
         box.appendChild(line);
     });
 }
@@ -384,11 +507,7 @@ function addHistory(result, paths) {
 }
 
 function formatPrompt(result, paths) {
-    return paths.map(p => {
-        const [g, m] = p.split('.');
-        const mod = state.data[g].modules[m];
-        return `${mod.name}: ${result[p]}`;
-    }).join('\n');
+    return paths.map(p => `${getPathName(p)}: ${result[p]}`).join('\n');
 }
 
 function formatShort(result, paths) {
@@ -398,6 +517,12 @@ function formatShort(result, paths) {
 function copyResult() {
     if (!state.currentPaths.length) { showToast('Сначала сгенерируйте!'); return; }
     navigator.clipboard.writeText(formatPrompt(state.current, state.currentPaths));
+    showToast('Скопировано!');
+}
+
+function copyShort() {
+    if (!state.currentPaths.length) { showToast('Сначала сгенерируйте!'); return; }
+    navigator.clipboard.writeText(formatShort(state.current, state.currentPaths));
     showToast('Скопировано!');
 }
 
@@ -453,18 +578,163 @@ function copyHist(id) {
 }
 
 // ============================================================
-// РЕДАКТОР МОДУЛЕЙ
+// ВКЛАДКА «СПИСКИ» — отдельные модули Расы и Стили
+// ============================================================
+function renderLists() {
+    const container = document.getElementById('listsContainer');
+    container.innerHTML = '';
+
+    for (const key in state.lists) {
+        const list = state.lists[key];
+        container.appendChild(createListBlock(key, list));
+    }
+}
+
+function createListBlock(key, list) {
+    const div = document.createElement('div');
+    div.className = `list-block ${list.enabled ? '' : 'disabled'} ${list.expanded ? 'open' : ''}`;
+
+    const active = list.items.filter(i => i.enabled).length;
+
+    div.innerHTML = `
+        <div class="list-header">
+            <div>
+                <h3>${list.name}</h3>
+                <span class="list-counter">Активно: ${active} / ${list.items.length}</span>
+            </div>
+            <div class="list-controls">
+                <label style="font-size:0.75rem; cursor:pointer;">
+                    <input type="checkbox" ${list.enabled ? 'checked' : ''} onchange="toggleList('${key}')" style="accent-color: var(--accent);"> Вкл
+                </label>
+                <button class="icon-btn" onclick="event.stopPropagation(); openEditList('${key}')" title="Редактировать">✏️</button>
+                <span style="font-size:0.9rem;">${list.expanded ? '▼' : '▶'}</span>
+            </div>
+        </div>
+    `;
+
+    const body = document.createElement('div');
+    body.className = 'list-body';
+    body.innerHTML = `
+        <div class="add-row">
+            <input type="text" placeholder="Добавить..." onkeydown="if(event.key==='Enter') addListItem('${key}', this)">
+            <button onclick="addListItem('${key}', this.previousElementSibling)">+</button>
+        </div>
+        <div class="item-list" id="list-values-${key}"></div>
+    `;
+
+    div.querySelector('.list-header').onclick = (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'LABEL') return;
+        list.expanded = !list.expanded;
+        save(); renderLists();
+    };
+
+    div.appendChild(body);
+    setTimeout(() => renderListItems(key), 0);
+    return div;
+}
+
+function renderListItems(key) {
+    const container = document.getElementById(`list-values-${key}`);
+    if (!container) return;
+    container.innerHTML = '';
+    const list = state.lists[key];
+
+    list.items.forEach((item, idx) => {
+        const row = document.createElement('div');
+        row.className = `item ${item.enabled ? '' : 'disabled'}`;
+
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = item.enabled;
+        cb.onchange = () => { item.enabled = !item.enabled; save(); renderListItems(key); };
+
+        const txt = document.createElement('span');
+        txt.className = 'item-text';
+        txt.textContent = item.text;
+        txt.onclick = () => startEditListItem(key, idx, txt);
+
+        const del = document.createElement('button');
+        del.className = 'icon-btn';
+        del.textContent = '❌';
+        del.onclick = () => { list.items.splice(idx, 1); save(); renderListItems(key); };
+
+        row.appendChild(cb);
+        row.appendChild(txt);
+        row.appendChild(del);
+        container.appendChild(row);
+    });
+
+    const header = container.closest('.list-block').querySelector('.list-counter');
+    const active = list.items.filter(i => i.enabled).length;
+    header.textContent = `Активно: ${active} / ${list.items.length}`;
+}
+
+function toggleList(key) {
+    state.lists[key].enabled = !state.lists[key].enabled;
+    save(); renderLists();
+}
+
+function startEditListItem(key, idx, span) {
+    const list = state.lists[key];
+    const old = list.items[idx].text;
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.value = old;
+    span.replaceWith(inp);
+    inp.focus();
+
+    const finish = () => {
+        const v = inp.value.trim();
+        if (v && v !== old) { list.items[idx].text = v; save(); }
+        renderListItems(key);
+    };
+    inp.onblur = finish;
+    inp.onkeydown = (e) => {
+        if (e.key === 'Enter') finish();
+        if (e.key === 'Escape') renderListItems(key);
+    };
+}
+
+function addListItem(key, inputEl) {
+    const v = inputEl.value.trim();
+    if (!v) return;
+    const list = state.lists[key];
+    if (list.items.some(i => i.text.toLowerCase() === v.toLowerCase())) {
+        showToast('Уже есть!'); return;
+    }
+    list.items.push({ text: v, enabled: true });
+    inputEl.value = '';
+    save(); renderListItems(key);
+}
+
+function sortLists() {
+    for (const key in state.lists) {
+        state.lists[key].items.sort((a, b) => a.text.localeCompare(b.text));
+    }
+    save(); renderLists();
+    showToast('Отсортировано');
+}
+
+function openEditList(key) {
+    editContext = { type: 'list', key };
+    const list = state.lists[key];
+    document.getElementById('editTitle').textContent = `Редактирование: ${list.name}`;
+    document.getElementById('editTextarea').value = list.items.map(i => i.text).join('\n');
+    document.getElementById('editModal').classList.add('active');
+}
+
+// ============================================================
+// ВКЛАДКА «МОДУЛИ»
 // ============================================================
 function renderModules() {
     const container = document.getElementById('modulesContainer');
     container.innerHTML = '';
 
-    for (const gKey in state.data) {
-        const group = state.data[gKey];
+    for (const gKey in state.modules) {
+        const group = state.modules[gKey];
 
-        // Группа
         const title = document.createElement('div');
-        title.className = `group-title ${group.groupClass || ''}`;
+        title.className = `group-title ${group.groupClass}`;
         title.innerHTML = `<span>${group.name}</span><span>${group.expanded ? '▼' : '▶'}</span>`;
         title.onclick = () => { group.expanded = !group.expanded; save(); renderModules(); };
         container.appendChild(title);
@@ -492,9 +762,10 @@ function createModule(gKey, mKey, mod) {
                 <span class="module-counter">Активно: ${active} / ${mod.items.length}</span>
             </div>
             <div class="module-controls">
-                <label style="font-size:0.8rem; cursor:pointer;">
+                <label style="font-size:0.75rem; cursor:pointer;">
                     <input type="checkbox" ${mod.enabled ? 'checked' : ''} onchange="toggleModule('${gKey}','${mKey}')" style="accent-color: var(--accent);"> Вкл
                 </label>
+                <button class="icon-btn" onclick="event.stopPropagation(); openEditModule('${gKey}','${mKey}')" title="Редактировать">✏️</button>
                 <button class="module-toggle">▼</button>
             </div>
         </div>
@@ -504,10 +775,10 @@ function createModule(gKey, mKey, mod) {
     body.className = 'module-body';
     body.innerHTML = `
         <div class="add-row">
-            <input type="text" placeholder="Добавить..." onkeydown="if(event.key==='Enter') addItem('${gKey}','${mKey}', this)">
-            <button onclick="addItem('${gKey}','${mKey}', this.previousElementSibling)">+</button>
+            <input type="text" placeholder="Добавить..." onkeydown="if(event.key==='Enter') addModuleItem('${gKey}','${mKey}', this)">
+            <button onclick="addModuleItem('${gKey}','${mKey}', this.previousElementSibling)">+</button>
         </div>
-        <div class="item-list" id="list-${gKey}-${mKey}"></div>
+        <div class="item-list" id="mod-values-${gKey}-${mKey}"></div>
     `;
 
     div.querySelector('.module-header').onclick = (e) => {
@@ -520,15 +791,15 @@ function createModule(gKey, mKey, mod) {
     };
 
     div.appendChild(body);
-    setTimeout(() => renderItems(gKey, mKey), 0);
+    setTimeout(() => renderModuleItems(gKey, mKey), 0);
     return div;
 }
 
-function renderItems(gKey, mKey) {
-    const container = document.getElementById(`list-${gKey}-${mKey}`);
+function renderModuleItems(gKey, mKey) {
+    const container = document.getElementById(`mod-values-${gKey}-${mKey}`);
     if (!container) return;
     container.innerHTML = '';
-    const mod = state.data[gKey].modules[mKey];
+    const mod = state.modules[gKey].modules[mKey];
 
     mod.items.forEach((item, idx) => {
         const row = document.createElement('div');
@@ -537,17 +808,17 @@ function renderItems(gKey, mKey) {
         const cb = document.createElement('input');
         cb.type = 'checkbox';
         cb.checked = item.enabled;
-        cb.onchange = () => { item.enabled = !item.enabled; save(); renderItems(gKey, mKey); };
+        cb.onchange = () => { item.enabled = !item.enabled; save(); renderModuleItems(gKey, mKey); };
 
         const txt = document.createElement('span');
         txt.className = 'item-text';
         txt.textContent = item.text;
-        txt.onclick = () => startEdit(gKey, mKey, idx, txt);
+        txt.onclick = () => startEditModuleItem(gKey, mKey, idx, txt);
 
         const del = document.createElement('button');
         del.className = 'icon-btn';
         del.textContent = '❌';
-        del.onclick = () => { mod.items.splice(idx, 1); save(); renderItems(gKey, mKey); };
+        del.onclick = () => { mod.items.splice(idx, 1); save(); renderModuleItems(gKey, mKey); };
 
         row.appendChild(cb);
         row.appendChild(txt);
@@ -561,12 +832,12 @@ function renderItems(gKey, mKey) {
 }
 
 function toggleModule(gKey, mKey) {
-    state.data[gKey].modules[mKey].enabled = !state.data[gKey].modules[mKey].enabled;
+    state.modules[gKey].modules[mKey].enabled = !state.modules[gKey].modules[mKey].enabled;
     save(); renderModules();
 }
 
-function startEdit(gKey, mKey, idx, span) {
-    const mod = state.data[gKey].modules[mKey];
+function startEditModuleItem(gKey, mKey, idx, span) {
+    const mod = state.modules[gKey].modules[mKey];
     const old = mod.items[idx].text;
     const inp = document.createElement('input');
     inp.type = 'text';
@@ -577,45 +848,84 @@ function startEdit(gKey, mKey, idx, span) {
     const finish = () => {
         const v = inp.value.trim();
         if (v && v !== old) { mod.items[idx].text = v; save(); }
-        renderItems(gKey, mKey);
+        renderModuleItems(gKey, mKey);
     };
     inp.onblur = finish;
     inp.onkeydown = (e) => {
         if (e.key === 'Enter') finish();
-        if (e.key === 'Escape') renderItems(gKey, mKey);
+        if (e.key === 'Escape') renderModuleItems(gKey, mKey);
     };
 }
 
-function addItem(gKey, mKey, inputEl) {
+function addModuleItem(gKey, mKey, inputEl) {
     const v = inputEl.value.trim();
     if (!v) return;
-    const mod = state.data[gKey].modules[mKey];
+    const mod = state.modules[gKey].modules[mKey];
     if (mod.items.some(i => i.text.toLowerCase() === v.toLowerCase())) {
         showToast('Уже есть!'); return;
     }
     mod.items.push({ text: v, enabled: true });
     inputEl.value = '';
-    save(); renderItems(gKey, mKey);
+    save(); renderModuleItems(gKey, mKey);
 }
 
-// ============================================================
-// СОРТИРОВКА / СБРОС
-// ============================================================
-function sortAll() {
-    for (const g in state.data) {
-        for (const m in state.data[g].modules) {
-            state.data[g].modules[m].items.sort((a, b) => a.text.localeCompare(b.text));
+function sortModules() {
+    for (const g in state.modules) {
+        for (const m in state.modules[g].modules) {
+            state.modules[g].modules[m].items.sort((a, b) => a.text.localeCompare(b.text));
         }
     }
     save(); renderModules();
     showToast('Отсортировано');
 }
 
-function resetAll() {
-    if (!confirm('Сбросить к стандартным?')) return;
-    state.data = JSON.parse(JSON.stringify(DEFAULT));
-    save(); renderModules();
-    showToast('Сброшено');
+function openEditModule(gKey, mKey) {
+    editContext = { type: 'module', gKey, mKey };
+    const mod = state.modules[gKey].modules[mKey];
+    document.getElementById('editTitle').textContent = `Редактирование: ${mod.name}`;
+    document.getElementById('editTextarea').value = mod.items.map(i => i.text).join('\n');
+    document.getElementById('editModal').classList.add('active');
+}
+
+// ============================================================
+// МОДАЛЬНОЕ ОКНО
+// ============================================================
+function closeEdit() {
+    document.getElementById('editModal').classList.remove('active');
+    editContext = null;
+}
+
+function saveEdit() {
+    if (!editContext) return;
+    const text = document.getElementById('editTextarea').value;
+    const lines = text.split(/[\n,]+/).map(s => s.trim()).filter(s => s);
+
+    let target;
+    if (editContext.type === 'list') {
+        target = state.lists[editContext.key].items;
+    } else {
+        target = state.modules[editContext.gKey].modules[editContext.mKey].items;
+    }
+
+    const oldMap = {};
+    target.forEach(i => oldMap[i.text.toLowerCase()] = i.enabled);
+
+    const newItems = lines.map(t => ({
+        text: t,
+        enabled: oldMap[t.toLowerCase()] !== undefined ? oldMap[t.toLowerCase()] : true
+    }));
+
+    if (editContext.type === 'list') {
+        state.lists[editContext.key].items = newItems;
+    } else {
+        state.modules[editContext.gKey].modules[editContext.mKey].items = newItems;
+    }
+
+    save();
+    renderLists();
+    renderModules();
+    closeEdit();
+    showToast(`Сохранено: ${lines.length}`);
 }
 
 // ============================================================
