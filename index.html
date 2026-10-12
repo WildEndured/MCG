@@ -44,7 +44,6 @@ body {
 .tab-content { padding: 20px; display: none; }
 .tab-content.active { display: block; }
 
-/* Генератор */
 .result-box {
     background: var(--secondary); padding: 20px;
     border-radius: 10px; margin-bottom: 20px;
@@ -75,7 +74,6 @@ body {
 }
 .btn-secondary:hover { background: #1a4a7a; }
 
-/* История */
 .history-controls { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
 .search-input {
     flex-grow: 1; padding: 10px; border-radius: 5px;
@@ -105,7 +103,6 @@ body {
 .icon-btn:hover { opacity: 1; transform: scale(1.1); }
 .icon-btn.fav-active { opacity: 1; color: gold; }
 
-/* Списки */
 .toolbar {
     display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;
     align-items: center;
@@ -166,7 +163,6 @@ body {
     flex-shrink: 0;
 }
 
-/* Модули */
 .group-title {
     font-size: 1rem; font-weight: bold;
     padding: 11px 15px; margin-top: 15px;
@@ -203,7 +199,6 @@ body {
 }
 .module.open .module-toggle { transform: rotate(180deg); }
 
-/* Модальное окно */
 .modal-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
     background: rgba(0,0,0,0.8); z-index: 1000;
@@ -278,7 +273,6 @@ body {
     </div>
 </div>
 
-<!-- МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ -->
 <div class="modal-overlay" id="editModal">
     <div class="modal">
         <h3 id="editTitle">Редактирование</h3>
@@ -291,7 +285,6 @@ body {
     </div>
 </div>
 
-<!-- МОДАЛЬНОЕ ОКНО МАССОВОГО ИМПОРТА -->
 <div class="modal-overlay" id="bulkImportModal">
     <div class="modal">
         <h3 id="bulkImportTitle">Массовый импорт</h3>
@@ -331,8 +324,31 @@ const DEFAULT_MODULES = {
         groupClass: "group-appearance",
         expanded: true,
         modules: {
-            bangs:      { name: "Bangs",           enabled: true, items: ["Прямая", "Косая", "Рваная"] },
-            sidelocks:  { name: "Sidelocks",       enabled: true, items: ["Короткие", "Длинные"] },
+            bangs: {
+                name: "Bangs",
+                enabled: true,
+                items: [
+                    "Arched bangs", "asymmetrical bangs", "blunt bangs", "crossed",
+                    "curtained bangs", "diagonal bangs", "hime cut", "short bangs",
+                    "medium bangs", "long bangs", "wispy bangs", "choppy bangs",
+                    "fanged bangs", "parted bangs", "double-parted bangs", "middle part",
+                    "swept bangs", "side part", "Bangs pinned back", "center flap bangs",
+                    "hair between eyes", "long hair between eyes", "hair over one eye",
+                    "hair over eyes"
+                ]
+            },
+            sidelocks: {
+                name: "Sidelocks",
+                enabled: true,
+                items: [
+                    "single sidelock", "long single sidelock", "single braided sidelock",
+                    "medium sidelock", "Long sidelocks", "very long sidelocks",
+                    "absurdly long sidelocks", "low tied sidelock", "blunt tesses",
+                    "ring sidelocks", "braided sidelock", "sidelocks tied back",
+                    "drill sidelocks", "flipped sidelocks", "blunt sidelocks",
+                    "wavy sidelocks", "curly sidelocks", "Asymmetrical sidelocks"
+                ]
+            },
             backHair:   { name: "Back hair",       enabled: true, items: ["Хвост", "Косички", "Распущенные"] },
             addHair:    { name: "Additional hair", enabled: true, items: ["Ахоге", "Пучок"] },
             eyeShape:   { name: "Форма глаз",      enabled: true, items: ["Большие", "Узкие", "Круглые", "Закрытые"] },
@@ -375,33 +391,20 @@ const DEFAULT_MODULES = {
 };
 
 // ============================================================
-// СОСТОЯНИЕ
-// ============================================================
-let state = {
-    lists: null,
-    modules: null,
-    history: [],
-    current: {},
-    currentPaths: []
-};
-
+let state = { lists: null, modules: null, history: [], current: {}, currentPaths: [] };
 let editContext = null;
 let bulkContext = null;
 
 // ============================================================
-// INIT
-// ============================================================
 function init() {
-    const savedLists = localStorage.getItem('cg_lists');
-    const savedModules = localStorage.getItem('cg_modules');
-    const savedHist = localStorage.getItem('cg_history');
+    const savedLists = localStorage.getItem('cg_lists_v2');
+    const savedModules = localStorage.getItem('cg_modules_v2');
+    const savedHist = localStorage.getItem('cg_history_v2');
 
     state.lists = savedLists ? JSON.parse(savedLists) : null;
     state.modules = savedModules ? JSON.parse(savedModules) : null;
     state.history = savedHist ? JSON.parse(savedHist) : [];
 
-    // === ВОССТАНОВЛЕНИЕ БИТЫХ ДАННЫХ ===
-    // Если lists пустые или не содержат текст — восстанавливаем из DEFAULT
     if (!state.lists || !isValidListStructure(state.lists)) {
         state.lists = JSON.parse(JSON.stringify(DEFAULT_LISTS));
     }
@@ -409,22 +412,18 @@ function init() {
         state.modules = JSON.parse(JSON.stringify(DEFAULT_MODULES));
     }
 
-    // Чистим каждый список от битых элементов (без .text)
     sanitizeData();
-
     save();
     renderLists();
     renderModules();
     renderHistory();
 }
 
-// Проверка: все ли списки имеют хотя бы один элемент с текстом
 function isValidListStructure(lists) {
     for (const key in lists) {
         const list = lists[key];
         if (!list || !Array.isArray(list.items)) return false;
-        const hasText = list.items.some(i => i && typeof i.text === 'string' && i.text.length > 0);
-        if (!hasText) return false;
+        if (!list.items.some(i => i && typeof i.text === 'string' && i.text.length > 0)) return false;
     }
     return true;
 }
@@ -436,32 +435,25 @@ function isValidModuleStructure(modules) {
         for (const mKey in group.modules) {
             const mod = group.modules[mKey];
             if (!Array.isArray(mod.items)) return false;
-            const hasText = mod.items.some(i => i && typeof i.text === 'string' && i.text.length > 0);
-            if (!hasText) return false;
+            if (!mod.items.some(i => i && typeof i.text === 'string' && i.text.length > 0)) return false;
         }
     }
     return true;
 }
 
-// Убираем битые элементы + нормализуем формат
 function sanitizeData() {
-    // Чистим списки
     for (const key in state.lists) {
         const list = state.lists[key];
         if (!Array.isArray(list.items)) { list.items = []; continue; }
-        list.items = list.items
-            .map(i => {
-                if (typeof i === 'string') return { text: i, enabled: true };
-                if (i && typeof i === 'object' && typeof i.text === 'string') return i;
-                return null;
-            })
-            .filter(i => i && i.text.trim().length > 0);
+        list.items = list.items.map(i => {
+            if (typeof i === 'string') return { text: i, enabled: true };
+            if (i && typeof i === 'object' && typeof i.text === 'string') return i;
+            return null;
+        }).filter(i => i && i.text.trim().length > 0);
         if (list.enabled === undefined) list.enabled = true;
         if (list.expanded === undefined) list.expanded = true;
         if (!list.name) list.name = key;
     }
-
-    // Чистим модули
     for (const gKey in state.modules) {
         const group = state.modules[gKey];
         if (!group.modules) group.modules = {};
@@ -469,13 +461,11 @@ function sanitizeData() {
         for (const mKey in group.modules) {
             const mod = group.modules[mKey];
             if (!Array.isArray(mod.items)) { mod.items = []; continue; }
-            mod.items = mod.items
-                .map(i => {
-                    if (typeof i === 'string') return { text: i, enabled: true };
-                    if (i && typeof i === 'object' && typeof i.text === 'string') return i;
-                    return null;
-                })
-                .filter(i => i && i.text.trim().length > 0);
+            mod.items = mod.items.map(i => {
+                if (typeof i === 'string') return { text: i, enabled: true };
+                if (i && typeof i === 'object' && typeof i.text === 'string') return i;
+                return null;
+            }).filter(i => i && i.text.trim().length > 0);
             if (mod.enabled === undefined) mod.enabled = true;
             if (!mod.name) mod.name = mKey;
         }
@@ -483,14 +473,11 @@ function sanitizeData() {
 }
 
 function save() {
-    localStorage.setItem('cg_lists', JSON.stringify(state.lists));
-    localStorage.setItem('cg_modules', JSON.stringify(state.modules));
-    localStorage.setItem('cg_history', JSON.stringify(state.history));
+    localStorage.setItem('cg_lists_v2', JSON.stringify(state.lists));
+    localStorage.setItem('cg_modules_v2', JSON.stringify(state.modules));
+    localStorage.setItem('cg_history_v2', JSON.stringify(state.history));
 }
 
-// ============================================================
-// НАВИГАЦИЯ
-// ============================================================
 function switchTab(name, btn) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -499,8 +486,6 @@ function switchTab(name, btn) {
     if (name === 'hist') renderHistory();
 }
 
-// ============================================================
-// ГЕНЕРАЦИЯ
 // ============================================================
 function randItem(items) {
     const active = items.filter(i => i.enabled && i.text && i.text !== "Отсутствует" && i.text !== "None");
@@ -535,7 +520,6 @@ function generate() {
     }
 
     if (paths.length === 0) { showToast("Все списки и модули отключены!"); return; }
-
     state.current = result;
     state.currentPaths = paths;
     renderResult(result, paths);
@@ -591,8 +575,6 @@ function copyShort() {
 }
 
 // ============================================================
-// ИСТОРИЯ
-// ============================================================
 function renderHistory() {
     const list = document.getElementById('historyList');
     const q = document.getElementById('search').value.toLowerCase();
@@ -638,8 +620,6 @@ function copyHist(id) {
 }
 
 // ============================================================
-// ВКЛАДКА «СПИСКИ»
-// ============================================================
 function renderLists() {
     const container = document.getElementById('listsContainer');
     container.innerHTML = '';
@@ -651,7 +631,6 @@ function renderLists() {
 function createListBlock(key, list) {
     const div = document.createElement('div');
     div.className = `list-block ${list.enabled ? '' : 'disabled'} ${list.expanded ? 'open' : ''}`;
-
     const active = list.items.filter(i => i.enabled).length;
 
     div.innerHTML = `
@@ -699,7 +678,7 @@ function renderListItems(key) {
     const list = state.lists[key];
 
     list.items.forEach((item, idx) => {
-        if (!item || !item.text) return; // защита
+        if (!item || !item.text) return;
         const row = document.createElement('div');
         row.className = `item ${item.enabled ? '' : 'disabled'}`;
 
@@ -711,7 +690,6 @@ function renderListItems(key) {
         const txt = document.createElement('span');
         txt.className = 'item-text';
         txt.textContent = item.text;
-
         txt.onclick = () => startEditListItem(key, idx, txt);
 
         const del = document.createElement('button');
@@ -783,8 +761,6 @@ function openEditList(key) {
     document.getElementById('editModal').classList.add('active');
 }
 
-// ============================================================
-// ВКЛАДКА «МОДУЛИ»
 // ============================================================
 function renderModules() {
     const container = document.getElementById('modulesContainer');
@@ -945,8 +921,6 @@ function openEditModule(gKey, mKey) {
 }
 
 // ============================================================
-// МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ (замена всего списка)
-// ============================================================
 function closeEdit() {
     document.getElementById('editModal').classList.remove('active');
     editContext = null;
@@ -958,11 +932,8 @@ function saveEdit() {
     const lines = text.split(/[\n,]+/).map(s => s.trim()).filter(s => s);
 
     let target;
-    if (editContext.type === 'list') {
-        target = state.lists[editContext.key].items;
-    } else {
-        target = state.modules[editContext.gKey].modules[editContext.mKey].items;
-    }
+    if (editContext.type === 'list') target = state.lists[editContext.key].items;
+    else target = state.modules[editContext.gKey].modules[editContext.mKey].items;
 
     const oldMap = {};
     target.forEach(i => { if (i && i.text) oldMap[i.text.toLowerCase()] = i.enabled; });
@@ -972,11 +943,8 @@ function saveEdit() {
         enabled: oldMap[t.toLowerCase()] !== undefined ? oldMap[t.toLowerCase()] : true
     }));
 
-    if (editContext.type === 'list') {
-        state.lists[editContext.key].items = newItems;
-    } else {
-        state.modules[editContext.gKey].modules[editContext.mKey].items = newItems;
-    }
+    if (editContext.type === 'list') state.lists[editContext.key].items = newItems;
+    else state.modules[editContext.gKey].modules[editContext.mKey].items = newItems;
 
     save();
     renderLists();
@@ -985,9 +953,6 @@ function saveEdit() {
     showToast(`Сохранено: ${lines.length}`);
 }
 
-// ============================================================
-// МАССОВЫЙ ИМПОРТ (добавление к существующим)
-// ============================================================
 function openBulkImport(type, key, mKey) {
     bulkContext = { type, key, mKey };
     const title = type === 'list' ? state.lists[key].name : state.modules[key].modules[mKey].name;
@@ -1007,11 +972,8 @@ function confirmBulkImport() {
     const lines = text.split(/[\n,]+/).map(s => s.trim()).filter(s => s);
 
     let target;
-    if (bulkContext.type === 'list') {
-        target = state.lists[bulkContext.key].items;
-    } else {
-        target = state.modules[bulkContext.key].modules[bulkContext.mKey].items;
-    }
+    if (bulkContext.type === 'list') target = state.lists[bulkContext.key].items;
+    else target = state.modules[bulkContext.key].modules[bulkContext.mKey].items;
 
     let added = 0, skipped = 0;
     lines.forEach(line => {
@@ -1030,9 +992,6 @@ function confirmBulkImport() {
     showToast(`Добавлено: ${added}${skipped ? `, пропущено: ${skipped}` : ''}`);
 }
 
-// ============================================================
-// СБРОС
-// ============================================================
 function resetAll() {
     if (!confirm('Сбросить все списки и модули к стандартным? Все ваши изменения будут потеряны.')) return;
     state.lists = JSON.parse(JSON.stringify(DEFAULT_LISTS));
@@ -1043,7 +1002,6 @@ function resetAll() {
     showToast('Сброшено');
 }
 
-// ============================================================
 function showToast(msg) {
     const t = document.getElementById('toast');
     t.textContent = msg;
