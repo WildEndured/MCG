@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Генератор Персонажей</title>
+<title>Генератор Персонажей + Правила</title>
 <style>
 :root {
     --bg: #1a1a2e;
@@ -16,6 +16,7 @@
     --clothes: #4a90d9;
     --race: #d9a441;
     --lists: #5cb85c;
+    --rules: #9b59b6;
 }
 * { box-sizing: border-box; }
 body {
@@ -31,11 +32,12 @@ body {
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     height: fit-content;
 }
-.tabs { display: flex; background: var(--header); }
+.tabs { display: flex; background: var(--header); flex-wrap: wrap; }
 .tab-btn {
-    flex: 1; padding: 14px 8px; background: none; border: none;
-    color: #888; font-size: 0.9rem; cursor: pointer; font-weight: bold;
+    flex: 1; padding: 12px 6px; background: none; border: none;
+    color: #888; font-size: 0.85rem; cursor: pointer; font-weight: bold;
     border-bottom: 3px solid transparent; transition: 0.3s;
+    min-width: 90px;
 }
 .tab-btn.active {
     color: var(--text); border-bottom-color: var(--accent);
@@ -60,6 +62,7 @@ body {
 .result-val { color: #fff; font-weight: bold; text-align: right; }
 .result-line.main .result-val { color: var(--accent); font-size: 1.05rem; }
 .result-line.slot .result-cat { color: var(--clothes); }
+.result-line.extra .result-val { color: var(--rules); font-style: italic; }
 
 .btn-main {
     background: var(--accent); color: white; border: none;
@@ -177,7 +180,6 @@ body {
 .group-body { padding-left: 8px; }
 .group-body.collapsed { display: none; }
 
-/* Модуль (Волосы, Одежда-слот) */
 .module {
     background: #0d1b2a; border-radius: 8px;
     margin-top: 8px; overflow: hidden;
@@ -201,7 +203,7 @@ body {
 }
 .module.open .module-toggle { transform: rotate(180deg); }
 
-/* Подкатегория (Форма, Длина) */
+/* Подкатегория */
 .subcat {
     background: #1a1a2e; border-radius: 6px;
     margin-top: 6px; overflow: hidden;
@@ -229,6 +231,54 @@ body {
     transition: 0.2s;
 }
 .subcat.open .subcat-toggle { transform: rotate(180deg); }
+
+/* ПРАВИЛА */
+.rule-card {
+    background: #0d1b2a; border-radius: 8px;
+    margin-bottom: 10px; overflow: hidden;
+    border-left: 3px solid var(--rules);
+}
+.rule-card.disabled { opacity: 0.5; }
+.rule-header {
+    display: flex; justify-content: space-between;
+    align-items: center; padding: 10px 15px;
+    background: var(--header);
+}
+.rule-header .rule-type {
+    font-size: 0.7rem; padding: 2px 8px; border-radius: 10px;
+    background: var(--rules); color: white; font-weight: bold;
+    text-transform: uppercase;
+}
+.rule-type-replace { background: var(--clothes); }
+.rule-type-exclude { background: var(--accent); }
+.rule-type-add { background: var(--race); color: #1a1a2e; }
+
+.rule-body { padding: 12px 15px; font-size: 0.85rem; line-height: 1.6; }
+.rule-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+.rule-row label { font-size: 0.8rem; color: #888; min-width: 80px; }
+.rule-row select, .rule-row input[type="text"] {
+    flex-grow: 1; padding: 6px 10px; border-radius: 5px;
+    border: 1px solid #333; background: #1a1a2e;
+    color: white; font-size: 0.85rem;
+    min-width: 150px;
+}
+.rule-row .arrow { color: var(--rules); font-weight: bold; font-size: 1.1rem; }
+
+.rule-actions {
+    display: flex; gap: 5px; margin-top: 10px;
+    justify-content: flex-end;
+}
+
+.add-rule-form {
+    background: #0d1b2a; padding: 15px;
+    border-radius: 8px; border: 1px dashed var(--rules);
+    margin-bottom: 15px;
+}
+
+.empty-state {
+    text-align: center; color: #666; padding: 30px;
+    font-size: 0.9rem;
+}
 
 /* Модальное окно */
 .modal-overlay {
@@ -271,6 +321,7 @@ body {
         <button class="tab-btn" onclick="switchTab('hist', this)">📜 История</button>
         <button class="tab-btn" onclick="switchTab('lists', this)">📋 Списки</button>
         <button class="tab-btn" onclick="switchTab('mod', this)">⚙️ Модули</button>
+        <button class="tab-btn" onclick="switchTab('rules', this)">🔗 Правила</button>
     </div>
 
     <div id="tab-gen" class="tab-content active">
@@ -305,6 +356,43 @@ body {
         </div>
         <div id="modulesContainer"></div>
     </div>
+
+    <div id="tab-rules" class="tab-content">
+        <div class="add-rule-form">
+            <h4 style="margin-top:0;">➕ Новое правило</h4>
+            <div class="rule-row">
+                <label>Тип:</label>
+                <select id="newRuleType" onchange="onRuleTypeChange()">
+                    <option value="replace">🔵 Замена (если X → Y)</option>
+                    <option value="exclude">🔴 Исключение (если X → убрать Y)</option>
+                    <option value="add">🟡 Добавить текст (если X → +текст)</option>
+                </select>
+            </div>
+            <div class="rule-row">
+                <label>Условие:</label>
+                <select id="newRuleCondModule"></select>
+                <span class="arrow">=</span>
+                <select id="newRuleCondValue"></select>
+            </div>
+            <div class="rule-row" id="actionReplaceRow">
+                <label>Действие:</label>
+                <select id="newRuleActModule"></select>
+                <span class="arrow">=</span>
+                <select id="newRuleActValue"></select>
+            </div>
+            <div class="rule-row" id="actionExcludeRow" style="display:none;">
+                <label>Убрать:</label>
+                <select id="newRuleExclModule"></select>
+                <input type="text" id="newRuleExclValue" placeholder="Значение (через запятую)">
+            </div>
+            <div class="rule-row" id="actionAddRow" style="display:none;">
+                <label>Текст:</label>
+                <input type="text" id="newRuleAddText" placeholder="torn clothes, pale skin">
+            </div>
+            <button class="btn-main" style="width:auto; margin:10px 0 0 0; padding:10px 20px; font-size:0.85rem;" onclick="addRule()">Добавить правило</button>
+        </div>
+        <div id="rulesContainer"></div>
+    </div>
 </div>
 
 <!-- МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ -->
@@ -320,12 +408,11 @@ body {
     </div>
 </div>
 
-<!-- МОДАЛЬНОЕ ОКНО МАССОВОГО ИМПОРТА -->
 <div class="modal-overlay" id="bulkImportModal">
     <div class="modal">
         <h3 id="bulkImportTitle">Массовый импорт</h3>
-        <p style="color:#888; font-size:0.85rem;">Вставьте значения: одно на строку или через запятую. Дубликаты пропускаются.</p>
-        <textarea id="bulkImportTextarea" placeholder="Arched bangs&#10;Blunt bangs&#10;Curtained bangs"></textarea>
+        <p style="color:#888; font-size:0.85rem;">Вставьте значения: одно на строку или через запятую.</p>
+        <textarea id="bulkImportTextarea"></textarea>
         <div class="modal-actions">
             <button class="btn-secondary" onclick="closeBulkImport()">Отмена</button>
             <button class="btn-main" style="width:auto; margin:0;" onclick="confirmBulkImport()">Добавить</button>
@@ -339,115 +426,57 @@ body {
 // ============================================================
 // ДЕФОЛТНЫЕ ДАННЫЕ
 // ============================================================
-
-// --- СПИСКИ (Расы и Стили) ---
 const DEFAULT_LISTS = {
     races: {
-        name: "🧬 Расы",
-        enabled: true,
-        expanded: true,
+        name: "🧬 Расы", enabled: true, expanded: true,
         items: ["Angel girl", "Arapaima girl", "Bat girl", "Bird girl", "Chimera", "Crocodile girl", "Crow girl", "Cat girl", "Cow girl", "Capybara girl", "Chicken girl", "Demon girl", "Doll girl", "Dragon girl", "Deer girl", "Elf", "Fish girl", "Fox girl", "Gargoyle girl", "Ghost girl", "Horse girl", "Insect girl", "Jackal girl", "Kitsune girl", "Mimic", "Orca girl", "Program girl", "Panda girl", "Rat girl", "Rabbit girl", "Reptile girl", "Snake girl", "Slime girl", "Serval girl", "Shark girl", "Succubus", "Sheep girl", "Tiger girl", "Vampire girl", "Wolf girl", "Wyrm girl", "Zombie girl"]
     },
     styles: {
-        name: "👗 Стили одежды",
-        enabled: true,
-        expanded: true,
+        name: "👗 Стили одежды", enabled: true, expanded: true,
         items: ["Ancient Egyptian", "Boho-chic", "Casual", "Gyaru", "Grunge", "Gothic Lolita", "Jester", "Japanese clothes", "Jirai key", "Maid", "Nun", "Naval", "Punk", "Prison", "Rags", "Sportswear", "Swimsuit", "Streetwear", "Techwear", "Witch", "Winter clothes", "Y2K"]
     }
 };
 
-// --- МОДУЛИ (с подкатегориями) ---
-// module = слот (Bangs), внутри subcategories (Форма, Длина) со своими items
 const DEFAULT_MODULES = {
     appearance: {
-        name: "🎨 Модуль базовой внешности",
-        groupClass: "group-appearance",
-        expanded: true,
+        name: "🎨 Модуль базовой внешности", groupClass: "group-appearance", expanded: true,
         modules: {
-            // === ВОЛОСЫ: 4 слота, у каждого свои подкатегории ===
             bangs: {
-                name: "Bangs (чёлка)",
-                enabled: true,
-                expanded: false,
+                name: "Bangs (чёлка)", enabled: true, expanded: false,
                 subcategories: {
-                    shape: {
-                        name: "Форма", enabled: true, expanded: false,
-                        items: ["Arched bangs", "Asymmetrical bangs", "Blunt bangs", "Crossed", "Curtained bangs", "Diagonal bangs", "Hime cut", "Wispy bangs", "Choppy bangs", "Fanged bangs", "Parted bangs", "Double-parted bangs", "Middle part", "Swept bangs", "Side part", "Bangs pinned back", "Center flap bangs"]
-                    },
-                    length: {
-                        name: "Длина", enabled: true, expanded: false,
-                        items: ["Short bangs", "Medium bangs", "Long bangs"]
-                    },
-                    special: {
-                        name: "Особые", enabled: true, expanded: false,
-                        items: ["Hair between eyes", "Long hair between eyes", "Hair over one eye", "Hair over eyes"]
-                    }
+                    shape: { name: "Форма", enabled: true, expanded: false, items: ["Arched bangs", "Asymmetrical bangs", "Blunt bangs", "Crossed", "Curtained bangs", "Diagonal bangs", "Hime cut", "Wispy bangs", "Choppy bangs", "Fanged bangs", "Parted bangs", "Double-parted bangs", "Middle part", "Swept bangs", "Side part", "Bangs pinned back", "Center flap bangs"] },
+                    length: { name: "Длина", enabled: true, expanded: false, items: ["Short bangs", "Medium bangs", "Long bangs"] },
+                    special: { name: "Особые", enabled: true, expanded: false, items: ["Hair between eyes", "Long hair between eyes", "Hair over one eye", "Hair over eyes"] }
                 }
             },
             sidelocks: {
-                name: "Sidelocks (боковые пряди)",
-                enabled: true,
-                expanded: false,
+                name: "Sidelocks (боковые пряди)", enabled: true, expanded: false,
                 subcategories: {
-                    shape: {
-                        name: "Форма", enabled: true, expanded: false,
-                        items: ["Single sidelock", "Long single sidelock", "Single braided sidelock", "Ring sidelocks", "Braided sidelock", "Drill sidelocks", "Flipped sidelocks", "Blunt sidelocks", "Wavy sidelocks", "Curly sidelocks", "Blunt tesses"]
-                    },
-                    length: {
-                        name: "Длина", enabled: true, expanded: false,
-                        items: ["Medium sidelock", "Long sidelocks", "Very long sidelocks", "Absurdly long sidelocks"]
-                    },
-                    position: {
-                        name: "Положение", enabled: true, expanded: false,
-                        items: ["Low tied sidelock", "Sidelocks tied back"]
-                    }
+                    shape: { name: "Форма", enabled: true, expanded: false, items: ["Single sidelock", "Long single sidelock", "Single braided sidelock", "Ring sidelocks", "Braided sidelock", "Drill sidelocks", "Flipped sidelocks", "Blunt sidelocks", "Wavy sidelocks", "Curly sidelocks", "Blunt tesses"] },
+                    length: { name: "Длина", enabled: true, expanded: false, items: ["Medium sidelock", "Long sidelocks", "Very long sidelocks", "Absurdly long sidelocks"] },
+                    position: { name: "Положение", enabled: true, expanded: false, items: ["Low tied sidelock", "Sidelocks tied back"] }
                 }
             },
             backHair: {
-                name: "Back hair (задние волосы)",
-                enabled: true,
-                expanded: false,
-                subcategories: {
-                    shape: {
-                        name: "Форма", enabled: true, expanded: false,
-                        items: ["Хвост", "Косички", "Распущенные", "Пучок"]
-                    }
-                }
+                name: "Back hair (задние волосы)", enabled: true, expanded: false,
+                subcategories: { shape: { name: "Форма", enabled: true, expanded: false, items: ["Хвост", "Косички", "Распущенные", "Пучок"] } }
             },
             addHair: {
-                name: "Additional hair (доп.)",
-                enabled: true,
-                expanded: false,
-                subcategories: {
-                    type: {
-                        name: "Тип", enabled: true, expanded: false,
-                        items: ["Ахоге", "Пучок", "Хвостик"]
-                    }
-                }
+                name: "Additional hair (доп.)", enabled: true, expanded: false,
+                subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Ахоге", "Пучок", "Хвостик"] } }
             },
-            // === ДРУГИЕ СЛОТЫ (плоские, без подкатегорий) ===
             eyeShape: {
-                name: "Форма глаз",
-                enabled: true,
-                expanded: false,
-                subcategories: {
-                    type: { name: "Тип", enabled: true, expanded: false, items: ["Большие", "Узкие", "Круглые", "Закрытые"] }
-                }
+                name: "Форма глаз", enabled: true, expanded: false,
+                subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Большие", "Узкие", "Круглые", "Закрытые"] } }
             },
             skinColor: {
-                name: "Цвет кожи",
-                enabled: true,
-                expanded: false,
-                subcategories: {
-                    type: { name: "Тип", enabled: true, expanded: false, items: ["Бледная", "Загорелая", "Тёмная", "Оливковая"] }
-                }
+                name: "Цвет кожи", enabled: true, expanded: false,
+                subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Бледная", "Загорелая", "Тёмная", "Оливковая"] } }
             }
         }
     },
     clothes: {
-        name: "👗 Модуль одежды",
-        groupClass: "group-clothes",
-        expanded: true,
+        name: "👗 Модуль одежды", groupClass: "group-clothes", expanded: true,
         modules: {
             headwear:   { name: "Headwear",     enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Шляпа", "Капюшон", "Ободок", "Шапка"] } } },
             neckwear:   { name: "Neckwear",     enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Чокер", "Шарф", "Ожерелье"] } } },
@@ -464,9 +493,7 @@ const DEFAULT_MODULES = {
         }
     },
     race: {
-        name: "🧬 Модуль расы",
-        groupClass: "group-race",
-        expanded: true,
+        name: "🧬 Модуль расы", groupClass: "group-race", expanded: true,
         modules: {
             trait1: { name: "Расовая черта 1", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Animal ears", "Horns", "Tail", "Wings", "Halos"] } } },
             trait2: { name: "Расовая черта 2", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Fangs", "Claws", "Glowing eyes", "Scales"] } } },
@@ -485,9 +512,11 @@ const DEFAULT_MODULES = {
 let state = {
     lists: null,
     modules: null,
+    rules: [],   // { id, type: 'replace'|'exclude'|'add', condition: {path, value}, action: {...}, enabled: true }
     history: [],
     current: {},
-    currentPaths: []
+    currentPaths: [],
+    extraText: ''   // текст от правил-add, добавляется к промпту
 };
 
 let editContext = null;
@@ -499,10 +528,12 @@ let bulkContext = null;
 function init() {
     const savedLists = localStorage.getItem('cg_lists_v2');
     const savedModules = localStorage.getItem('cg_modules_v2');
+    const savedRules = localStorage.getItem('cg_rules');
     const savedHist = localStorage.getItem('cg_history');
 
     state.lists = savedLists ? JSON.parse(savedLists) : null;
     state.modules = savedModules ? JSON.parse(savedModules) : null;
+    state.rules = savedRules ? JSON.parse(savedRules) : [];
     state.history = savedHist ? JSON.parse(savedHist) : [];
 
     if (!state.lists || !isValidListStructure(state.lists)) {
@@ -511,12 +542,13 @@ function init() {
     if (!state.modules || !isValidModuleStructure(state.modules)) {
         state.modules = JSON.parse(JSON.stringify(DEFAULT_MODULES));
     }
-
     sanitizeData();
     save();
     renderLists();
     renderModules();
+    renderRules();
     renderHistory();
+    populateRuleSelects();
 }
 
 function isValidListStructure(lists) {
@@ -528,7 +560,6 @@ function isValidListStructure(lists) {
     }
     return true;
 }
-
 function isValidModuleStructure(modules) {
     for (const gKey in modules) {
         const group = modules[gKey];
@@ -543,9 +574,7 @@ function isValidModuleStructure(modules) {
     }
     return true;
 }
-
 function sanitizeData() {
-    // Списки
     for (const key in state.lists) {
         const list = state.lists[key];
         if (!Array.isArray(list.items)) { list.items = []; continue; }
@@ -557,19 +586,15 @@ function sanitizeData() {
         if (list.enabled === undefined) list.enabled = true;
         if (list.expanded === undefined) list.expanded = true;
     }
-
-    // Модули
     for (const gKey in state.modules) {
         const group = state.modules[gKey];
         if (!group.modules) group.modules = {};
         if (group.expanded === undefined) group.expanded = true;
-
         for (const mKey in group.modules) {
             const mod = group.modules[mKey];
             if (!mod.subcategories) mod.subcategories = {};
             if (mod.enabled === undefined) mod.enabled = true;
             if (mod.expanded === undefined) mod.expanded = false;
-
             for (const sKey in mod.subcategories) {
                 const sub = mod.subcategories[sKey];
                 if (!Array.isArray(sub.items)) { sub.items = []; continue; }
@@ -584,10 +609,10 @@ function sanitizeData() {
         }
     }
 }
-
 function save() {
     localStorage.setItem('cg_lists_v2', JSON.stringify(state.lists));
     localStorage.setItem('cg_modules_v2', JSON.stringify(state.modules));
+    localStorage.setItem('cg_rules', JSON.stringify(state.rules));
     localStorage.setItem('cg_history', JSON.stringify(state.history));
 }
 
@@ -600,13 +625,47 @@ function switchTab(name, btn) {
     document.getElementById(`tab-${name}`).classList.add('active');
     btn.classList.add('active');
     if (name === 'hist') renderHistory();
+    if (name === 'rules') { populateRuleSelects(); renderRules(); }
 }
 
 // ============================================================
-// ГЕНЕРАЦИЯ
+// СПИСОК ВСЕХ ВОЗМОЖНЫХ ПУТЕЙ (для правил)
+// ============================================================
+function getAllPaths() {
+    const paths = [];
+    // Списки
+    paths.push({ path: 'list.races', name: 'Расы', items: state.lists.races.items });
+    paths.push({ path: 'list.styles', name: 'Стили', items: state.lists.styles.items });
+    // Модули
+    for (const gKey in state.modules) {
+        const group = state.modules[gKey];
+        for (const mKey in group.modules) {
+            const mod = group.modules[mKey];
+            const allItems = [];
+            for (const sKey in mod.subcategories) {
+                allItems.push(...mod.subcategories[sKey].items);
+            }
+            paths.push({
+                path: `${gKey}.${mKey}`,
+                name: `${group.name.replace(/^[^\s]+\s/, '')} → ${mod.name}`,
+                items: allItems
+            });
+        }
+    }
+    return paths;
+}
+
+// ============================================================
+// ГЕНЕРАЦИЯ С ПРАВИЛАМИ
 // ============================================================
 function randItem(items) {
     const active = items.filter(i => i.enabled && i.text && i.text !== "Отсутствует" && i.text !== "None");
+    if (active.length === 0) return null;
+    return active[Math.floor(Math.random() * active.length)].text;
+}
+function randItemExcluding(items, excludeList) {
+    const excludeLower = excludeList.map(s => s.toLowerCase());
+    const active = items.filter(i => i.enabled && i.text && i.text !== "Отсутствует" && i.text !== "None" && !excludeLower.includes(i.text.toLowerCase()));
     if (active.length === 0) return null;
     return active[Math.floor(Math.random() * active.length)].text;
 }
@@ -614,55 +673,109 @@ function randItem(items) {
 function generate() {
     const result = {};
     const paths = [];
+    const extraTexts = [];
 
-    // 1. Раса
+    // === 1. Первый проход: генерируем всё как обычно ===
     if (state.lists.races.enabled) {
         const race = randItem(state.lists.races.items);
         if (race) { result['list.races'] = race; paths.push('list.races'); }
     }
-
-    // 2. Стиль
     if (state.lists.styles.enabled) {
         const style = randItem(state.lists.styles.items);
         if (style) { result['list.styles'] = style; paths.push('list.styles'); }
     }
-
-    // 3. Модули
     for (const gKey in state.modules) {
         const group = state.modules[gKey];
         for (const mKey in group.modules) {
             const mod = group.modules[mKey];
             if (!mod.enabled) continue;
-
-            // Собираем значения из всех активных подкатегорий
             const slotValues = [];
-            const subValues = {};
-
             for (const sKey in mod.subcategories) {
                 const sub = mod.subcategories[sKey];
                 if (!sub.enabled) continue;
                 const v = randItem(sub.items);
-                if (v) {
-                    slotValues.push(v);
-                    subValues[sKey] = v;
-                }
+                if (v) slotValues.push(v);
             }
-
             if (slotValues.length > 0) {
                 const path = `${gKey}.${mKey}`;
                 result[path] = slotValues.join(', ');
-                result[`${path}__subs`] = subValues; // сохраняем по подкатегориям
                 paths.push(path);
             }
         }
     }
 
+    // === 2. Применяем правила ===
+    const activeRules = state.rules.filter(r => r.enabled);
+
+    // 2.1 Замены
+    activeRules.filter(r => r.type === 'replace').forEach(rule => {
+        const condPath = rule.condition.path;
+        const condVal = rule.condition.value;
+        // Проверяем условие: если в текущем результате есть это значение
+        if (matchesCondition(result, condPath, condVal)) {
+            // Применяем: заменяем целое значение action.path на action.value
+            const actPath = rule.action.path;
+            const actVal = rule.action.value;
+            if (actPath) {
+                result[actPath] = actVal;
+                if (!paths.includes(actPath)) paths.push(actPath);
+            }
+        }
+    });
+
+    // 2.2 Исключения (перегенерируем те модули, где есть исключения)
+    const excludeRules = activeRules.filter(r => r.type === 'exclude');
+    excludeRules.forEach(rule => {
+        if (matchesCondition(result, rule.condition.path, rule.condition.value)) {
+            const exclPath = rule.action.path;
+            const exclValues = rule.action.values || [];
+            if (!exclPath) return;
+
+            // Если это простой путь модуля — перегенерируем
+            if (exclPath.startsWith('list.')) {
+                const listKey = exclPath.split('.')[1];
+                const newVal = randItemExcluding(state.lists[listKey].items, exclValues);
+                if (newVal) result[exclPath] = newVal;
+            } else {
+                const [gKey, mKey] = exclPath.split('.');
+                const mod = state.modules[gKey] && state.modules[gKey].modules[mKey];
+                if (!mod || !mod.enabled) return;
+                // Идём по подкатегориям и перегенерируем
+                const slotValues = [];
+                for (const sKey in mod.subcategories) {
+                    const sub = mod.subcategories[sKey];
+                    if (!sub.enabled) continue;
+                    const v = randItemExcluding(sub.items, exclValues);
+                    if (v) slotValues.push(v);
+                }
+                if (slotValues.length > 0) result[exclPath] = slotValues.join(', ');
+            }
+        }
+    });
+
+    // 2.3 Добавление текста
+    activeRules.filter(r => r.type === 'add').forEach(rule => {
+        if (matchesCondition(result, rule.condition.path, rule.condition.value)) {
+            if (rule.action.text) extraTexts.push(rule.action.text);
+        }
+    });
+
     if (paths.length === 0) { showToast("Все списки и модули отключены!"); return; }
 
     state.current = result;
     state.currentPaths = paths;
-    renderResult(result, paths);
-    addHistory(result, paths);
+    state.extraText = extraTexts.join(', ');
+    renderResult(result, paths, extraTexts);
+    addHistory(result, paths, extraTexts);
+}
+
+function matchesCondition(result, condPath, condVal) {
+    if (!condPath || !condVal) return false;
+    const currentVal = result[condPath];
+    if (!currentVal) return false;
+    // Проверяем совпадение (в т.ч. если в значении несколько через запятую)
+    const currentParts = currentVal.split(',').map(s => s.trim().toLowerCase());
+    return currentParts.includes(condVal.toLowerCase());
 }
 
 function getPathName(path) {
@@ -671,27 +784,32 @@ function getPathName(path) {
     return state.modules[g].modules[m].name;
 }
 
-function renderResult(result, paths) {
+function renderResult(result, paths, extraTexts) {
     const box = document.getElementById('resultBox');
     box.innerHTML = '';
-
     paths.forEach(path => {
         const name = getPathName(path);
         const isMain = path === 'list.races' || path === 'list.styles';
         const isSlot = !path.startsWith('list.');
-
         const line = document.createElement('div');
         line.className = `result-line ${isMain ? 'main' : ''} ${isSlot ? 'slot' : ''}`;
         line.innerHTML = `<span class="result-cat">${name}</span><span class="result-val">${result[path]}</span>`;
         box.appendChild(line);
     });
+    if (extraTexts && extraTexts.length > 0) {
+        const line = document.createElement('div');
+        line.className = 'result-line extra';
+        line.innerHTML = `<span class="result-cat">🔗 Дополнительно</span><span class="result-val">${extraTexts.join(', ')}</span>`;
+        box.appendChild(line);
+    }
 }
 
-function addHistory(result, paths) {
+function addHistory(result, paths, extraTexts) {
     state.history.unshift({
         id: Date.now(),
         result: JSON.parse(JSON.stringify(result)),
         paths: [...paths],
+        extraTexts: extraTexts || [],
         date: new Date().toLocaleString('ru-RU'),
         favorite: false
     });
@@ -699,20 +817,24 @@ function addHistory(result, paths) {
     save();
 }
 
-function formatPrompt(result, paths) {
-    return paths.map(p => `${getPathName(p)}: ${result[p]}`).join('\n');
+function formatPrompt(result, paths, extraTexts) {
+    let out = paths.map(p => `${getPathName(p)}: ${result[p]}`).join('\n');
+    if (extraTexts && extraTexts.length > 0) out += `\nДополнительно: ${extraTexts.join(', ')}`;
+    return out;
 }
-function formatShort(result, paths) {
-    return paths.map(p => result[p]).join(', ');
+function formatShort(result, paths, extraTexts) {
+    let out = paths.map(p => result[p]).join(', ');
+    if (extraTexts && extraTexts.length > 0) out += `, ${extraTexts.join(', ')}`;
+    return out;
 }
 function copyResult() {
     if (!state.currentPaths.length) { showToast('Сначала сгенерируйте!'); return; }
-    navigator.clipboard.writeText(formatPrompt(state.current, state.currentPaths));
+    navigator.clipboard.writeText(formatPrompt(state.current, state.currentPaths, state.extraText ? [state.extraText] : []));
     showToast('Скопировано!');
 }
 function copyShort() {
     if (!state.currentPaths.length) { showToast('Сначала сгенерируйте!'); return; }
-    navigator.clipboard.writeText(formatShort(state.current, state.currentPaths));
+    navigator.clipboard.writeText(formatShort(state.current, state.currentPaths, state.extraText ? [state.extraText] : []));
     showToast('Скопировано!');
 }
 
@@ -723,7 +845,7 @@ function renderHistory() {
     const list = document.getElementById('historyList');
     const q = document.getElementById('search').value.toLowerCase();
     list.innerHTML = '';
-    const filtered = state.history.filter(it => formatShort(it.result, it.paths).toLowerCase().includes(q));
+    const filtered = state.history.filter(it => formatShort(it.result, it.paths, it.extraTexts || []).toLowerCase().includes(q));
     if (filtered.length === 0) {
         list.innerHTML = '<p style="text-align:center; color:#666;">История пуста.</p>';
         return;
@@ -740,7 +862,7 @@ function renderHistory() {
                     <button class="icon-btn" onclick="delHist(${it.id})">❌</button>
                 </div>
             </div>
-            <div class="history-details">${formatShort(it.result, it.paths)}</div>
+            <div class="history-details">${formatShort(it.result, it.paths, it.extraTexts || [])}</div>
         `;
         list.appendChild(div);
     });
@@ -760,52 +882,214 @@ function clearHistory() {
 }
 function copyHist(id) {
     const it = state.history.find(i => i.id === id);
-    if (it) { navigator.clipboard.writeText(formatPrompt(it.result, it.paths)); showToast('Скопировано!'); }
+    if (it) { navigator.clipboard.writeText(formatPrompt(it.result, it.paths, it.extraTexts || [])); showToast('Скопировано!'); }
 }
 
 // ============================================================
-// ВКЛАДКА «СПИСКИ»
+// ПРАВИЛА — UI
+// ============================================================
+function populateRuleSelects() {
+    const paths = getAllPaths();
+    const selects = ['newRuleCondModule', 'newRuleActModule', 'newRuleExclModule'];
+    selects.forEach(selId => {
+        const sel = document.getElementById(selId);
+        if (!sel) return;
+        const currentVal = sel.value;
+        sel.innerHTML = '';
+        paths.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.path;
+            opt.textContent = p.name;
+            sel.appendChild(opt);
+        });
+        if (currentVal) sel.value = currentVal;
+    });
+    onRuleCondModuleChange();
+    onRuleActModuleChange();
+    onRuleExclModuleChange();
+}
+
+function getItemsByPath(path) {
+    if (path.startsWith('list.')) return state.lists[path.split('.')[1]].items;
+    const [g, m] = path.split('.');
+    if (!state.modules[g] || !state.modules[g].modules[m]) return [];
+    const all = [];
+    for (const sKey in state.modules[g].modules[m].subcategories) {
+        all.push(...state.modules[g].modules[m].subcategories[sKey].items);
+    }
+    return all;
+}
+
+function onRuleCondModuleChange() {
+    const sel = document.getElementById('newRuleCondModule');
+    const valSel = document.getElementById('newRuleCondValue');
+    if (!sel || !valSel) return;
+    const items = getItemsByPath(sel.value);
+    valSel.innerHTML = '';
+    items.filter(i => i.enabled).forEach(i => {
+        const opt = document.createElement('option');
+        opt.value = i.text;
+        opt.textContent = i.text;
+        valSel.appendChild(opt);
+    });
+}
+function onRuleActModuleChange() {
+    const sel = document.getElementById('newRuleActModule');
+    const valSel = document.getElementById('newRuleActValue');
+    if (!sel || !valSel) return;
+    const items = getItemsByPath(sel.value);
+    valSel.innerHTML = '';
+    items.filter(i => i.enabled).forEach(i => {
+        const opt = document.createElement('option');
+        opt.value = i.text;
+        opt.textContent = i.text;
+        valSel.appendChild(opt);
+    });
+}
+function onRuleExclModuleChange() {
+    // для исключений вводится текст вручную
+}
+
+function onRuleTypeChange() {
+    const t = document.getElementById('newRuleType').value;
+    document.getElementById('actionReplaceRow').style.display = t === 'replace' ? 'flex' : 'none';
+    document.getElementById('actionExcludeRow').style.display = t === 'exclude' ? 'flex' : 'none';
+    document.getElementById('actionAddRow').style.display = t === 'add' ? 'flex' : 'none';
+}
+
+function addRule() {
+    const type = document.getElementById('newRuleType').value;
+    const condPath = document.getElementById('newRuleCondModule').value;
+    const condValue = document.getElementById('newRuleCondValue').value;
+
+    if (!condPath || !condValue) { showToast('Заполните условие!'); return; }
+
+    const rule = {
+        id: Date.now(),
+        type: type,
+        condition: { path: condPath, value: condValue },
+        action: {},
+        enabled: true
+    };
+
+    if (type === 'replace') {
+        const actPath = document.getElementById('newRuleActModule').value;
+        const actValue = document.getElementById('newRuleActValue').value;
+        if (!actPath || !actValue) { showToast('Заполните действие!'); return; }
+        rule.action = { path: actPath, value: actValue };
+    } else if (type === 'exclude') {
+        const actPath = document.getElementById('newRuleExclModule').value;
+        const actValues = document.getElementById('newRuleExclValue').value.split(',').map(s => s.trim()).filter(s => s);
+        if (!actPath || actValues.length === 0) { showToast('Заполните действие!'); return; }
+        rule.action = { path: actPath, values: actValues };
+    } else if (type === 'add') {
+        const text = document.getElementById('newRuleAddText').value.trim();
+        if (!text) { showToast('Введите текст!'); return; }
+        rule.action = { text: text };
+    }
+
+    state.rules.push(rule);
+    save();
+    renderRules();
+    showToast('Правило добавлено');
+
+    // Очистка
+    document.getElementById('newRuleExclValue').value = '';
+    document.getElementById('newRuleAddText').value = '';
+}
+
+function renderRules() {
+    const container = document.getElementById('rulesContainer');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (state.rules.length === 0) {
+        container.innerHTML = '<div class="empty-state">Пока нет правил.<br>Создайте первое — например, «Если раса = Dragon girl → добавить Scales».</div>';
+        return;
+    }
+
+    state.rules.forEach(rule => {
+        const div = document.createElement('div');
+        div.className = `rule-card ${rule.enabled ? '' : 'disabled'}`;
+
+        const typeLabel = rule.type === 'replace' ? '🔵 Замена' : rule.type === 'exclude' ? '🔴 Исключение' : '🟡 Добавить';
+        const typeClass = rule.type === 'replace' ? 'rule-type-replace' : rule.type === 'exclude' ? 'rule-type-exclude' : 'rule-type-add';
+
+        const condName = getPathName(rule.condition.path) || rule.condition.path;
+
+        let actionText = '';
+        if (rule.type === 'replace') {
+            const actName = getPathName(rule.action.path) || rule.action.path;
+            actionText = `<b>${actName}</b> = <b style="color:var(--clothes);">${rule.action.value}</b>`;
+        } else if (rule.type === 'exclude') {
+            const actName = getPathName(rule.action.path) || rule.action.path;
+            actionText = `убрать из <b>${actName}</b>: <b style="color:var(--accent);">${rule.action.values.join(', ')}</b>`;
+        } else if (rule.type === 'add') {
+            actionText = `добавить текст: <b style="color:var(--race);">${rule.action.text}</b>`;
+        }
+
+        div.innerHTML = `
+            <div class="rule-header">
+                <span class="rule-type ${typeClass}">${typeLabel}</span>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <label style="font-size:0.75rem; cursor:pointer;">
+                        <input type="checkbox" ${rule.enabled ? 'checked' : ''} onchange="toggleRule(${rule.id})" style="accent-color: var(--rules);"> Вкл
+                    </label>
+                    <button class="icon-btn" onclick="deleteRule(${rule.id})">❌</button>
+                </div>
+            </div>
+            <div class="rule-body">
+                <b>Если</b> ${condName} = <b style="color:var(--rules);">${rule.condition.value}</b><br>
+                <b>Тогда</b> ${actionText}
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function toggleRule(id) {
+    const r = state.rules.find(x => x.id === id);
+    if (r) { r.enabled = !r.enabled; save(); renderRules(); }
+}
+function deleteRule(id) {
+    state.rules = state.rules.filter(x => x.id !== id);
+    save(); renderRules();
+}
+
+// ============================================================
+// СПИСКИ / МОДУЛИ / РЕНДЕР (те же функции, что и раньше)
 // ============================================================
 function renderLists() {
     const container = document.getElementById('listsContainer');
     container.innerHTML = '';
-    for (const key in state.lists) {
-        container.appendChild(createListBlock(key, state.lists[key]));
-    }
+    for (const key in state.lists) container.appendChild(createListBlock(key, state.lists[key]));
 }
-
 function createListBlock(key, list) {
     const div = document.createElement('div');
     div.className = `list-block ${list.enabled ? '' : 'disabled'} ${list.expanded ? 'open' : ''}`;
     const active = list.items.filter(i => i.enabled).length;
-
     div.innerHTML = `
         <div class="list-header">
-            <div>
-                <h3>${list.name}</h3>
-                <span class="list-counter">Активно: ${active} / ${list.items.length}</span>
-            </div>
+            <div><h3>${list.name}</h3><span class="list-counter">Активно: ${active} / ${list.items.length}</span></div>
             <div class="list-controls">
                 <label style="font-size:0.75rem; cursor:pointer;">
                     <input type="checkbox" ${list.enabled ? 'checked' : ''} onchange="toggleList('${key}')" style="accent-color: var(--accent);"> Вкл
                 </label>
-                <button class="icon-btn" onclick="event.stopPropagation(); openEditList('${key}')" title="Редактировать">✏️</button>
+                <button class="icon-btn" onclick="event.stopPropagation(); openEditList('${key}')">✏️</button>
                 <span style="font-size:0.9rem;">${list.expanded ? '▼' : '▶'}</span>
             </div>
         </div>
     `;
-
     const body = document.createElement('div');
     body.className = 'list-body';
     body.innerHTML = `
         <div class="add-row">
             <input type="text" placeholder="Добавить..." onkeydown="if(event.key==='Enter') addListItem('${key}', this)">
             <button onclick="addListItem('${key}', this.previousElementSibling)">+</button>
-            <button class="import-btn" onclick="openBulkImport('list','${key}')" title="Массовый импорт">📥</button>
+            <button class="import-btn" onclick="openBulkImport('list','${key}')">📥</button>
         </div>
         <div class="item-list" id="list-values-${key}"></div>
     `;
-
     div.querySelector('.list-header').onclick = (e) => {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'LABEL') return;
         list.expanded = !list.expanded; save(); renderLists();
@@ -814,78 +1098,50 @@ function createListBlock(key, list) {
     setTimeout(() => renderListItems(key), 0);
     return div;
 }
-
 function renderListItems(key) {
     const container = document.getElementById(`list-values-${key}`);
     if (!container) return;
     container.innerHTML = '';
     const list = state.lists[key];
-
     list.items.forEach((item, idx) => {
         if (!item || !item.text) return;
         const row = document.createElement('div');
         row.className = `item ${item.enabled ? '' : 'disabled'}`;
-
         const cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.checked = item.enabled;
+        cb.type = 'checkbox'; cb.checked = item.enabled;
         cb.onchange = () => { item.enabled = !item.enabled; save(); renderListItems(key); };
-
         const txt = document.createElement('span');
-        txt.className = 'item-text';
-        txt.textContent = item.text;
+        txt.className = 'item-text'; txt.textContent = item.text;
         txt.onclick = () => startEditListItem(key, idx, txt);
-
         const del = document.createElement('button');
-        del.className = 'icon-btn';
-        del.textContent = '❌';
+        del.className = 'icon-btn'; del.textContent = '❌';
         del.onclick = () => { list.items.splice(idx, 1); save(); renderListItems(key); };
-
         row.appendChild(cb); row.appendChild(txt); row.appendChild(del);
         container.appendChild(row);
     });
-
     const header = container.closest('.list-block').querySelector('.list-counter');
     const active = list.items.filter(i => i.enabled).length;
     header.textContent = `Активно: ${active} / ${list.items.length}`;
 }
-
-function toggleList(key) {
-    state.lists[key].enabled = !state.lists[key].enabled;
-    save(); renderLists();
-}
+function toggleList(key) { state.lists[key].enabled = !state.lists[key].enabled; save(); renderLists(); }
 function startEditListItem(key, idx, span) {
-    const list = state.lists[key];
-    const old = list.items[idx].text;
-    const inp = document.createElement('input');
-    inp.type = 'text'; inp.value = old;
+    const list = state.lists[key]; const old = list.items[idx].text;
+    const inp = document.createElement('input'); inp.type = 'text'; inp.value = old;
     span.replaceWith(inp); inp.focus();
-    const finish = () => {
-        const v = inp.value.trim();
-        if (v && v !== old) { list.items[idx].text = v; save(); }
-        renderListItems(key);
-    };
+    const finish = () => { const v = inp.value.trim(); if (v && v !== old) { list.items[idx].text = v; save(); } renderListItems(key); };
     inp.onblur = finish;
-    inp.onkeydown = (e) => {
-        if (e.key === 'Enter') finish();
-        if (e.key === 'Escape') renderListItems(key);
-    };
+    inp.onkeydown = (e) => { if (e.key === 'Enter') finish(); if (e.key === 'Escape') renderListItems(key); };
 }
 function addListItem(key, inputEl) {
-    const v = inputEl.value.trim();
-    if (!v) return;
+    const v = inputEl.value.trim(); if (!v) return;
     const list = state.lists[key];
     if (list.items.some(i => i.text.toLowerCase() === v.toLowerCase())) { showToast('Уже есть!'); return; }
-    list.items.push({ text: v, enabled: true });
-    inputEl.value = '';
+    list.items.push({ text: v, enabled: true }); inputEl.value = '';
     save(); renderListItems(key);
 }
 function sortLists() {
-    for (const key in state.lists) {
-        state.lists[key].items.sort((a, b) => a.text.localeCompare(b.text));
-    }
-    save(); renderLists();
-    showToast('Отсортировано');
+    for (const key in state.lists) state.lists[key].items.sort((a, b) => a.text.localeCompare(b.text));
+    save(); renderLists(); showToast('Отсортировано');
 }
 function openEditList(key) {
     editContext = { type: 'list', key };
@@ -895,9 +1151,7 @@ function openEditList(key) {
     document.getElementById('editModal').classList.add('active');
 }
 
-// ============================================================
-// ВКЛАДКА «МОДУЛИ»
-// ============================================================
+// МОДУЛИ
 function renderModules() {
     const container = document.getElementById('modulesContainer');
     container.innerHTML = '';
@@ -908,30 +1162,22 @@ function renderModules() {
         title.innerHTML = `<span>${group.name}</span><span>${group.expanded ? '▼' : '▶'}</span>`;
         title.onclick = () => { group.expanded = !group.expanded; save(); renderModules(); };
         container.appendChild(title);
-
         const body = document.createElement('div');
         body.className = `group-body ${group.expanded ? '' : 'collapsed'}`;
-        for (const mKey in group.modules) {
-            body.appendChild(createModule(gKey, mKey, group.modules[mKey]));
-        }
+        for (const mKey in group.modules) body.appendChild(createModule(gKey, mKey, group.modules[mKey]));
         container.appendChild(body);
     }
 }
-
 function createModule(gKey, mKey, mod) {
     const div = document.createElement('div');
     div.className = `module ${mod.enabled ? '' : 'disabled'} ${mod.expanded ? 'open' : ''}`;
-
-    // Считаем активные подкатегории и общее число активных значений
     let activeSubs = 0, totalSubs = 0, totalActive = 0, totalItems = 0;
     for (const sKey in mod.subcategories) {
         const sub = mod.subcategories[sKey];
-        totalSubs++;
-        if (sub.enabled) activeSubs++;
+        totalSubs++; if (sub.enabled) activeSubs++;
         totalItems += sub.items.length;
         totalActive += sub.items.filter(i => i.enabled).length;
     }
-
     div.innerHTML = `
         <div class="module-header">
             <div>
@@ -946,34 +1192,21 @@ function createModule(gKey, mKey, mod) {
             </div>
         </div>
     `;
-
     const body = document.createElement('div');
     body.className = 'module-body';
-
-    // Подкатегории
-    for (const sKey in mod.subcategories) {
-        body.appendChild(createSubcat(gKey, mKey, sKey, mod.subcategories[sKey]));
-    }
-
+    for (const sKey in mod.subcategories) body.appendChild(createSubcat(gKey, mKey, sKey, mod.subcategories[sKey]));
     div.querySelector('.module-header').onclick = (e) => {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'LABEL') return;
         mod.expanded = !mod.expanded; save(); renderModules();
     };
-    div.querySelector('.module-toggle').onclick = (e) => {
-        e.stopPropagation();
-        mod.expanded = !mod.expanded; save(); renderModules();
-    };
-
+    div.querySelector('.module-toggle').onclick = (e) => { e.stopPropagation(); mod.expanded = !mod.expanded; save(); renderModules(); };
     div.appendChild(body);
     return div;
 }
-
 function createSubcat(gKey, mKey, sKey, sub) {
     const div = document.createElement('div');
     div.className = `subcat ${sub.enabled ? '' : 'disabled'} ${sub.expanded ? 'open' : ''}`;
-
     const active = sub.items.filter(i => i.enabled).length;
-
     div.innerHTML = `
         <div class="subcat-header">
             <div style="display:flex; align-items:center; gap:8px;">
@@ -982,13 +1215,12 @@ function createSubcat(gKey, mKey, sKey, sub) {
                 <span class="subcat-counter">(${active}/${sub.items.length})</span>
             </div>
             <div class="subcat-controls">
-                <button class="icon-btn" onclick="event.stopPropagation(); openEditSubcat('${gKey}','${mKey}','${sKey}')" title="Редактировать">✏️</button>
-                <button class="icon-btn" onclick="event.stopPropagation(); openBulkImport('subcat','${gKey}','${mKey}','${sKey}')" title="Импорт">📥</button>
+                <button class="icon-btn" onclick="event.stopPropagation(); openEditSubcat('${gKey}','${mKey}','${sKey}')">✏️</button>
+                <button class="icon-btn" onclick="event.stopPropagation(); openBulkImport('subcat','${gKey}','${mKey}','${sKey}')">📥</button>
                 <button class="subcat-toggle">▼</button>
             </div>
         </div>
     `;
-
     const body = document.createElement('div');
     body.className = 'subcat-body';
     body.innerHTML = `
@@ -998,96 +1230,53 @@ function createSubcat(gKey, mKey, sKey, sub) {
         </div>
         <div class="item-list" id="sub-values-${gKey}-${mKey}-${sKey}"></div>
     `;
-
     div.querySelector('.subcat-header').onclick = (e) => {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
         sub.expanded = !sub.expanded; save(); renderModules();
     };
-    div.querySelector('.subcat-toggle').onclick = (e) => {
-        e.stopPropagation();
-        sub.expanded = !sub.expanded; save(); renderModules();
-    };
-
+    div.querySelector('.subcat-toggle').onclick = (e) => { e.stopPropagation(); sub.expanded = !sub.expanded; save(); renderModules(); };
     div.appendChild(body);
     setTimeout(() => renderSubcatItems(gKey, mKey, sKey), 0);
     return div;
 }
-
 function renderSubcatItems(gKey, mKey, sKey) {
     const container = document.getElementById(`sub-values-${gKey}-${mKey}-${sKey}`);
     if (!container) return;
     container.innerHTML = '';
     const sub = state.modules[gKey].modules[mKey].subcategories[sKey];
-
     sub.items.forEach((item, idx) => {
         if (!item || !item.text) return;
         const row = document.createElement('div');
         row.className = `item ${item.enabled ? '' : 'disabled'}`;
-
         const cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.checked = item.enabled;
+        cb.type = 'checkbox'; cb.checked = item.enabled;
         cb.onchange = () => { item.enabled = !item.enabled; save(); renderSubcatItems(gKey, mKey, sKey); };
-
         const txt = document.createElement('span');
-        txt.className = 'item-text';
-        txt.textContent = item.text;
+        txt.className = 'item-text'; txt.textContent = item.text;
         txt.onclick = () => startEditSubcatItem(gKey, mKey, sKey, idx, txt);
-
         const del = document.createElement('button');
-        del.className = 'icon-btn';
-        del.textContent = '❌';
+        del.className = 'icon-btn'; del.textContent = '❌';
         del.onclick = () => { sub.items.splice(idx, 1); save(); renderSubcatItems(gKey, mKey, sKey); };
-
         row.appendChild(cb); row.appendChild(txt); row.appendChild(del);
         container.appendChild(row);
     });
-
     const header = container.closest('.subcat').querySelector('.subcat-counter');
     const active = sub.items.filter(i => i.enabled).length;
     header.textContent = `(${active}/${sub.items.length})`;
-
-    // обновляем counter модуля
-    const mod = state.modules[gKey].modules[mKey];
-    let totalActive = 0, totalItems = 0;
-    for (const k in mod.subcategories) {
-        totalActive += mod.subcategories[k].items.filter(i => i.enabled).length;
-        totalItems += mod.subcategories[k].items.length;
-    }
-    const modHeader = container.closest('.module').querySelector('.module-counter');
-    let activeSubs = 0, totalSubs = 0;
-    for (const k in mod.subcategories) { totalSubs++; if (mod.subcategories[k].enabled) activeSubs++; }
-    modHeader.textContent = `Подкатегорий: ${activeSubs}/${totalSubs} · Значений: ${totalActive}/${totalItems}`;
 }
-
-function toggleModule(gKey, mKey) {
-    state.modules[gKey].modules[mKey].enabled = !state.modules[gKey].modules[mKey].enabled;
-    save(); renderModules();
-}
-function toggleSubcat(gKey, mKey, sKey) {
-    state.modules[gKey].modules[mKey].subcategories[sKey].enabled = !state.modules[gKey].modules[mKey].subcategories[sKey].enabled;
-    save(); renderModules();
-}
+function toggleModule(gKey, mKey) { state.modules[gKey].modules[mKey].enabled = !state.modules[gKey].modules[mKey].enabled; save(); renderModules(); }
+function toggleSubcat(gKey, mKey, sKey) { state.modules[gKey].modules[mKey].subcategories[sKey].enabled = !state.modules[gKey].modules[mKey].subcategories[sKey].enabled; save(); renderModules(); }
 function startEditSubcatItem(gKey, mKey, sKey, idx, span) {
     const sub = state.modules[gKey].modules[mKey].subcategories[sKey];
     const old = sub.items[idx].text;
-    const inp = document.createElement('input');
-    inp.type = 'text'; inp.value = old;
+    const inp = document.createElement('input'); inp.type = 'text'; inp.value = old;
     span.replaceWith(inp); inp.focus();
-    const finish = () => {
-        const v = inp.value.trim();
-        if (v && v !== old) { sub.items[idx].text = v; save(); }
-        renderSubcatItems(gKey, mKey, sKey);
-    };
+    const finish = () => { const v = inp.value.trim(); if (v && v !== old) { sub.items[idx].text = v; save(); } renderSubcatItems(gKey, mKey, sKey); };
     inp.onblur = finish;
-    inp.onkeydown = (e) => {
-        if (e.key === 'Enter') finish();
-        if (e.key === 'Escape') renderSubcatItems(gKey, mKey, sKey);
-    };
+    inp.onkeydown = (e) => { if (e.key === 'Enter') finish(); if (e.key === 'Escape') renderSubcatItems(gKey, mKey, sKey); };
 }
 function addSubcatItem(gKey, mKey, sKey, inputEl) {
-    const v = inputEl.value.trim();
-    if (!v) return;
+    const v = inputEl.value.trim(); if (!v) return;
     const sub = state.modules[gKey].modules[mKey].subcategories[sKey];
     if (sub.items.some(i => i.text.toLowerCase() === v.toLowerCase())) { showToast('Уже есть!'); return; }
     sub.items.push({ text: v, enabled: true });
@@ -1102,8 +1291,7 @@ function sortModules() {
             }
         }
     }
-    save(); renderModules();
-    showToast('Отсортировано');
+    save(); renderModules(); showToast('Отсортировано');
 }
 function openEditSubcat(gKey, mKey, sKey) {
     editContext = { type: 'subcat', gKey, mKey, sKey };
@@ -1114,42 +1302,24 @@ function openEditSubcat(gKey, mKey, sKey) {
 }
 
 // ============================================================
-// МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ
+// МОДАЛЬНЫЕ ОКНА
 // ============================================================
-function closeEdit() {
-    document.getElementById('editModal').classList.remove('active');
-    editContext = null;
-}
+function closeEdit() { document.getElementById('editModal').classList.remove('active'); editContext = null; }
 function saveEdit() {
     if (!editContext) return;
     const text = document.getElementById('editTextarea').value;
     const lines = text.split(/[\n,]+/).map(s => s.trim()).filter(s => s);
-
     let target;
-    if (editContext.type === 'list') {
-        target = state.lists[editContext.key].items;
-    } else {
-        target = state.modules[editContext.gKey].modules[editContext.mKey].subcategories[editContext.sKey].items;
-    }
-
+    if (editContext.type === 'list') target = state.lists[editContext.key].items;
+    else target = state.modules[editContext.gKey].modules[editContext.mKey].subcategories[editContext.sKey].items;
     const oldMap = {};
     target.forEach(i => { if (i && i.text) oldMap[i.text.toLowerCase()] = i.enabled; });
     const newItems = lines.map(t => ({ text: t, enabled: oldMap[t.toLowerCase()] !== undefined ? oldMap[t.toLowerCase()] : true }));
-
-    if (editContext.type === 'list') {
-        state.lists[editContext.key].items = newItems;
-    } else {
-        state.modules[editContext.gKey].modules[editContext.mKey].subcategories[editContext.sKey].items = newItems;
-    }
-
+    if (editContext.type === 'list') state.lists[editContext.key].items = newItems;
+    else state.modules[editContext.gKey].modules[editContext.mKey].subcategories[editContext.sKey].items = newItems;
     save(); renderLists(); renderModules();
-    closeEdit();
-    showToast(`Сохранено: ${lines.length}`);
+    closeEdit(); showToast(`Сохранено: ${lines.length}`);
 }
-
-// ============================================================
-// МАССОВЫЙ ИМПОРТ
-// ============================================================
 function openBulkImport(type, key, mKey, sKey) {
     bulkContext = { type, key, mKey, sKey };
     let title = '';
@@ -1159,43 +1329,30 @@ function openBulkImport(type, key, mKey, sKey) {
     document.getElementById('bulkImportTextarea').value = '';
     document.getElementById('bulkImportModal').classList.add('active');
 }
-function closeBulkImport() {
-    document.getElementById('bulkImportModal').classList.remove('active');
-    bulkContext = null;
-}
+function closeBulkImport() { document.getElementById('bulkImportModal').classList.remove('active'); bulkContext = null; }
 function confirmBulkImport() {
     if (!bulkContext) return;
     const text = document.getElementById('bulkImportTextarea').value;
     const lines = text.split(/[\n,]+/).map(s => s.trim()).filter(s => s);
-
     let target;
     if (bulkContext.type === 'list') target = state.lists[bulkContext.key].items;
     else target = state.modules[bulkContext.key].modules[bulkContext.mKey].subcategories[bulkContext.sKey].items;
-
     let added = 0, skipped = 0;
     lines.forEach(line => {
-        if (target.some(i => i.text.toLowerCase() === line.toLowerCase())) { skipped++; }
+        if (target.some(i => i.text.toLowerCase() === line.toLowerCase())) skipped++;
         else { target.push({ text: line, enabled: true }); added++; }
     });
-
     save(); renderLists(); renderModules();
     closeBulkImport();
     showToast(`Добавлено: ${added}${skipped ? `, пропущено: ${skipped}` : ''}`);
 }
-
-// ============================================================
-// СБРОС
-// ============================================================
 function resetAll() {
-    if (!confirm('Сбросить все списки и модули к стандартным? Ваши изменения будут потеряны.')) return;
+    if (!confirm('Сбросить списки и модули? Правила сохранятся.')) return;
     state.lists = JSON.parse(JSON.stringify(DEFAULT_LISTS));
     state.modules = JSON.parse(JSON.stringify(DEFAULT_MODULES));
-    save();
-    renderLists(); renderModules();
+    save(); renderLists(); renderModules();
     showToast('Сброшено');
 }
-
-// ============================================================
 function showToast(msg) {
     const t = document.getElementById('toast');
     t.textContent = msg;
@@ -1206,4 +1363,4 @@ function showToast(msg) {
 window.onload = init;
 </script>
 </body>
-</html>
+    </html>
