@@ -44,6 +44,7 @@ body {
 .tab-content { padding: 20px; display: none; }
 .tab-content.active { display: block; }
 
+/* Генератор */
 .result-box {
     background: var(--secondary); padding: 20px;
     border-radius: 10px; margin-bottom: 20px;
@@ -58,6 +59,7 @@ body {
 .result-cat { color: #888; font-weight: bold; font-size: 0.82rem; }
 .result-val { color: #fff; font-weight: bold; text-align: right; }
 .result-line.main .result-val { color: var(--accent); font-size: 1.05rem; }
+.result-line.slot .result-cat { color: var(--clothes); }
 
 .btn-main {
     background: var(--accent); color: white; border: none;
@@ -74,6 +76,7 @@ body {
 }
 .btn-secondary:hover { background: #1a4a7a; }
 
+/* История */
 .history-controls { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
 .search-input {
     flex-grow: 1; padding: 10px; border-radius: 5px;
@@ -103,6 +106,7 @@ body {
 .icon-btn:hover { opacity: 1; transform: scale(1.1); }
 .icon-btn.fav-active { opacity: 1; color: gold; }
 
+/* Списки */
 .toolbar {
     display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;
     align-items: center;
@@ -135,9 +139,7 @@ body {
     color: white; border: none; border-radius: 5px;
     cursor: pointer; font-size: 0.85rem;
 }
-.add-row button.import-btn {
-    background: var(--clothes);
-}
+.add-row button.import-btn { background: var(--clothes); }
 
 .item-list { max-height: 300px; overflow-y: auto; }
 .item {
@@ -148,8 +150,7 @@ body {
 .item.disabled { opacity: 0.4; text-decoration: line-through; }
 .item-text {
     flex-grow: 1; cursor: pointer; padding: 3px;
-    border-radius: 3px;
-    word-break: break-word;
+    border-radius: 3px; word-break: break-word;
 }
 .item-text:hover { background: rgba(255,255,255,0.1); }
 .item input[type="text"] {
@@ -159,10 +160,10 @@ body {
 }
 .item input[type="checkbox"] {
     cursor: pointer; width: 15px; height: 15px;
-    accent-color: var(--accent);
-    flex-shrink: 0;
+    accent-color: var(--accent); flex-shrink: 0;
 }
 
+/* Модули */
 .group-title {
     font-size: 1rem; font-weight: bold;
     padding: 11px 15px; margin-top: 15px;
@@ -176,6 +177,7 @@ body {
 .group-body { padding-left: 8px; }
 .group-body.collapsed { display: none; }
 
+/* Модуль (Волосы, Одежда-слот) */
 .module {
     background: #0d1b2a; border-radius: 8px;
     margin-top: 8px; overflow: hidden;
@@ -199,6 +201,36 @@ body {
 }
 .module.open .module-toggle { transform: rotate(180deg); }
 
+/* Подкатегория (Форма, Длина) */
+.subcat {
+    background: #1a1a2e; border-radius: 6px;
+    margin-top: 6px; overflow: hidden;
+    border-left: 2px solid var(--secondary);
+}
+.subcat.disabled { opacity: 0.4; }
+.subcat-header {
+    display: flex; justify-content: space-between;
+    align-items: center; padding: 8px 12px;
+    cursor: pointer; user-select: none; font-size: 0.85rem;
+}
+.subcat-header:hover { background: rgba(255,255,255,0.03); }
+.subcat-name { font-weight: bold; }
+.subcat-counter { font-size: 0.7rem; color: #888; margin-left: 8px; }
+.subcat-controls { display: flex; gap: 5px; align-items: center; }
+.subcat-body {
+    padding: 8px 12px 12px;
+    border-top: 1px solid #0d1b2a;
+    display: none;
+}
+.subcat.open .subcat-body { display: block; }
+.subcat-toggle {
+    background: none; border: none; color: white;
+    font-size: 0.8rem; cursor: pointer; padding: 3px;
+    transition: 0.2s;
+}
+.subcat.open .subcat-toggle { transform: rotate(180deg); }
+
+/* Модальное окно */
 .modal-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
     background: rgba(0,0,0,0.8); z-index: 1000;
@@ -209,6 +241,7 @@ body {
 .modal {
     background: var(--container); padding: 25px;
     border-radius: 12px; max-width: 500px; width: 100%;
+    max-height: 85vh; overflow-y: auto;
 }
 .modal h3 { margin-top: 0; }
 .modal textarea {
@@ -268,11 +301,13 @@ body {
     <div id="tab-mod" class="tab-content">
         <div class="toolbar">
             <button class="btn-secondary" onclick="sortModules()">🔤 Сортировать</button>
+            <button class="btn-secondary" onclick="resetAll()">↺ Сброс</button>
         </div>
         <div id="modulesContainer"></div>
     </div>
 </div>
 
+<!-- МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ -->
 <div class="modal-overlay" id="editModal">
     <div class="modal">
         <h3 id="editTitle">Редактирование</h3>
@@ -285,11 +320,12 @@ body {
     </div>
 </div>
 
+<!-- МОДАЛЬНОЕ ОКНО МАССОВОГО ИМПОРТА -->
 <div class="modal-overlay" id="bulkImportModal">
     <div class="modal">
         <h3 id="bulkImportTitle">Массовый импорт</h3>
-        <p style="color:#888; font-size:0.85rem;">Вставьте значения: одно на строку или через запятую. Дубликаты будут пропущены.</p>
-        <textarea id="bulkImportTextarea" placeholder="Cat girl&#10;Dog girl&#10;Fox girl"></textarea>
+        <p style="color:#888; font-size:0.85rem;">Вставьте значения: одно на строку или через запятую. Дубликаты пропускаются.</p>
+        <textarea id="bulkImportTextarea" placeholder="Arched bangs&#10;Blunt bangs&#10;Curtained bangs"></textarea>
         <div class="modal-actions">
             <button class="btn-secondary" onclick="closeBulkImport()">Отмена</button>
             <button class="btn-main" style="width:auto; margin:0;" onclick="confirmBulkImport()">Добавить</button>
@@ -303,6 +339,8 @@ body {
 // ============================================================
 // ДЕФОЛТНЫЕ ДАННЫЕ
 // ============================================================
+
+// --- СПИСКИ (Расы и Стили) ---
 const DEFAULT_LISTS = {
     races: {
         name: "🧬 Расы",
@@ -318,41 +356,92 @@ const DEFAULT_LISTS = {
     }
 };
 
+// --- МОДУЛИ (с подкатегориями) ---
+// module = слот (Bangs), внутри subcategories (Форма, Длина) со своими items
 const DEFAULT_MODULES = {
     appearance: {
         name: "🎨 Модуль базовой внешности",
         groupClass: "group-appearance",
         expanded: true,
         modules: {
+            // === ВОЛОСЫ: 4 слота, у каждого свои подкатегории ===
             bangs: {
-                name: "Bangs",
+                name: "Bangs (чёлка)",
                 enabled: true,
-                items: [
-                    "Arched bangs", "asymmetrical bangs", "blunt bangs", "crossed",
-                    "curtained bangs", "diagonal bangs", "hime cut", "short bangs",
-                    "medium bangs", "long bangs", "wispy bangs", "choppy bangs",
-                    "fanged bangs", "parted bangs", "double-parted bangs", "middle part",
-                    "swept bangs", "side part", "Bangs pinned back", "center flap bangs",
-                    "hair between eyes", "long hair between eyes", "hair over one eye",
-                    "hair over eyes"
-                ]
+                expanded: false,
+                subcategories: {
+                    shape: {
+                        name: "Форма", enabled: true, expanded: false,
+                        items: ["Arched bangs", "Asymmetrical bangs", "Blunt bangs", "Crossed", "Curtained bangs", "Diagonal bangs", "Hime cut", "Wispy bangs", "Choppy bangs", "Fanged bangs", "Parted bangs", "Double-parted bangs", "Middle part", "Swept bangs", "Side part", "Bangs pinned back", "Center flap bangs"]
+                    },
+                    length: {
+                        name: "Длина", enabled: true, expanded: false,
+                        items: ["Short bangs", "Medium bangs", "Long bangs"]
+                    },
+                    special: {
+                        name: "Особые", enabled: true, expanded: false,
+                        items: ["Hair between eyes", "Long hair between eyes", "Hair over one eye", "Hair over eyes"]
+                    }
+                }
             },
             sidelocks: {
-                name: "Sidelocks",
+                name: "Sidelocks (боковые пряди)",
                 enabled: true,
-                items: [
-                    "single sidelock", "long single sidelock", "single braided sidelock",
-                    "medium sidelock", "Long sidelocks", "very long sidelocks",
-                    "absurdly long sidelocks", "low tied sidelock", "blunt tesses",
-                    "ring sidelocks", "braided sidelock", "sidelocks tied back",
-                    "drill sidelocks", "flipped sidelocks", "blunt sidelocks",
-                    "wavy sidelocks", "curly sidelocks", "Asymmetrical sidelocks"
-                ]
+                expanded: false,
+                subcategories: {
+                    shape: {
+                        name: "Форма", enabled: true, expanded: false,
+                        items: ["Single sidelock", "Long single sidelock", "Single braided sidelock", "Ring sidelocks", "Braided sidelock", "Drill sidelocks", "Flipped sidelocks", "Blunt sidelocks", "Wavy sidelocks", "Curly sidelocks", "Blunt tesses"]
+                    },
+                    length: {
+                        name: "Длина", enabled: true, expanded: false,
+                        items: ["Medium sidelock", "Long sidelocks", "Very long sidelocks", "Absurdly long sidelocks"]
+                    },
+                    position: {
+                        name: "Положение", enabled: true, expanded: false,
+                        items: ["Low tied sidelock", "Sidelocks tied back"]
+                    }
+                }
             },
-            backHair:   { name: "Back hair",       enabled: true, items: ["Хвост", "Косички", "Распущенные"] },
-            addHair:    { name: "Additional hair", enabled: true, items: ["Ахоге", "Пучок"] },
-            eyeShape:   { name: "Форма глаз",      enabled: true, items: ["Большие", "Узкие", "Круглые", "Закрытые"] },
-            skinColor:  { name: "Цвет кожи",       enabled: true, items: ["Бледная", "Загорелая", "Тёмная", "Оливковая"] }
+            backHair: {
+                name: "Back hair (задние волосы)",
+                enabled: true,
+                expanded: false,
+                subcategories: {
+                    shape: {
+                        name: "Форма", enabled: true, expanded: false,
+                        items: ["Хвост", "Косички", "Распущенные", "Пучок"]
+                    }
+                }
+            },
+            addHair: {
+                name: "Additional hair (доп.)",
+                enabled: true,
+                expanded: false,
+                subcategories: {
+                    type: {
+                        name: "Тип", enabled: true, expanded: false,
+                        items: ["Ахоге", "Пучок", "Хвостик"]
+                    }
+                }
+            },
+            // === ДРУГИЕ СЛОТЫ (плоские, без подкатегорий) ===
+            eyeShape: {
+                name: "Форма глаз",
+                enabled: true,
+                expanded: false,
+                subcategories: {
+                    type: { name: "Тип", enabled: true, expanded: false, items: ["Большие", "Узкие", "Круглые", "Закрытые"] }
+                }
+            },
+            skinColor: {
+                name: "Цвет кожи",
+                enabled: true,
+                expanded: false,
+                subcategories: {
+                    type: { name: "Тип", enabled: true, expanded: false, items: ["Бледная", "Загорелая", "Тёмная", "Оливковая"] }
+                }
+            }
         }
     },
     clothes: {
@@ -360,18 +449,18 @@ const DEFAULT_MODULES = {
         groupClass: "group-clothes",
         expanded: true,
         modules: {
-            headwear:   { name: "Headwear",     enabled: true, items: ["Шляпа", "Капюшон", "Ободок", "Шапка"] },
-            neckwear:   { name: "Neckwear",     enabled: true, items: ["Чокер", "Шарф", "Ожерелье"] },
-            handwear:   { name: "Handwear",     enabled: true, items: ["Перчатки", "Митенки", "Кольца"] },
-            topwear1:   { name: "Topwear 1",    enabled: true, items: ["Футболка", "Худи", "Кроп-топ", "Куртка", "Свитер"] },
-            bottomwear: { name: "Bottomwear",   enabled: true, items: ["Юбка", "Джинсы", "Шорты", "Карго"] },
-            legwear:    { name: "Legwear",      enabled: true, items: ["Чулки", "Носки", "Колготки"] },
-            footwear:   { name: "Footwear",     enabled: true, items: ["Кроссовки", "Ботинки", "Каблуки", "Сандалии"] },
-            acc1:       { name: "Accessory 1",  enabled: true, items: ["Серьги", "Очки", "Браслет"] },
-            acc2:       { name: "Accessory 2",  enabled: true, items: ["Сумка", "Зонт", "Оружие"] },
-            acc3:       { name: "Accessory 3",  enabled: true, items: ["Шарф", "Платок", "Пояс"] },
-            acc4:       { name: "Accessory 4",  enabled: true, items: ["Часы", "Кольцо", "Брошь"] },
-            acc5:       { name: "Accessory 5",  enabled: true, items: ["Корона", "Вуаль", "Маска"] }
+            headwear:   { name: "Headwear",     enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Шляпа", "Капюшон", "Ободок", "Шапка"] } } },
+            neckwear:   { name: "Neckwear",     enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Чокер", "Шарф", "Ожерелье"] } } },
+            handwear:   { name: "Handwear",     enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Перчатки", "Митенки", "Кольца"] } } },
+            topwear1:   { name: "Topwear 1",    enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Футболка", "Худи", "Кроп-топ", "Куртка", "Свитер"] } } },
+            bottomwear: { name: "Bottomwear",   enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Юбка", "Джинсы", "Шорты", "Карго"] } } },
+            legwear:    { name: "Legwear",      enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Чулки", "Носки", "Колготки"] } } },
+            footwear:   { name: "Footwear",     enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Кроссовки", "Ботинки", "Каблуки", "Сандалии"] } } },
+            acc1:       { name: "Accessory 1",  enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Серьги", "Очки", "Браслет"] } } },
+            acc2:       { name: "Accessory 2",  enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Сумка", "Зонт", "Оружие"] } } },
+            acc3:       { name: "Accessory 3",  enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Шарф", "Платок", "Пояс"] } } },
+            acc4:       { name: "Accessory 4",  enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Часы", "Кольцо", "Брошь"] } } },
+            acc5:       { name: "Accessory 5",  enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Корона", "Вуаль", "Маска"] } } }
         }
     },
     race: {
@@ -379,27 +468,38 @@ const DEFAULT_MODULES = {
         groupClass: "group-race",
         expanded: true,
         modules: {
-            trait1: { name: "Расовая черта 1", enabled: true, items: ["Animal ears", "Horns", "Tail", "Wings", "Halos"] },
-            trait2: { name: "Расовая черта 2", enabled: true, items: ["Fangs", "Claws", "Glowing eyes", "Scales"] },
-            trait3: { name: "Расовая черта 3", enabled: true, items: ["Magic aura", "Tattoos", "Freckles", "Scars"] },
-            trait4: { name: "Расовая черта 4", enabled: true, items: ["Отсутствует"] },
-            trait5: { name: "Расовая черта 5", enabled: true, items: ["Отсутствует"] },
-            trait6: { name: "Расовая черта 6", enabled: true, items: ["Отсутствует"] },
-            trait7: { name: "Расовая черта 7", enabled: true, items: ["Отсутствует"] }
+            trait1: { name: "Расовая черта 1", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Animal ears", "Horns", "Tail", "Wings", "Halos"] } } },
+            trait2: { name: "Расовая черта 2", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Fangs", "Claws", "Glowing eyes", "Scales"] } } },
+            trait3: { name: "Расовая черта 3", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Magic aura", "Tattoos", "Freckles", "Scars"] } } },
+            trait4: { name: "Расовая черта 4", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Отсутствует"] } } },
+            trait5: { name: "Расовая черта 5", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Отсутствует"] } } },
+            trait6: { name: "Расовая черта 6", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Отсутствует"] } } },
+            trait7: { name: "Расовая черта 7", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Отсутствует"] } } }
         }
     }
 };
 
 // ============================================================
-let state = { lists: null, modules: null, history: [], current: {}, currentPaths: [] };
+// СОСТОЯНИЕ
+// ============================================================
+let state = {
+    lists: null,
+    modules: null,
+    history: [],
+    current: {},
+    currentPaths: []
+};
+
 let editContext = null;
 let bulkContext = null;
 
 // ============================================================
+// INIT
+// ============================================================
 function init() {
     const savedLists = localStorage.getItem('cg_lists_v2');
     const savedModules = localStorage.getItem('cg_modules_v2');
-    const savedHist = localStorage.getItem('cg_history_v2');
+    const savedHist = localStorage.getItem('cg_history');
 
     state.lists = savedLists ? JSON.parse(savedLists) : null;
     state.modules = savedModules ? JSON.parse(savedModules) : null;
@@ -423,7 +523,8 @@ function isValidListStructure(lists) {
     for (const key in lists) {
         const list = lists[key];
         if (!list || !Array.isArray(list.items)) return false;
-        if (!list.items.some(i => i && typeof i.text === 'string' && i.text.length > 0)) return false;
+        const hasText = list.items.some(i => i && typeof i.text === 'string' && i.text.length > 0);
+        if (!hasText) return false;
     }
     return true;
 }
@@ -434,14 +535,17 @@ function isValidModuleStructure(modules) {
         if (!group.modules) return false;
         for (const mKey in group.modules) {
             const mod = group.modules[mKey];
-            if (!Array.isArray(mod.items)) return false;
-            if (!mod.items.some(i => i && typeof i.text === 'string' && i.text.length > 0)) return false;
+            if (!mod.subcategories) return false;
+            for (const sKey in mod.subcategories) {
+                if (!Array.isArray(mod.subcategories[sKey].items)) return false;
+            }
         }
     }
     return true;
 }
 
 function sanitizeData() {
+    // Списки
     for (const key in state.lists) {
         const list = state.lists[key];
         if (!Array.isArray(list.items)) { list.items = []; continue; }
@@ -452,22 +556,31 @@ function sanitizeData() {
         }).filter(i => i && i.text.trim().length > 0);
         if (list.enabled === undefined) list.enabled = true;
         if (list.expanded === undefined) list.expanded = true;
-        if (!list.name) list.name = key;
     }
+
+    // Модули
     for (const gKey in state.modules) {
         const group = state.modules[gKey];
         if (!group.modules) group.modules = {};
         if (group.expanded === undefined) group.expanded = true;
+
         for (const mKey in group.modules) {
             const mod = group.modules[mKey];
-            if (!Array.isArray(mod.items)) { mod.items = []; continue; }
-            mod.items = mod.items.map(i => {
-                if (typeof i === 'string') return { text: i, enabled: true };
-                if (i && typeof i === 'object' && typeof i.text === 'string') return i;
-                return null;
-            }).filter(i => i && i.text.trim().length > 0);
+            if (!mod.subcategories) mod.subcategories = {};
             if (mod.enabled === undefined) mod.enabled = true;
-            if (!mod.name) mod.name = mKey;
+            if (mod.expanded === undefined) mod.expanded = false;
+
+            for (const sKey in mod.subcategories) {
+                const sub = mod.subcategories[sKey];
+                if (!Array.isArray(sub.items)) { sub.items = []; continue; }
+                sub.items = sub.items.map(i => {
+                    if (typeof i === 'string') return { text: i, enabled: true };
+                    if (i && typeof i === 'object' && typeof i.text === 'string') return i;
+                    return null;
+                }).filter(i => i && i.text.trim().length > 0);
+                if (sub.enabled === undefined) sub.enabled = true;
+                if (sub.expanded === undefined) sub.expanded = false;
+            }
         }
     }
 }
@@ -475,9 +588,12 @@ function sanitizeData() {
 function save() {
     localStorage.setItem('cg_lists_v2', JSON.stringify(state.lists));
     localStorage.setItem('cg_modules_v2', JSON.stringify(state.modules));
-    localStorage.setItem('cg_history_v2', JSON.stringify(state.history));
+    localStorage.setItem('cg_history', JSON.stringify(state.history));
 }
 
+// ============================================================
+// НАВИГАЦИЯ
+// ============================================================
 function switchTab(name, btn) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -486,6 +602,8 @@ function switchTab(name, btn) {
     if (name === 'hist') renderHistory();
 }
 
+// ============================================================
+// ГЕНЕРАЦИЯ
 // ============================================================
 function randItem(items) {
     const active = items.filter(i => i.enabled && i.text && i.text !== "Отсутствует" && i.text !== "None");
@@ -497,29 +615,50 @@ function generate() {
     const result = {};
     const paths = [];
 
+    // 1. Раса
     if (state.lists.races.enabled) {
         const race = randItem(state.lists.races.items);
         if (race) { result['list.races'] = race; paths.push('list.races'); }
     }
+
+    // 2. Стиль
     if (state.lists.styles.enabled) {
         const style = randItem(state.lists.styles.items);
         if (style) { result['list.styles'] = style; paths.push('list.styles'); }
     }
+
+    // 3. Модули
     for (const gKey in state.modules) {
         const group = state.modules[gKey];
         for (const mKey in group.modules) {
             const mod = group.modules[mKey];
             if (!mod.enabled) continue;
-            const value = randItem(mod.items);
-            if (value) {
+
+            // Собираем значения из всех активных подкатегорий
+            const slotValues = [];
+            const subValues = {};
+
+            for (const sKey in mod.subcategories) {
+                const sub = mod.subcategories[sKey];
+                if (!sub.enabled) continue;
+                const v = randItem(sub.items);
+                if (v) {
+                    slotValues.push(v);
+                    subValues[sKey] = v;
+                }
+            }
+
+            if (slotValues.length > 0) {
                 const path = `${gKey}.${mKey}`;
-                result[path] = value;
+                result[path] = slotValues.join(', ');
+                result[`${path}__subs`] = subValues; // сохраняем по подкатегориям
                 paths.push(path);
             }
         }
     }
 
     if (paths.length === 0) { showToast("Все списки и модули отключены!"); return; }
+
     state.current = result;
     state.currentPaths = paths;
     renderResult(result, paths);
@@ -535,11 +674,14 @@ function getPathName(path) {
 function renderResult(result, paths) {
     const box = document.getElementById('resultBox');
     box.innerHTML = '';
+
     paths.forEach(path => {
         const name = getPathName(path);
         const isMain = path === 'list.races' || path === 'list.styles';
+        const isSlot = !path.startsWith('list.');
+
         const line = document.createElement('div');
-        line.className = `result-line ${isMain ? 'main' : ''}`;
+        line.className = `result-line ${isMain ? 'main' : ''} ${isSlot ? 'slot' : ''}`;
         line.innerHTML = `<span class="result-cat">${name}</span><span class="result-val">${result[path]}</span>`;
         box.appendChild(line);
     });
@@ -574,6 +716,8 @@ function copyShort() {
     showToast('Скопировано!');
 }
 
+// ============================================================
+// ИСТОРИЯ
 // ============================================================
 function renderHistory() {
     const list = document.getElementById('historyList');
@@ -620,6 +764,8 @@ function copyHist(id) {
 }
 
 // ============================================================
+// ВКЛАДКА «СПИСКИ»
+// ============================================================
 function renderLists() {
     const container = document.getElementById('listsContainer');
     container.innerHTML = '';
@@ -662,10 +808,8 @@ function createListBlock(key, list) {
 
     div.querySelector('.list-header').onclick = (e) => {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'LABEL') return;
-        list.expanded = !list.expanded;
-        save(); renderLists();
+        list.expanded = !list.expanded; save(); renderLists();
     };
-
     div.appendChild(body);
     setTimeout(() => renderListItems(key), 0);
     return div;
@@ -697,9 +841,7 @@ function renderListItems(key) {
         del.textContent = '❌';
         del.onclick = () => { list.items.splice(idx, 1); save(); renderListItems(key); };
 
-        row.appendChild(cb);
-        row.appendChild(txt);
-        row.appendChild(del);
+        row.appendChild(cb); row.appendChild(txt); row.appendChild(del);
         container.appendChild(row);
     });
 
@@ -712,15 +854,12 @@ function toggleList(key) {
     state.lists[key].enabled = !state.lists[key].enabled;
     save(); renderLists();
 }
-
 function startEditListItem(key, idx, span) {
     const list = state.lists[key];
     const old = list.items[idx].text;
     const inp = document.createElement('input');
-    inp.type = 'text';
-    inp.value = old;
-    span.replaceWith(inp);
-    inp.focus();
+    inp.type = 'text'; inp.value = old;
+    span.replaceWith(inp); inp.focus();
     const finish = () => {
         const v = inp.value.trim();
         if (v && v !== old) { list.items[idx].text = v; save(); }
@@ -732,19 +871,15 @@ function startEditListItem(key, idx, span) {
         if (e.key === 'Escape') renderListItems(key);
     };
 }
-
 function addListItem(key, inputEl) {
     const v = inputEl.value.trim();
     if (!v) return;
     const list = state.lists[key];
-    if (list.items.some(i => i.text.toLowerCase() === v.toLowerCase())) {
-        showToast('Уже есть!'); return;
-    }
+    if (list.items.some(i => i.text.toLowerCase() === v.toLowerCase())) { showToast('Уже есть!'); return; }
     list.items.push({ text: v, enabled: true });
     inputEl.value = '';
     save(); renderListItems(key);
 }
-
 function sortLists() {
     for (const key in state.lists) {
         state.lists[key].items.sort((a, b) => a.text.localeCompare(b.text));
@@ -752,7 +887,6 @@ function sortLists() {
     save(); renderLists();
     showToast('Отсортировано');
 }
-
 function openEditList(key) {
     editContext = { type: 'list', key };
     const list = state.lists[key];
@@ -761,6 +895,8 @@ function openEditList(key) {
     document.getElementById('editModal').classList.add('active');
 }
 
+// ============================================================
+// ВКЛАДКА «МОДУЛИ»
 // ============================================================
 function renderModules() {
     const container = document.getElementById('modulesContainer');
@@ -784,20 +920,28 @@ function renderModules() {
 
 function createModule(gKey, mKey, mod) {
     const div = document.createElement('div');
-    div.className = `module ${mod.enabled ? '' : 'disabled'}`;
-    const active = mod.items.filter(i => i.enabled).length;
+    div.className = `module ${mod.enabled ? '' : 'disabled'} ${mod.expanded ? 'open' : ''}`;
+
+    // Считаем активные подкатегории и общее число активных значений
+    let activeSubs = 0, totalSubs = 0, totalActive = 0, totalItems = 0;
+    for (const sKey in mod.subcategories) {
+        const sub = mod.subcategories[sKey];
+        totalSubs++;
+        if (sub.enabled) activeSubs++;
+        totalItems += sub.items.length;
+        totalActive += sub.items.filter(i => i.enabled).length;
+    }
 
     div.innerHTML = `
         <div class="module-header">
             <div>
                 <h4>${mod.name}</h4>
-                <span class="module-counter">Активно: ${active} / ${mod.items.length}</span>
+                <span class="module-counter">Подкатегорий: ${activeSubs}/${totalSubs} · Значений: ${totalActive}/${totalItems}</span>
             </div>
             <div class="module-controls">
                 <label style="font-size:0.75rem; cursor:pointer;">
                     <input type="checkbox" ${mod.enabled ? 'checked' : ''} onchange="toggleModule('${gKey}','${mKey}')" style="accent-color: var(--accent);"> Вкл
                 </label>
-                <button class="icon-btn" onclick="event.stopPropagation(); openEditModule('${gKey}','${mKey}')" title="Редактировать">✏️</button>
                 <button class="module-toggle">▼</button>
             </div>
         </div>
@@ -805,36 +949,77 @@ function createModule(gKey, mKey, mod) {
 
     const body = document.createElement('div');
     body.className = 'module-body';
-    body.innerHTML = `
-        <div class="add-row">
-            <input type="text" placeholder="Добавить..." onkeydown="if(event.key==='Enter') addModuleItem('${gKey}','${mKey}', this)">
-            <button onclick="addModuleItem('${gKey}','${mKey}', this.previousElementSibling)">+</button>
-            <button class="import-btn" onclick="openBulkImport('module','${gKey}','${mKey}')" title="Массовый импорт">📥</button>
-        </div>
-        <div class="item-list" id="mod-values-${gKey}-${mKey}"></div>
-    `;
+
+    // Подкатегории
+    for (const sKey in mod.subcategories) {
+        body.appendChild(createSubcat(gKey, mKey, sKey, mod.subcategories[sKey]));
+    }
 
     div.querySelector('.module-header').onclick = (e) => {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'LABEL') return;
-        div.classList.toggle('open');
+        mod.expanded = !mod.expanded; save(); renderModules();
     };
     div.querySelector('.module-toggle').onclick = (e) => {
         e.stopPropagation();
-        div.classList.toggle('open');
+        mod.expanded = !mod.expanded; save(); renderModules();
     };
 
     div.appendChild(body);
-    setTimeout(() => renderModuleItems(gKey, mKey), 0);
     return div;
 }
 
-function renderModuleItems(gKey, mKey) {
-    const container = document.getElementById(`mod-values-${gKey}-${mKey}`);
+function createSubcat(gKey, mKey, sKey, sub) {
+    const div = document.createElement('div');
+    div.className = `subcat ${sub.enabled ? '' : 'disabled'} ${sub.expanded ? 'open' : ''}`;
+
+    const active = sub.items.filter(i => i.enabled).length;
+
+    div.innerHTML = `
+        <div class="subcat-header">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <input type="checkbox" ${sub.enabled ? 'checked' : ''} style="accent-color: var(--accent); cursor:pointer;" onclick="event.stopPropagation(); toggleSubcat('${gKey}','${mKey}','${sKey}')">
+                <span class="subcat-name">${sub.name}</span>
+                <span class="subcat-counter">(${active}/${sub.items.length})</span>
+            </div>
+            <div class="subcat-controls">
+                <button class="icon-btn" onclick="event.stopPropagation(); openEditSubcat('${gKey}','${mKey}','${sKey}')" title="Редактировать">✏️</button>
+                <button class="icon-btn" onclick="event.stopPropagation(); openBulkImport('subcat','${gKey}','${mKey}','${sKey}')" title="Импорт">📥</button>
+                <button class="subcat-toggle">▼</button>
+            </div>
+        </div>
+    `;
+
+    const body = document.createElement('div');
+    body.className = 'subcat-body';
+    body.innerHTML = `
+        <div class="add-row">
+            <input type="text" placeholder="Добавить..." onkeydown="if(event.key==='Enter') addSubcatItem('${gKey}','${mKey}','${sKey}', this)">
+            <button onclick="addSubcatItem('${gKey}','${mKey}','${sKey}', this.previousElementSibling)">+</button>
+        </div>
+        <div class="item-list" id="sub-values-${gKey}-${mKey}-${sKey}"></div>
+    `;
+
+    div.querySelector('.subcat-header').onclick = (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+        sub.expanded = !sub.expanded; save(); renderModules();
+    };
+    div.querySelector('.subcat-toggle').onclick = (e) => {
+        e.stopPropagation();
+        sub.expanded = !sub.expanded; save(); renderModules();
+    };
+
+    div.appendChild(body);
+    setTimeout(() => renderSubcatItems(gKey, mKey, sKey), 0);
+    return div;
+}
+
+function renderSubcatItems(gKey, mKey, sKey) {
+    const container = document.getElementById(`sub-values-${gKey}-${mKey}-${sKey}`);
     if (!container) return;
     container.innerHTML = '';
-    const mod = state.modules[gKey].modules[mKey];
+    const sub = state.modules[gKey].modules[mKey].subcategories[sKey];
 
-    mod.items.forEach((item, idx) => {
+    sub.items.forEach((item, idx) => {
         if (!item || !item.text) return;
         const row = document.createElement('div');
         row.className = `item ${item.enabled ? '' : 'disabled'}`;
@@ -842,130 +1027,142 @@ function renderModuleItems(gKey, mKey) {
         const cb = document.createElement('input');
         cb.type = 'checkbox';
         cb.checked = item.enabled;
-        cb.onchange = () => { item.enabled = !item.enabled; save(); renderModuleItems(gKey, mKey); };
+        cb.onchange = () => { item.enabled = !item.enabled; save(); renderSubcatItems(gKey, mKey, sKey); };
 
         const txt = document.createElement('span');
         txt.className = 'item-text';
         txt.textContent = item.text;
-        txt.onclick = () => startEditModuleItem(gKey, mKey, idx, txt);
+        txt.onclick = () => startEditSubcatItem(gKey, mKey, sKey, idx, txt);
 
         const del = document.createElement('button');
         del.className = 'icon-btn';
         del.textContent = '❌';
-        del.onclick = () => { mod.items.splice(idx, 1); save(); renderModuleItems(gKey, mKey); };
+        del.onclick = () => { sub.items.splice(idx, 1); save(); renderSubcatItems(gKey, mKey, sKey); };
 
-        row.appendChild(cb);
-        row.appendChild(txt);
-        row.appendChild(del);
+        row.appendChild(cb); row.appendChild(txt); row.appendChild(del);
         container.appendChild(row);
     });
 
-    const header = container.closest('.module').querySelector('.module-counter');
-    const active = mod.items.filter(i => i.enabled).length;
-    header.textContent = `Активно: ${active} / ${mod.items.length}`;
+    const header = container.closest('.subcat').querySelector('.subcat-counter');
+    const active = sub.items.filter(i => i.enabled).length;
+    header.textContent = `(${active}/${sub.items.length})`;
+
+    // обновляем counter модуля
+    const mod = state.modules[gKey].modules[mKey];
+    let totalActive = 0, totalItems = 0;
+    for (const k in mod.subcategories) {
+        totalActive += mod.subcategories[k].items.filter(i => i.enabled).length;
+        totalItems += mod.subcategories[k].items.length;
+    }
+    const modHeader = container.closest('.module').querySelector('.module-counter');
+    let activeSubs = 0, totalSubs = 0;
+    for (const k in mod.subcategories) { totalSubs++; if (mod.subcategories[k].enabled) activeSubs++; }
+    modHeader.textContent = `Подкатегорий: ${activeSubs}/${totalSubs} · Значений: ${totalActive}/${totalItems}`;
 }
 
 function toggleModule(gKey, mKey) {
     state.modules[gKey].modules[mKey].enabled = !state.modules[gKey].modules[mKey].enabled;
     save(); renderModules();
 }
-
-function startEditModuleItem(gKey, mKey, idx, span) {
-    const mod = state.modules[gKey].modules[mKey];
-    const old = mod.items[idx].text;
+function toggleSubcat(gKey, mKey, sKey) {
+    state.modules[gKey].modules[mKey].subcategories[sKey].enabled = !state.modules[gKey].modules[mKey].subcategories[sKey].enabled;
+    save(); renderModules();
+}
+function startEditSubcatItem(gKey, mKey, sKey, idx, span) {
+    const sub = state.modules[gKey].modules[mKey].subcategories[sKey];
+    const old = sub.items[idx].text;
     const inp = document.createElement('input');
-    inp.type = 'text';
-    inp.value = old;
-    span.replaceWith(inp);
-    inp.focus();
+    inp.type = 'text'; inp.value = old;
+    span.replaceWith(inp); inp.focus();
     const finish = () => {
         const v = inp.value.trim();
-        if (v && v !== old) { mod.items[idx].text = v; save(); }
-        renderModuleItems(gKey, mKey);
+        if (v && v !== old) { sub.items[idx].text = v; save(); }
+        renderSubcatItems(gKey, mKey, sKey);
     };
     inp.onblur = finish;
     inp.onkeydown = (e) => {
         if (e.key === 'Enter') finish();
-        if (e.key === 'Escape') renderModuleItems(gKey, mKey);
+        if (e.key === 'Escape') renderSubcatItems(gKey, mKey, sKey);
     };
 }
-
-function addModuleItem(gKey, mKey, inputEl) {
+function addSubcatItem(gKey, mKey, sKey, inputEl) {
     const v = inputEl.value.trim();
     if (!v) return;
-    const mod = state.modules[gKey].modules[mKey];
-    if (mod.items.some(i => i.text.toLowerCase() === v.toLowerCase())) {
-        showToast('Уже есть!'); return;
-    }
-    mod.items.push({ text: v, enabled: true });
+    const sub = state.modules[gKey].modules[mKey].subcategories[sKey];
+    if (sub.items.some(i => i.text.toLowerCase() === v.toLowerCase())) { showToast('Уже есть!'); return; }
+    sub.items.push({ text: v, enabled: true });
     inputEl.value = '';
-    save(); renderModuleItems(gKey, mKey);
+    save(); renderSubcatItems(gKey, mKey, sKey);
 }
-
 function sortModules() {
     for (const g in state.modules) {
         for (const m in state.modules[g].modules) {
-            state.modules[g].modules[m].items.sort((a, b) => a.text.localeCompare(b.text));
+            for (const s in state.modules[g].modules[m].subcategories) {
+                state.modules[g].modules[m].subcategories[s].items.sort((a, b) => a.text.localeCompare(b.text));
+            }
         }
     }
     save(); renderModules();
     showToast('Отсортировано');
 }
-
-function openEditModule(gKey, mKey) {
-    editContext = { type: 'module', gKey, mKey };
-    const mod = state.modules[gKey].modules[mKey];
-    document.getElementById('editTitle').textContent = `Редактирование: ${mod.name}`;
-    document.getElementById('editTextarea').value = mod.items.map(i => i.text).join('\n');
+function openEditSubcat(gKey, mKey, sKey) {
+    editContext = { type: 'subcat', gKey, mKey, sKey };
+    const sub = state.modules[gKey].modules[mKey].subcategories[sKey];
+    document.getElementById('editTitle').textContent = `Редактирование: ${sub.name}`;
+    document.getElementById('editTextarea').value = sub.items.map(i => i.text).join('\n');
     document.getElementById('editModal').classList.add('active');
 }
 
+// ============================================================
+// МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ
 // ============================================================
 function closeEdit() {
     document.getElementById('editModal').classList.remove('active');
     editContext = null;
 }
-
 function saveEdit() {
     if (!editContext) return;
     const text = document.getElementById('editTextarea').value;
     const lines = text.split(/[\n,]+/).map(s => s.trim()).filter(s => s);
 
     let target;
-    if (editContext.type === 'list') target = state.lists[editContext.key].items;
-    else target = state.modules[editContext.gKey].modules[editContext.mKey].items;
+    if (editContext.type === 'list') {
+        target = state.lists[editContext.key].items;
+    } else {
+        target = state.modules[editContext.gKey].modules[editContext.mKey].subcategories[editContext.sKey].items;
+    }
 
     const oldMap = {};
     target.forEach(i => { if (i && i.text) oldMap[i.text.toLowerCase()] = i.enabled; });
+    const newItems = lines.map(t => ({ text: t, enabled: oldMap[t.toLowerCase()] !== undefined ? oldMap[t.toLowerCase()] : true }));
 
-    const newItems = lines.map(t => ({
-        text: t,
-        enabled: oldMap[t.toLowerCase()] !== undefined ? oldMap[t.toLowerCase()] : true
-    }));
+    if (editContext.type === 'list') {
+        state.lists[editContext.key].items = newItems;
+    } else {
+        state.modules[editContext.gKey].modules[editContext.mKey].subcategories[editContext.sKey].items = newItems;
+    }
 
-    if (editContext.type === 'list') state.lists[editContext.key].items = newItems;
-    else state.modules[editContext.gKey].modules[editContext.mKey].items = newItems;
-
-    save();
-    renderLists();
-    renderModules();
+    save(); renderLists(); renderModules();
     closeEdit();
     showToast(`Сохранено: ${lines.length}`);
 }
 
-function openBulkImport(type, key, mKey) {
-    bulkContext = { type, key, mKey };
-    const title = type === 'list' ? state.lists[key].name : state.modules[key].modules[mKey].name;
+// ============================================================
+// МАССОВЫЙ ИМПОРТ
+// ============================================================
+function openBulkImport(type, key, mKey, sKey) {
+    bulkContext = { type, key, mKey, sKey };
+    let title = '';
+    if (type === 'list') title = state.lists[key].name;
+    else if (type === 'subcat') title = state.modules[key].modules[mKey].subcategories[sKey].name;
     document.getElementById('bulkImportTitle').textContent = `Импорт: ${title}`;
     document.getElementById('bulkImportTextarea').value = '';
     document.getElementById('bulkImportModal').classList.add('active');
 }
-
 function closeBulkImport() {
     document.getElementById('bulkImportModal').classList.remove('active');
     bulkContext = null;
 }
-
 function confirmBulkImport() {
     if (!bulkContext) return;
     const text = document.getElementById('bulkImportTextarea').value;
@@ -973,35 +1170,32 @@ function confirmBulkImport() {
 
     let target;
     if (bulkContext.type === 'list') target = state.lists[bulkContext.key].items;
-    else target = state.modules[bulkContext.key].modules[bulkContext.mKey].items;
+    else target = state.modules[bulkContext.key].modules[bulkContext.mKey].subcategories[bulkContext.sKey].items;
 
     let added = 0, skipped = 0;
     lines.forEach(line => {
-        if (target.some(i => i.text.toLowerCase() === line.toLowerCase())) {
-            skipped++;
-        } else {
-            target.push({ text: line, enabled: true });
-            added++;
-        }
+        if (target.some(i => i.text.toLowerCase() === line.toLowerCase())) { skipped++; }
+        else { target.push({ text: line, enabled: true }); added++; }
     });
 
-    save();
-    renderLists();
-    renderModules();
+    save(); renderLists(); renderModules();
     closeBulkImport();
     showToast(`Добавлено: ${added}${skipped ? `, пропущено: ${skipped}` : ''}`);
 }
 
+// ============================================================
+// СБРОС
+// ============================================================
 function resetAll() {
-    if (!confirm('Сбросить все списки и модули к стандартным? Все ваши изменения будут потеряны.')) return;
+    if (!confirm('Сбросить все списки и модули к стандартным? Ваши изменения будут потеряны.')) return;
     state.lists = JSON.parse(JSON.stringify(DEFAULT_LISTS));
     state.modules = JSON.parse(JSON.stringify(DEFAULT_MODULES));
     save();
-    renderLists();
-    renderModules();
+    renderLists(); renderModules();
     showToast('Сброшено');
 }
 
+// ============================================================
 function showToast(msg) {
     const t = document.getElementById('toast');
     t.textContent = msg;
