@@ -138,6 +138,9 @@ body {
     color: white; border: none; border-radius: 5px;
     cursor: pointer; font-size: 0.85rem;
 }
+.add-row button.import-btn {
+    background: var(--clothes);
+}
 
 .item-list { max-height: 300px; overflow-y: auto; }
 .item {
@@ -149,6 +152,7 @@ body {
 .item-text {
     flex-grow: 1; cursor: pointer; padding: 3px;
     border-radius: 3px;
+    word-break: break-word;
 }
 .item-text:hover { background: rgba(255,255,255,0.1); }
 .item input[type="text"] {
@@ -159,6 +163,7 @@ body {
 .item input[type="checkbox"] {
     cursor: pointer; width: 15px; height: 15px;
     accent-color: var(--accent);
+    flex-shrink: 0;
 }
 
 /* Модули */
@@ -240,7 +245,6 @@ body {
         <button class="tab-btn" onclick="switchTab('mod', this)">⚙️ Модули</button>
     </div>
 
-    <!-- ГЕНЕРАТОР -->
     <div id="tab-gen" class="tab-content active">
         <div class="result-box" id="resultBox">
             <p style="text-align:center; color:#888;">Нажмите «Сгенерировать»</p>
@@ -250,7 +254,6 @@ body {
         <button class="btn-secondary" style="width:100%;" onclick="copyShort()">📋 Скопировать кратко</button>
     </div>
 
-    <!-- ИСТОРИЯ -->
     <div id="tab-hist" class="tab-content">
         <div class="history-controls">
             <input type="text" id="search" class="search-input" placeholder="Поиск..." oninput="renderHistory()">
@@ -259,15 +262,14 @@ body {
         <div class="history-list" id="historyList"></div>
     </div>
 
-    <!-- СПИСКИ -->
     <div id="tab-lists" class="tab-content">
         <div class="toolbar">
             <button class="btn-secondary" onclick="sortLists()">🔤 Сортировать</button>
+            <button class="btn-secondary" onclick="resetAll()">↺ Сброс</button>
         </div>
         <div id="listsContainer"></div>
     </div>
 
-    <!-- МОДУЛИ -->
     <div id="tab-mod" class="tab-content">
         <div class="toolbar">
             <button class="btn-secondary" onclick="sortModules()">🔤 Сортировать</button>
@@ -289,45 +291,40 @@ body {
     </div>
 </div>
 
+<!-- МОДАЛЬНОЕ ОКНО МАССОВОГО ИМПОРТА -->
+<div class="modal-overlay" id="bulkImportModal">
+    <div class="modal">
+        <h3 id="bulkImportTitle">Массовый импорт</h3>
+        <p style="color:#888; font-size:0.85rem;">Вставьте значения: одно на строку или через запятую. Дубликаты будут пропущены.</p>
+        <textarea id="bulkImportTextarea" placeholder="Cat girl&#10;Dog girl&#10;Fox girl"></textarea>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeBulkImport()">Отмена</button>
+            <button class="btn-main" style="width:auto; margin:0;" onclick="confirmBulkImport()">Добавить</button>
+        </div>
+    </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
 // ============================================================
 // ДЕФОЛТНЫЕ ДАННЫЕ
 // ============================================================
-
-// Два отдельных списка (вкладка «Списки»)
 const DEFAULT_LISTS = {
     races: {
         name: "🧬 Расы",
         enabled: true,
         expanded: true,
-        items: [
-            "Angel girl", "Arapaima girl", "Bat girl", "Bird girl", "Chimera",
-            "Crocodile girl", "Crow girl", "Cat girl", "Cow girl", "Capybara girl",
-            "Chicken girl", "Demon girl", "Doll girl", "Dragon girl", "Deer girl",
-            "Elf", "Fish girl", "Fox girl", "Gargoyle girl", "Ghost girl",
-            "Horse girl", "Insect girl", "Jackal girl", "Kitsune girl", "Mimic",
-            "Orca girl", "Program girl", "Panda girl", "Rat girl", "Rabbit girl",
-            "Reptile girl", "Snake girl", "Slime girl", "Serval girl", "Shark girl",
-            "Succubus", "Sheep girl", "Tiger girl", "Vampire girl", "Wolf girl",
-            "Wyrm girl", "Zombie girl"
-        ]
+        items: ["Angel girl", "Arapaima girl", "Bat girl", "Bird girl", "Chimera", "Crocodile girl", "Crow girl", "Cat girl", "Cow girl", "Capybara girl", "Chicken girl", "Demon girl", "Doll girl", "Dragon girl", "Deer girl", "Elf", "Fish girl", "Fox girl", "Gargoyle girl", "Ghost girl", "Horse girl", "Insect girl", "Jackal girl", "Kitsune girl", "Mimic", "Orca girl", "Program girl", "Panda girl", "Rat girl", "Rabbit girl", "Reptile girl", "Snake girl", "Slime girl", "Serval girl", "Shark girl", "Succubus", "Sheep girl", "Tiger girl", "Vampire girl", "Wolf girl", "Wyrm girl", "Zombie girl"]
     },
     styles: {
         name: "👗 Стили одежды",
         enabled: true,
         expanded: true,
-        items: [
-            "Ancient Egyptian", "Boho-chic", "Casual", "Gyaru", "Grunge",
-            "Gothic Lolita", "Jester", "Japanese clothes", "Jirai key", "Maid",
-            "Nun", "Naval", "Punk", "Prison", "Rags", "Sportswear",
-            "Swimsuit", "Streetwear", "Techwear", "Witch", "Winter clothes", "Y2K"
-        ]
+        items: ["Ancient Egyptian", "Boho-chic", "Casual", "Gyaru", "Grunge", "Gothic Lolita", "Jester", "Japanese clothes", "Jirai key", "Maid", "Nun", "Naval", "Punk", "Prison", "Rags", "Sportswear", "Swimsuit", "Streetwear", "Techwear", "Witch", "Winter clothes", "Y2K"]
     }
 };
 
-// Модули (вкладка «Модули») — 3 группы, внутри каждой модули со своими значениями
 const DEFAULT_MODULES = {
     appearance: {
         name: "🎨 Модуль базовой внешности",
@@ -384,11 +381,12 @@ let state = {
     lists: null,
     modules: null,
     history: [],
-    current: {},   // { path: value }
+    current: {},
     currentPaths: []
 };
 
 let editContext = null;
+let bulkContext = null;
 
 // ============================================================
 // INIT
@@ -398,14 +396,90 @@ function init() {
     const savedModules = localStorage.getItem('cg_modules');
     const savedHist = localStorage.getItem('cg_history');
 
-    state.lists = savedLists ? JSON.parse(savedLists) : JSON.parse(JSON.stringify(DEFAULT_LISTS));
-    state.modules = savedModules ? JSON.parse(savedModules) : JSON.parse(JSON.stringify(DEFAULT_MODULES));
+    state.lists = savedLists ? JSON.parse(savedLists) : null;
+    state.modules = savedModules ? JSON.parse(savedModules) : null;
     state.history = savedHist ? JSON.parse(savedHist) : [];
+
+    // === ВОССТАНОВЛЕНИЕ БИТЫХ ДАННЫХ ===
+    // Если lists пустые или не содержат текст — восстанавливаем из DEFAULT
+    if (!state.lists || !isValidListStructure(state.lists)) {
+        state.lists = JSON.parse(JSON.stringify(DEFAULT_LISTS));
+    }
+    if (!state.modules || !isValidModuleStructure(state.modules)) {
+        state.modules = JSON.parse(JSON.stringify(DEFAULT_MODULES));
+    }
+
+    // Чистим каждый список от битых элементов (без .text)
+    sanitizeData();
 
     save();
     renderLists();
     renderModules();
     renderHistory();
+}
+
+// Проверка: все ли списки имеют хотя бы один элемент с текстом
+function isValidListStructure(lists) {
+    for (const key in lists) {
+        const list = lists[key];
+        if (!list || !Array.isArray(list.items)) return false;
+        const hasText = list.items.some(i => i && typeof i.text === 'string' && i.text.length > 0);
+        if (!hasText) return false;
+    }
+    return true;
+}
+
+function isValidModuleStructure(modules) {
+    for (const gKey in modules) {
+        const group = modules[gKey];
+        if (!group.modules) return false;
+        for (const mKey in group.modules) {
+            const mod = group.modules[mKey];
+            if (!Array.isArray(mod.items)) return false;
+            const hasText = mod.items.some(i => i && typeof i.text === 'string' && i.text.length > 0);
+            if (!hasText) return false;
+        }
+    }
+    return true;
+}
+
+// Убираем битые элементы + нормализуем формат
+function sanitizeData() {
+    // Чистим списки
+    for (const key in state.lists) {
+        const list = state.lists[key];
+        if (!Array.isArray(list.items)) { list.items = []; continue; }
+        list.items = list.items
+            .map(i => {
+                if (typeof i === 'string') return { text: i, enabled: true };
+                if (i && typeof i === 'object' && typeof i.text === 'string') return i;
+                return null;
+            })
+            .filter(i => i && i.text.trim().length > 0);
+        if (list.enabled === undefined) list.enabled = true;
+        if (list.expanded === undefined) list.expanded = true;
+        if (!list.name) list.name = key;
+    }
+
+    // Чистим модули
+    for (const gKey in state.modules) {
+        const group = state.modules[gKey];
+        if (!group.modules) group.modules = {};
+        if (group.expanded === undefined) group.expanded = true;
+        for (const mKey in group.modules) {
+            const mod = group.modules[mKey];
+            if (!Array.isArray(mod.items)) { mod.items = []; continue; }
+            mod.items = mod.items
+                .map(i => {
+                    if (typeof i === 'string') return { text: i, enabled: true };
+                    if (i && typeof i === 'object' && typeof i.text === 'string') return i;
+                    return null;
+                })
+                .filter(i => i && i.text.trim().length > 0);
+            if (mod.enabled === undefined) mod.enabled = true;
+            if (!mod.name) mod.name = mKey;
+        }
+    }
 }
 
 function save() {
@@ -438,19 +512,14 @@ function generate() {
     const result = {};
     const paths = [];
 
-    // 1. Раса (из вкладки «Списки»)
     if (state.lists.races.enabled) {
         const race = randItem(state.lists.races.items);
         if (race) { result['list.races'] = race; paths.push('list.races'); }
     }
-
-    // 2. Стиль (из вкладки «Списки»)
     if (state.lists.styles.enabled) {
         const style = randItem(state.lists.styles.items);
         if (style) { result['list.styles'] = style; paths.push('list.styles'); }
     }
-
-    // 3. Все модули
     for (const gKey in state.modules) {
         const group = state.modules[gKey];
         for (const mKey in group.modules) {
@@ -474,9 +543,7 @@ function generate() {
 }
 
 function getPathName(path) {
-    if (path.startsWith('list.')) {
-        return state.lists[path.split('.')[1]].name;
-    }
+    if (path.startsWith('list.')) return state.lists[path.split('.')[1]].name;
     const [g, m] = path.split('.');
     return state.modules[g].modules[m].name;
 }
@@ -509,17 +576,14 @@ function addHistory(result, paths) {
 function formatPrompt(result, paths) {
     return paths.map(p => `${getPathName(p)}: ${result[p]}`).join('\n');
 }
-
 function formatShort(result, paths) {
     return paths.map(p => result[p]).join(', ');
 }
-
 function copyResult() {
     if (!state.currentPaths.length) { showToast('Сначала сгенерируйте!'); return; }
     navigator.clipboard.writeText(formatPrompt(state.current, state.currentPaths));
     showToast('Скопировано!');
 }
-
 function copyShort() {
     if (!state.currentPaths.length) { showToast('Сначала сгенерируйте!'); return; }
     navigator.clipboard.writeText(formatShort(state.current, state.currentPaths));
@@ -533,14 +597,11 @@ function renderHistory() {
     const list = document.getElementById('historyList');
     const q = document.getElementById('search').value.toLowerCase();
     list.innerHTML = '';
-
     const filtered = state.history.filter(it => formatShort(it.result, it.paths).toLowerCase().includes(q));
-
     if (filtered.length === 0) {
         list.innerHTML = '<p style="text-align:center; color:#666;">История пуста.</p>';
         return;
     }
-
     filtered.forEach(it => {
         const div = document.createElement('div');
         div.className = `history-item ${it.favorite ? 'fav' : ''}`;
@@ -558,7 +619,6 @@ function renderHistory() {
         list.appendChild(div);
     });
 }
-
 function toggleFav(id) {
     const it = state.history.find(i => i.id === id);
     if (it) { it.favorite = !it.favorite; save(); renderHistory(); }
@@ -578,15 +638,13 @@ function copyHist(id) {
 }
 
 // ============================================================
-// ВКЛАДКА «СПИСКИ» — отдельные модули Расы и Стили
+// ВКЛАДКА «СПИСКИ»
 // ============================================================
 function renderLists() {
     const container = document.getElementById('listsContainer');
     container.innerHTML = '';
-
     for (const key in state.lists) {
-        const list = state.lists[key];
-        container.appendChild(createListBlock(key, list));
+        container.appendChild(createListBlock(key, state.lists[key]));
     }
 }
 
@@ -618,6 +676,7 @@ function createListBlock(key, list) {
         <div class="add-row">
             <input type="text" placeholder="Добавить..." onkeydown="if(event.key==='Enter') addListItem('${key}', this)">
             <button onclick="addListItem('${key}', this.previousElementSibling)">+</button>
+            <button class="import-btn" onclick="openBulkImport('list','${key}')" title="Массовый импорт">📥</button>
         </div>
         <div class="item-list" id="list-values-${key}"></div>
     `;
@@ -640,6 +699,7 @@ function renderListItems(key) {
     const list = state.lists[key];
 
     list.items.forEach((item, idx) => {
+        if (!item || !item.text) return; // защита
         const row = document.createElement('div');
         row.className = `item ${item.enabled ? '' : 'disabled'}`;
 
@@ -651,6 +711,7 @@ function renderListItems(key) {
         const txt = document.createElement('span');
         txt.className = 'item-text';
         txt.textContent = item.text;
+
         txt.onclick = () => startEditListItem(key, idx, txt);
 
         const del = document.createElement('button');
@@ -682,7 +743,6 @@ function startEditListItem(key, idx, span) {
     inp.value = old;
     span.replaceWith(inp);
     inp.focus();
-
     const finish = () => {
         const v = inp.value.trim();
         if (v && v !== old) { list.items[idx].text = v; save(); }
@@ -729,10 +789,8 @@ function openEditList(key) {
 function renderModules() {
     const container = document.getElementById('modulesContainer');
     container.innerHTML = '';
-
     for (const gKey in state.modules) {
         const group = state.modules[gKey];
-
         const title = document.createElement('div');
         title.className = `group-title ${group.groupClass}`;
         title.innerHTML = `<span>${group.name}</span><span>${group.expanded ? '▼' : '▶'}</span>`;
@@ -741,7 +799,6 @@ function renderModules() {
 
         const body = document.createElement('div');
         body.className = `group-body ${group.expanded ? '' : 'collapsed'}`;
-
         for (const mKey in group.modules) {
             body.appendChild(createModule(gKey, mKey, group.modules[mKey]));
         }
@@ -752,7 +809,6 @@ function renderModules() {
 function createModule(gKey, mKey, mod) {
     const div = document.createElement('div');
     div.className = `module ${mod.enabled ? '' : 'disabled'}`;
-
     const active = mod.items.filter(i => i.enabled).length;
 
     div.innerHTML = `
@@ -777,6 +833,7 @@ function createModule(gKey, mKey, mod) {
         <div class="add-row">
             <input type="text" placeholder="Добавить..." onkeydown="if(event.key==='Enter') addModuleItem('${gKey}','${mKey}', this)">
             <button onclick="addModuleItem('${gKey}','${mKey}', this.previousElementSibling)">+</button>
+            <button class="import-btn" onclick="openBulkImport('module','${gKey}','${mKey}')" title="Массовый импорт">📥</button>
         </div>
         <div class="item-list" id="mod-values-${gKey}-${mKey}"></div>
     `;
@@ -802,6 +859,7 @@ function renderModuleItems(gKey, mKey) {
     const mod = state.modules[gKey].modules[mKey];
 
     mod.items.forEach((item, idx) => {
+        if (!item || !item.text) return;
         const row = document.createElement('div');
         row.className = `item ${item.enabled ? '' : 'disabled'}`;
 
@@ -844,7 +902,6 @@ function startEditModuleItem(gKey, mKey, idx, span) {
     inp.value = old;
     span.replaceWith(inp);
     inp.focus();
-
     const finish = () => {
         const v = inp.value.trim();
         if (v && v !== old) { mod.items[idx].text = v; save(); }
@@ -888,7 +945,7 @@ function openEditModule(gKey, mKey) {
 }
 
 // ============================================================
-// МОДАЛЬНОЕ ОКНО
+// МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ (замена всего списка)
 // ============================================================
 function closeEdit() {
     document.getElementById('editModal').classList.remove('active');
@@ -908,7 +965,7 @@ function saveEdit() {
     }
 
     const oldMap = {};
-    target.forEach(i => oldMap[i.text.toLowerCase()] = i.enabled);
+    target.forEach(i => { if (i && i.text) oldMap[i.text.toLowerCase()] = i.enabled; });
 
     const newItems = lines.map(t => ({
         text: t,
@@ -926,6 +983,64 @@ function saveEdit() {
     renderModules();
     closeEdit();
     showToast(`Сохранено: ${lines.length}`);
+}
+
+// ============================================================
+// МАССОВЫЙ ИМПОРТ (добавление к существующим)
+// ============================================================
+function openBulkImport(type, key, mKey) {
+    bulkContext = { type, key, mKey };
+    const title = type === 'list' ? state.lists[key].name : state.modules[key].modules[mKey].name;
+    document.getElementById('bulkImportTitle').textContent = `Импорт: ${title}`;
+    document.getElementById('bulkImportTextarea').value = '';
+    document.getElementById('bulkImportModal').classList.add('active');
+}
+
+function closeBulkImport() {
+    document.getElementById('bulkImportModal').classList.remove('active');
+    bulkContext = null;
+}
+
+function confirmBulkImport() {
+    if (!bulkContext) return;
+    const text = document.getElementById('bulkImportTextarea').value;
+    const lines = text.split(/[\n,]+/).map(s => s.trim()).filter(s => s);
+
+    let target;
+    if (bulkContext.type === 'list') {
+        target = state.lists[bulkContext.key].items;
+    } else {
+        target = state.modules[bulkContext.key].modules[bulkContext.mKey].items;
+    }
+
+    let added = 0, skipped = 0;
+    lines.forEach(line => {
+        if (target.some(i => i.text.toLowerCase() === line.toLowerCase())) {
+            skipped++;
+        } else {
+            target.push({ text: line, enabled: true });
+            added++;
+        }
+    });
+
+    save();
+    renderLists();
+    renderModules();
+    closeBulkImport();
+    showToast(`Добавлено: ${added}${skipped ? `, пропущено: ${skipped}` : ''}`);
+}
+
+// ============================================================
+// СБРОС
+// ============================================================
+function resetAll() {
+    if (!confirm('Сбросить все списки и модули к стандартным? Все ваши изменения будут потеряны.')) return;
+    state.lists = JSON.parse(JSON.stringify(DEFAULT_LISTS));
+    state.modules = JSON.parse(JSON.stringify(DEFAULT_MODULES));
+    save();
+    renderLists();
+    renderModules();
+    showToast('Сброшено');
 }
 
 // ============================================================
