@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Генератор Персонажей + Правила</title>
+<title>Генератор Персонажей v2.0</title>
 <style>
 :root {
     --bg: #1a1a2e;
@@ -17,6 +17,7 @@
     --race: #d9a441;
     --lists: #5cb85c;
     --rules: #9b59b6;
+    --mods: #7b68ee;
 }
 * { box-sizing: border-box; }
 body {
@@ -37,7 +38,7 @@ body {
     flex: 1; padding: 12px 6px; background: none; border: none;
     color: #888; font-size: 0.85rem; cursor: pointer; font-weight: bold;
     border-bottom: 3px solid transparent; transition: 0.3s;
-    min-width: 90px;
+    min-width: 80px;
 }
 .tab-btn.active {
     color: var(--text); border-bottom-color: var(--accent);
@@ -78,6 +79,24 @@ body {
     transition: 0.2s;
 }
 .btn-secondary:hover { background: #1a4a7a; }
+
+/* Пресеты */
+.presets-bar {
+    display: flex; gap: 8px; margin-bottom: 15px;
+    flex-wrap: wrap; align-items: center;
+}
+.presets-bar span { font-size: 0.85rem; color: #888; }
+.preset-btn {
+    padding: 6px 12px; font-size: 0.8rem;
+    border-radius: 20px; cursor: pointer;
+    background: var(--secondary); color: white;
+    border: 1px solid #555; transition: 0.2s;
+}
+.preset-btn:hover { background: var(--accent); border-color: var(--accent); }
+.counter-badge {
+    font-size: 0.75rem; color: #888; margin-left: auto;
+    padding: 4px 10px; background: rgba(0,0,0,0.3); border-radius: 10px;
+}
 
 /* История */
 .history-controls { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
@@ -177,6 +196,7 @@ body {
 .group-appearance { background: linear-gradient(90deg, var(--appearance), transparent); }
 .group-clothes { background: linear-gradient(90deg, var(--clothes), transparent); }
 .group-race { background: linear-gradient(90deg, var(--race), transparent); }
+.group-mods { background: linear-gradient(90deg, var(--mods), transparent); }
 .group-body { padding-left: 8px; }
 .group-body.collapsed { display: none; }
 
@@ -202,6 +222,22 @@ body {
     transition: 0.2s;
 }
 .module.open .module-toggle { transform: rotate(180deg); }
+
+/* Простой модуль (без подкатегорий) — для модификаторов */
+.simple-module {
+    background: #0d1b2a; border-radius: 8px;
+    margin-top: 8px; overflow: hidden;
+    border-left: 3px solid var(--mods);
+}
+.simple-module.disabled { opacity: 0.5; }
+.simple-header {
+    display: flex; justify-content: space-between;
+    align-items: center; padding: 10px 15px;
+    background: var(--header); cursor: pointer; user-select: none;
+}
+.simple-header h4 { margin: 0; font-size: 0.9rem; }
+.simple-body { padding: 10px 15px 15px; display: none; }
+.simple-module.open .simple-body { display: block; }
 
 /* Подкатегория */
 .subcat {
@@ -255,18 +291,27 @@ body {
 
 .rule-body { padding: 12px 15px; font-size: 0.85rem; line-height: 1.6; }
 .rule-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
-.rule-row label { font-size: 0.8rem; color: #888; min-width: 80px; }
+.rule-row label { font-size: 0.8rem; color: #888; min-width: 100px; }
 .rule-row select, .rule-row input[type="text"] {
     flex-grow: 1; padding: 6px 10px; border-radius: 5px;
     border: 1px solid #333; background: #1a1a2e;
     color: white; font-size: 0.85rem;
-    min-width: 150px;
+    min-width: 130px;
 }
 .rule-row .arrow { color: var(--rules); font-weight: bold; font-size: 1.1rem; }
 
-.rule-actions {
-    display: flex; gap: 5px; margin-top: 10px;
-    justify-content: flex-end;
+.condition-block {
+    background: #1a1a2e; padding: 10px; border-radius: 6px;
+    margin-bottom: 8px; border-left: 2px solid var(--rules);
+}
+.condition-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px; font-size: 0.8rem; color: var(--rules);
+    font-weight: bold;
+}
+.condition-header button {
+    background: none; border: none; color: var(--accent);
+    cursor: pointer; font-size: 1rem;
 }
 
 .add-rule-form {
@@ -274,10 +319,18 @@ body {
     border-radius: 8px; border: 1px dashed var(--rules);
     margin-bottom: 15px;
 }
-
+.rule-actions {
+    display: flex; gap: 5px; margin-top: 10px;
+    justify-content: flex-end;
+}
 .empty-state {
     text-align: center; color: #666; padding: 30px;
     font-size: 0.9rem;
+}
+.chain-badge {
+    font-size: 0.65rem; padding: 2px 6px; border-radius: 8px;
+    background: var(--race); color: #1a1a2e; font-weight: bold;
+    margin-left: 6px;
 }
 
 /* Модальное окно */
@@ -290,7 +343,7 @@ body {
 .modal-overlay.active { display: flex; }
 .modal {
     background: var(--container); padding: 25px;
-    border-radius: 12px; max-width: 500px; width: 100%;
+    border-radius: 12px; max-width: 550px; width: 100%;
     max-height: 85vh; overflow-y: auto;
 }
 .modal h3 { margin-top: 0; }
@@ -325,6 +378,14 @@ body {
     </div>
 
     <div id="tab-gen" class="tab-content active">
+        <div class="presets-bar">
+            <span>Пресеты:</span>
+            <button class="preset-btn" onclick="applyPreset('portrait')">👤 Портрет</button>
+            <button class="preset-btn" onclick="applyPreset('full')">🧍 Полный рост</button>
+            <button class="preset-btn" onclick="applyPreset('race')">🧬 Только раса</button>
+            <button class="preset-btn" onclick="applyPreset('all')">✅ Всё</button>
+            <span class="counter-badge" id="genCounter">Создано: 0</span>
+        </div>
         <div class="result-box" id="resultBox">
             <p style="text-align:center; color:#888;">Нажмите «Сгенерировать»</p>
         </div>
@@ -351,6 +412,7 @@ body {
 
     <div id="tab-mod" class="tab-content">
         <div class="toolbar">
+            <input type="text" id="moduleSearch" class="search-input" placeholder="🔍 Поиск по модулям..." oninput="renderModules()" style="flex-grow:1;">
             <button class="btn-secondary" onclick="sortModules()">🔤 Сортировать</button>
             <button class="btn-secondary" onclick="resetAll()">↺ Сброс</button>
         </div>
@@ -368,12 +430,15 @@ body {
                     <option value="add">🟡 Добавить текст (если X → +текст)</option>
                 </select>
             </div>
-            <div class="rule-row">
-                <label>Условие:</label>
-                <select id="newRuleCondModule"></select>
-                <span class="arrow">=</span>
-                <select id="newRuleCondValue"></select>
+
+            <div class="condition-block">
+                <div class="condition-header">
+                    <span>Условия (И)</span>
+                    <button onclick="addCondition()" title="Добавить условие">➕</button>
+                </div>
+                <div id="conditionsContainer"></div>
             </div>
+
             <div class="rule-row" id="actionReplaceRow">
                 <label>Действие:</label>
                 <select id="newRuleActModule"></select>
@@ -381,21 +446,36 @@ body {
                 <select id="newRuleActValue"></select>
             </div>
             <div class="rule-row" id="actionExcludeRow" style="display:none;">
-                <label>Убрать:</label>
+                <label>Убрать из:</label>
                 <select id="newRuleExclModule"></select>
-                <input type="text" id="newRuleExclValue" placeholder="Значение (через запятую)">
+                <input type="text" id="newRuleExclValue" placeholder="Значения через запятую">
             </div>
             <div class="rule-row" id="actionAddRow" style="display:none;">
                 <label>Текст:</label>
                 <input type="text" id="newRuleAddText" placeholder="torn clothes, pale skin">
             </div>
+
+            <div class="rule-row">
+                <label>Цепочка:</label>
+                <label style="display:flex; align-items:center; gap:5px; font-size:0.8rem; cursor:pointer;">
+                    <input type="checkbox" id="newRuleChain"> Может активировать другие правила
+                </label>
+            </div>
+
             <button class="btn-main" style="width:auto; margin:10px 0 0 0; padding:10px 20px; font-size:0.85rem;" onclick="addRule()">Добавить правило</button>
         </div>
+
+        <div class="toolbar">
+            <button class="btn-secondary" onclick="exportRules()">💾 Экспорт правил</button>
+            <button class="btn-secondary" onclick="document.getElementById('ruleFileInput').click()">📂 Импорт правил</button>
+            <input type="file" id="ruleFileInput" accept=".json" style="display:none;" onchange="importRules(event)">
+        </div>
+
         <div id="rulesContainer"></div>
     </div>
 </div>
 
-<!-- МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ -->
+<!-- МОДАЛЬНЫЕ ОКНА -->
 <div class="modal-overlay" id="editModal">
     <div class="modal">
         <h3 id="editTitle">Редактирование</h3>
@@ -437,6 +517,13 @@ const DEFAULT_LISTS = {
     }
 };
 
+const DEFAULT_MODIFIERS = {
+    name: "✨ Модификаторы одежды",
+    enabled: true,
+    expanded: true,
+    items: ["Oversized", "Cropped", "Vintage", "Torn", "Formal", "Sporty", "Baggy", "Slim", "Loose", "Tight", "Fitted"]
+};
+
 const DEFAULT_MODULES = {
     appearance: {
         name: "🎨 Модуль базовой внешности", groupClass: "group-appearance", expanded: true,
@@ -458,11 +545,11 @@ const DEFAULT_MODULES = {
                 }
             },
             backHair: {
-                name: "Back hair (задние волосы)", enabled: true, expanded: false,
+                name: "Back hair", enabled: true, expanded: false,
                 subcategories: { shape: { name: "Форма", enabled: true, expanded: false, items: ["Хвост", "Косички", "Распущенные", "Пучок"] } }
             },
             addHair: {
-                name: "Additional hair (доп.)", enabled: true, expanded: false,
+                name: "Additional hair", enabled: true, expanded: false,
                 subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Ахоге", "Пучок", "Хвостик"] } }
             },
             eyeShape: {
@@ -511,12 +598,14 @@ const DEFAULT_MODULES = {
 // ============================================================
 let state = {
     lists: null,
+    modifiers: null,
     modules: null,
-    rules: [],   // { id, type: 'replace'|'exclude'|'add', condition: {path, value}, action: {...}, enabled: true }
+    rules: [],
     history: [],
     current: {},
     currentPaths: [],
-    extraText: ''   // текст от правил-add, добавляется к промпту
+    extraText: '',
+    genCount: 0
 };
 
 let editContext = null;
@@ -527,17 +616,24 @@ let bulkContext = null;
 // ============================================================
 function init() {
     const savedLists = localStorage.getItem('cg_lists_v2');
+    const savedMods = localStorage.getItem('cg_modifiers');
     const savedModules = localStorage.getItem('cg_modules_v2');
     const savedRules = localStorage.getItem('cg_rules');
     const savedHist = localStorage.getItem('cg_history');
+    const savedCount = localStorage.getItem('cg_gen_count');
 
     state.lists = savedLists ? JSON.parse(savedLists) : null;
+    state.modifiers = savedMods ? JSON.parse(savedMods) : null;
     state.modules = savedModules ? JSON.parse(savedModules) : null;
     state.rules = savedRules ? JSON.parse(savedRules) : [];
     state.history = savedHist ? JSON.parse(savedHist) : [];
+    state.genCount = savedCount ? parseInt(savedCount) : 0;
 
     if (!state.lists || !isValidListStructure(state.lists)) {
         state.lists = JSON.parse(JSON.stringify(DEFAULT_LISTS));
+    }
+    if (!state.modifiers) {
+        state.modifiers = JSON.parse(JSON.stringify(DEFAULT_MODIFIERS));
     }
     if (!state.modules || !isValidModuleStructure(state.modules)) {
         state.modules = JSON.parse(JSON.stringify(DEFAULT_MODULES));
@@ -549,14 +645,14 @@ function init() {
     renderRules();
     renderHistory();
     populateRuleSelects();
+    updateCounter();
 }
 
 function isValidListStructure(lists) {
     for (const key in lists) {
         const list = lists[key];
         if (!list || !Array.isArray(list.items)) return false;
-        const hasText = list.items.some(i => i && typeof i.text === 'string' && i.text.length > 0);
-        if (!hasText) return false;
+        if (!list.items.some(i => i && typeof i.text === 'string' && i.text.length > 0)) return false;
     }
     return true;
 }
@@ -586,6 +682,15 @@ function sanitizeData() {
         if (list.enabled === undefined) list.enabled = true;
         if (list.expanded === undefined) list.expanded = true;
     }
+    if (state.modifiers) {
+        state.modifiers.items = (state.modifiers.items || []).map(i => {
+            if (typeof i === 'string') return { text: i, enabled: true };
+            if (i && typeof i === 'object' && typeof i.text === 'string') return i;
+            return null;
+        }).filter(i => i && i.text.trim().length > 0);
+        if (state.modifiers.enabled === undefined) state.modifiers.enabled = true;
+        if (state.modifiers.expanded === undefined) state.modifiers.expanded = true;
+    }
     for (const gKey in state.modules) {
         const group = state.modules[gKey];
         if (!group.modules) group.modules = {};
@@ -611,9 +716,15 @@ function sanitizeData() {
 }
 function save() {
     localStorage.setItem('cg_lists_v2', JSON.stringify(state.lists));
+    localStorage.setItem('cg_modifiers', JSON.stringify(state.modifiers));
     localStorage.setItem('cg_modules_v2', JSON.stringify(state.modules));
     localStorage.setItem('cg_rules', JSON.stringify(state.rules));
     localStorage.setItem('cg_history', JSON.stringify(state.history));
+    localStorage.setItem('cg_gen_count', state.genCount.toString());
+}
+function updateCounter() {
+    const el = document.getElementById('genCounter');
+    if (el) el.textContent = `Создано: ${state.genCount}`;
 }
 
 // ============================================================
@@ -629,14 +740,12 @@ function switchTab(name, btn) {
 }
 
 // ============================================================
-// СПИСОК ВСЕХ ВОЗМОЖНЫХ ПУТЕЙ (для правил)
+// СПИСОК ВСЕХ ПУТЕЙ
 // ============================================================
 function getAllPaths() {
     const paths = [];
-    // Списки
-    paths.push({ path: 'list.races', name: 'Расы', items: state.lists.races.items });
-    paths.push({ path: 'list.styles', name: 'Стили', items: state.lists.styles.items });
-    // Модули
+    paths.push({ path: 'list.races', name: '🧬 Расы', items: state.lists.races.items });
+    paths.push({ path: 'list.styles', name: '👗 Стили', items: state.lists.styles.items });
     for (const gKey in state.modules) {
         const group = state.modules[gKey];
         for (const mKey in group.modules) {
@@ -647,7 +756,7 @@ function getAllPaths() {
             }
             paths.push({
                 path: `${gKey}.${mKey}`,
-                name: `${group.name.replace(/^[^\s]+\s/, '')} → ${mod.name}`,
+                name: `${mod.name}`,
                 items: allItems
             });
         }
@@ -656,7 +765,7 @@ function getAllPaths() {
 }
 
 // ============================================================
-// ГЕНЕРАЦИЯ С ПРАВИЛАМИ
+// ГЕНЕРАЦИЯ
 // ============================================================
 function randItem(items) {
     const active = items.filter(i => i.enabled && i.text && i.text !== "Отсутствует" && i.text !== "None");
@@ -675,7 +784,7 @@ function generate() {
     const paths = [];
     const extraTexts = [];
 
-    // === 1. Первый проход: генерируем всё как обычно ===
+    // 1. Первичная генерация
     if (state.lists.races.enabled) {
         const race = randItem(state.lists.races.items);
         if (race) { result['list.races'] = race; paths.push('list.races'); }
@@ -704,34 +813,70 @@ function generate() {
         }
     }
 
-    // === 2. Применяем правила ===
+    // 2. Применяем модификатор к случайному предмету одежды
+    let modifierApplied = null;
+    if (state.modifiers && state.modifiers.enabled) {
+        const modifier = randItem(state.modifiers.items);
+        if (modifier) {
+            const clothesSlots = ['clothes.headwear', 'clothes.neckwear', 'clothes.topwear1', 'clothes.bottomwear', 'clothes.legwear', 'clothes.footwear'];
+            const available = clothesSlots.filter(s => result[s]);
+            if (available.length > 0) {
+                const target = available[Math.floor(Math.random() * available.length)];
+                // Модификатор применяется к последнему значению в слоте
+                const parts = result[target].split(', ');
+                parts[parts.length - 1] = `${modifier} ${parts[parts.length - 1]}`;
+                result[target] = parts.join(', ');
+                modifierApplied = { slot: target, modifier: modifier };
+            }
+        }
+    }
+
+    // 3. Правила
     const activeRules = state.rules.filter(r => r.enabled);
 
-    // 2.1 Замены
+    // 3.1 Замены (с проверкой всех условий)
     activeRules.filter(r => r.type === 'replace').forEach(rule => {
-        const condPath = rule.condition.path;
-        const condVal = rule.condition.value;
-        // Проверяем условие: если в текущем результате есть это значение
-        if (matchesCondition(result, condPath, condVal)) {
-            // Применяем: заменяем целое значение action.path на action.value
+        if (checkConditions(rule, result)) {
             const actPath = rule.action.path;
             const actVal = rule.action.value;
             if (actPath) {
                 result[actPath] = actVal;
                 if (!paths.includes(actPath)) paths.push(actPath);
+                // Цепочка: если правило имеет chain — проверяем ещё раз все правила
+                if (rule.chain) {
+                    // После замены могли активироваться другие правила — рекурсия 1 уровня
+                    setTimeout(() => {}, 0);
+                }
             }
         }
     });
 
-    // 2.2 Исключения (перегенерируем те модули, где есть исключения)
-    const excludeRules = activeRules.filter(r => r.type === 'exclude');
-    excludeRules.forEach(rule => {
-        if (matchesCondition(result, rule.condition.path, rule.condition.value)) {
+    // 3.2 Цепочки: повторная проверка правил (1 проход)
+    let chainChanged = true;
+    let chainIterations = 0;
+    while (chainChanged && chainIterations < 3) {
+        chainChanged = false;
+        chainIterations++;
+        activeRules.filter(r => r.type === 'replace' && r.chain).forEach(rule => {
+            if (checkConditions(rule, result)) {
+                const actPath = rule.action.path;
+                const actVal = rule.action.value;
+                if (actPath && result[actPath] !== actVal) {
+                    result[actPath] = actVal;
+                    if (!paths.includes(actPath)) paths.push(actPath);
+                    chainChanged = true;
+                }
+            }
+        });
+    }
+
+    // 3.3 Исключения
+    activeRules.filter(r => r.type === 'exclude').forEach(rule => {
+        if (checkConditions(rule, result)) {
             const exclPath = rule.action.path;
             const exclValues = rule.action.values || [];
             if (!exclPath) return;
 
-            // Если это простой путь модуля — перегенерируем
             if (exclPath.startsWith('list.')) {
                 const listKey = exclPath.split('.')[1];
                 const newVal = randItemExcluding(state.lists[listKey].items, exclValues);
@@ -740,7 +885,6 @@ function generate() {
                 const [gKey, mKey] = exclPath.split('.');
                 const mod = state.modules[gKey] && state.modules[gKey].modules[mKey];
                 if (!mod || !mod.enabled) return;
-                // Идём по подкатегориям и перегенерируем
                 const slotValues = [];
                 for (const sKey in mod.subcategories) {
                     const sub = mod.subcategories[sKey];
@@ -753,9 +897,9 @@ function generate() {
         }
     });
 
-    // 2.3 Добавление текста
+    // 3.4 Добавление текста
     activeRules.filter(r => r.type === 'add').forEach(rule => {
-        if (matchesCondition(result, rule.condition.path, rule.condition.value)) {
+        if (checkConditions(rule, result)) {
             if (rule.action.text) extraTexts.push(rule.action.text);
         }
     });
@@ -765,17 +909,34 @@ function generate() {
     state.current = result;
     state.currentPaths = paths;
     state.extraText = extraTexts.join(', ');
-    renderResult(result, paths, extraTexts);
+    state.genCount++;
+    save();
+    updateCounter();
+    renderResult(result, paths, extraTexts, modifierApplied);
     addHistory(result, paths, extraTexts);
 }
 
-function matchesCondition(result, condPath, condVal) {
-    if (!condPath || !condVal) return false;
+// Проверка условий (все должны выполниться — AND)
+function checkConditions(rule, result) {
+    if (!rule.conditions || rule.conditions.length === 0) return false;
+    for (const cond of rule.conditions) {
+        if (!matchesCondition(result, cond.path, cond.value, cond.negate)) return false;
+    }
+    return true;
+}
+
+function matchesCondition(result, condPath, condVal, negate) {
+    if (!condPath) return false;
     const currentVal = result[condPath];
-    if (!currentVal) return false;
-    // Проверяем совпадение (в т.ч. если в значении несколько через запятую)
-    const currentParts = currentVal.split(',').map(s => s.trim().toLowerCase());
-    return currentParts.includes(condVal.toLowerCase());
+    const isEmpty = !currentVal;
+    const currentParts = currentVal ? currentVal.split(',').map(s => s.trim().toLowerCase()) : [];
+    const match = !isEmpty && currentParts.includes((condVal || '').toLowerCase());
+
+    if (negate) {
+        // Условие "отсутствует"
+        return isEmpty || !match;
+    }
+    return match;
 }
 
 function getPathName(path) {
@@ -784,7 +945,7 @@ function getPathName(path) {
     return state.modules[g].modules[m].name;
 }
 
-function renderResult(result, paths, extraTexts) {
+function renderResult(result, paths, extraTexts, modifierApplied) {
     const box = document.getElementById('resultBox');
     box.innerHTML = '';
     paths.forEach(path => {
@@ -839,6 +1000,49 @@ function copyShort() {
 }
 
 // ============================================================
+// ПРЕСЕТЫ
+// ============================================================
+const PRESETS = {
+    all: null,
+    portrait: ['list.races', 'list.styles', 'appearance.bangs', 'appearance.sidelocks', 'appearance.backHair', 'appearance.addHair', 'appearance.eyeShape', 'appearance.skinColor', 'race.trait1', 'race.trait2', 'race.trait3', 'clothes.acc1'],
+    full: ['list.races', 'list.styles', 'appearance.bangs', 'appearance.sidelocks', 'appearance.backHair', 'appearance.addHair', 'appearance.eyeShape', 'appearance.skinColor', 'clothes.headwear', 'clothes.neckwear', 'clothes.handwear', 'clothes.topwear1', 'clothes.bottomwear', 'clothes.legwear', 'clothes.footwear', 'clothes.acc1', 'clothes.acc2', 'clothes.acc3', 'clothes.acc4', 'clothes.acc5', 'race.trait1', 'race.trait2', 'race.trait3'],
+    race: ['list.races', 'race.trait1', 'race.trait2', 'race.trait3', 'race.trait4', 'race.trait5', 'race.trait6', 'race.trait7']
+};
+
+function applyPreset(name) {
+    const preset = PRESETS[name];
+
+    // Списки
+    for (const key in state.lists) {
+        if (preset === null) state.lists[key].enabled = true;
+        else state.lists[key].enabled = preset.includes(`list.${key}`);
+    }
+
+    // Модификаторы
+    if (state.modifiers) {
+        if (preset === null) state.modifiers.enabled = true;
+        else state.modifiers.enabled = false; // по умолчанию выкл в пресетах кроме full
+    }
+
+    // Модули
+    for (const gKey in state.modules) {
+        const group = state.modules[gKey];
+        for (const mKey in group.modules) {
+            const mod = group.modules[mKey];
+            if (preset === null) mod.enabled = true;
+            else mod.enabled = preset.includes(`${gKey}.${mKey}`);
+        }
+    }
+
+    if (name === 'full' && state.modifiers) state.modifiers.enabled = true;
+
+    save();
+    renderLists();
+    renderModules();
+    showToast(`Пресет "${name}"`);
+}
+
+// ============================================================
 // ИСТОРИЯ
 // ============================================================
 function renderHistory() {
@@ -886,178 +1090,7 @@ function copyHist(id) {
 }
 
 // ============================================================
-// ПРАВИЛА — UI
-// ============================================================
-function populateRuleSelects() {
-    const paths = getAllPaths();
-    const selects = ['newRuleCondModule', 'newRuleActModule', 'newRuleExclModule'];
-    selects.forEach(selId => {
-        const sel = document.getElementById(selId);
-        if (!sel) return;
-        const currentVal = sel.value;
-        sel.innerHTML = '';
-        paths.forEach(p => {
-            const opt = document.createElement('option');
-            opt.value = p.path;
-            opt.textContent = p.name;
-            sel.appendChild(opt);
-        });
-        if (currentVal) sel.value = currentVal;
-    });
-    onRuleCondModuleChange();
-    onRuleActModuleChange();
-    onRuleExclModuleChange();
-}
-
-function getItemsByPath(path) {
-    if (path.startsWith('list.')) return state.lists[path.split('.')[1]].items;
-    const [g, m] = path.split('.');
-    if (!state.modules[g] || !state.modules[g].modules[m]) return [];
-    const all = [];
-    for (const sKey in state.modules[g].modules[m].subcategories) {
-        all.push(...state.modules[g].modules[m].subcategories[sKey].items);
-    }
-    return all;
-}
-
-function onRuleCondModuleChange() {
-    const sel = document.getElementById('newRuleCondModule');
-    const valSel = document.getElementById('newRuleCondValue');
-    if (!sel || !valSel) return;
-    const items = getItemsByPath(sel.value);
-    valSel.innerHTML = '';
-    items.filter(i => i.enabled).forEach(i => {
-        const opt = document.createElement('option');
-        opt.value = i.text;
-        opt.textContent = i.text;
-        valSel.appendChild(opt);
-    });
-}
-function onRuleActModuleChange() {
-    const sel = document.getElementById('newRuleActModule');
-    const valSel = document.getElementById('newRuleActValue');
-    if (!sel || !valSel) return;
-    const items = getItemsByPath(sel.value);
-    valSel.innerHTML = '';
-    items.filter(i => i.enabled).forEach(i => {
-        const opt = document.createElement('option');
-        opt.value = i.text;
-        opt.textContent = i.text;
-        valSel.appendChild(opt);
-    });
-}
-function onRuleExclModuleChange() {
-    // для исключений вводится текст вручную
-}
-
-function onRuleTypeChange() {
-    const t = document.getElementById('newRuleType').value;
-    document.getElementById('actionReplaceRow').style.display = t === 'replace' ? 'flex' : 'none';
-    document.getElementById('actionExcludeRow').style.display = t === 'exclude' ? 'flex' : 'none';
-    document.getElementById('actionAddRow').style.display = t === 'add' ? 'flex' : 'none';
-}
-
-function addRule() {
-    const type = document.getElementById('newRuleType').value;
-    const condPath = document.getElementById('newRuleCondModule').value;
-    const condValue = document.getElementById('newRuleCondValue').value;
-
-    if (!condPath || !condValue) { showToast('Заполните условие!'); return; }
-
-    const rule = {
-        id: Date.now(),
-        type: type,
-        condition: { path: condPath, value: condValue },
-        action: {},
-        enabled: true
-    };
-
-    if (type === 'replace') {
-        const actPath = document.getElementById('newRuleActModule').value;
-        const actValue = document.getElementById('newRuleActValue').value;
-        if (!actPath || !actValue) { showToast('Заполните действие!'); return; }
-        rule.action = { path: actPath, value: actValue };
-    } else if (type === 'exclude') {
-        const actPath = document.getElementById('newRuleExclModule').value;
-        const actValues = document.getElementById('newRuleExclValue').value.split(',').map(s => s.trim()).filter(s => s);
-        if (!actPath || actValues.length === 0) { showToast('Заполните действие!'); return; }
-        rule.action = { path: actPath, values: actValues };
-    } else if (type === 'add') {
-        const text = document.getElementById('newRuleAddText').value.trim();
-        if (!text) { showToast('Введите текст!'); return; }
-        rule.action = { text: text };
-    }
-
-    state.rules.push(rule);
-    save();
-    renderRules();
-    showToast('Правило добавлено');
-
-    // Очистка
-    document.getElementById('newRuleExclValue').value = '';
-    document.getElementById('newRuleAddText').value = '';
-}
-
-function renderRules() {
-    const container = document.getElementById('rulesContainer');
-    if (!container) return;
-    container.innerHTML = '';
-
-    if (state.rules.length === 0) {
-        container.innerHTML = '<div class="empty-state">Пока нет правил.<br>Создайте первое — например, «Если раса = Dragon girl → добавить Scales».</div>';
-        return;
-    }
-
-    state.rules.forEach(rule => {
-        const div = document.createElement('div');
-        div.className = `rule-card ${rule.enabled ? '' : 'disabled'}`;
-
-        const typeLabel = rule.type === 'replace' ? '🔵 Замена' : rule.type === 'exclude' ? '🔴 Исключение' : '🟡 Добавить';
-        const typeClass = rule.type === 'replace' ? 'rule-type-replace' : rule.type === 'exclude' ? 'rule-type-exclude' : 'rule-type-add';
-
-        const condName = getPathName(rule.condition.path) || rule.condition.path;
-
-        let actionText = '';
-        if (rule.type === 'replace') {
-            const actName = getPathName(rule.action.path) || rule.action.path;
-            actionText = `<b>${actName}</b> = <b style="color:var(--clothes);">${rule.action.value}</b>`;
-        } else if (rule.type === 'exclude') {
-            const actName = getPathName(rule.action.path) || rule.action.path;
-            actionText = `убрать из <b>${actName}</b>: <b style="color:var(--accent);">${rule.action.values.join(', ')}</b>`;
-        } else if (rule.type === 'add') {
-            actionText = `добавить текст: <b style="color:var(--race);">${rule.action.text}</b>`;
-        }
-
-        div.innerHTML = `
-            <div class="rule-header">
-                <span class="rule-type ${typeClass}">${typeLabel}</span>
-                <div style="display:flex; gap:8px; align-items:center;">
-                    <label style="font-size:0.75rem; cursor:pointer;">
-                        <input type="checkbox" ${rule.enabled ? 'checked' : ''} onchange="toggleRule(${rule.id})" style="accent-color: var(--rules);"> Вкл
-                    </label>
-                    <button class="icon-btn" onclick="deleteRule(${rule.id})">❌</button>
-                </div>
-            </div>
-            <div class="rule-body">
-                <b>Если</b> ${condName} = <b style="color:var(--rules);">${rule.condition.value}</b><br>
-                <b>Тогда</b> ${actionText}
-            </div>
-        `;
-        container.appendChild(div);
-    });
-}
-
-function toggleRule(id) {
-    const r = state.rules.find(x => x.id === id);
-    if (r) { r.enabled = !r.enabled; save(); renderRules(); }
-}
-function deleteRule(id) {
-    state.rules = state.rules.filter(x => x.id !== id);
-    save(); renderRules();
-}
-
-// ============================================================
-// СПИСКИ / МОДУЛИ / РЕНДЕР (те же функции, что и раньше)
+// СПИСКИ
 // ============================================================
 function renderLists() {
     const container = document.getElementById('listsContainer');
@@ -1151,23 +1184,161 @@ function openEditList(key) {
     document.getElementById('editModal').classList.add('active');
 }
 
-// МОДУЛИ
+// ============================================================
+// МОДУЛИ + МОДИФИКАТОРЫ
+// ============================================================
 function renderModules() {
     const container = document.getElementById('modulesContainer');
     container.innerHTML = '';
+    const q = (document.getElementById('moduleSearch').value || '').toLowerCase();
+
     for (const gKey in state.modules) {
         const group = state.modules[gKey];
+
+        // Фильтрация модулей
+        const visibleModules = {};
+        for (const mKey in group.modules) {
+            const mod = group.modules[mKey];
+            if (!q) { visibleModules[mKey] = mod; continue; }
+            const modMatch = mod.name.toLowerCase().includes(q);
+            let subMatch = false;
+            for (const sKey in mod.subcategories) {
+                if (mod.subcategories[sKey].name.toLowerCase().includes(q)) { subMatch = true; break; }
+                for (const item of mod.subcategories[sKey].items) {
+                    if (item.text.toLowerCase().includes(q)) { subMatch = true; break; }
+                }
+                if (subMatch) break;
+            }
+            if (modMatch || subMatch) visibleModules[mKey] = mod;
+        }
+
+        if (Object.keys(visibleModules).length === 0 && q) continue;
+
         const title = document.createElement('div');
         title.className = `group-title ${group.groupClass}`;
         title.innerHTML = `<span>${group.name}</span><span>${group.expanded ? '▼' : '▶'}</span>`;
         title.onclick = () => { group.expanded = !group.expanded; save(); renderModules(); };
         container.appendChild(title);
+
         const body = document.createElement('div');
         body.className = `group-body ${group.expanded ? '' : 'collapsed'}`;
-        for (const mKey in group.modules) body.appendChild(createModule(gKey, mKey, group.modules[mKey]));
+        for (const mKey in visibleModules) {
+            body.appendChild(createModule(gKey, mKey, visibleModules[mKey]));
+        }
+        container.appendChild(body);
+    }
+
+    // Модификаторы (отдельный блок)
+    if (state.modifiers && (!q || state.modifiers.name.toLowerCase().includes(q) || state.modifiers.items.some(i => i.text.toLowerCase().includes(q)))) {
+        const title = document.createElement('div');
+        title.className = 'group-title group-mods';
+        title.innerHTML = `<span>✨ Модификаторы одежды</span><span>${state.modifiers.expanded ? '▼' : '▶'}</span>`;
+        title.onclick = () => { state.modifiers.expanded = !state.modifiers.expanded; save(); renderModules(); };
+        container.appendChild(title);
+
+        const body = document.createElement('div');
+        body.className = `group-body ${state.modifiers.expanded ? '' : 'collapsed'}`;
+        body.appendChild(createSimpleModule());
         container.appendChild(body);
     }
 }
+
+function createSimpleModule() {
+    const mod = state.modifiers;
+    const div = document.createElement('div');
+    div.className = `simple-module ${mod.enabled ? '' : 'disabled'} ${mod.expanded ? 'open' : ''}`;
+    const active = mod.items.filter(i => i.enabled).length;
+    div.innerHTML = `
+        <div class="simple-header">
+            <div>
+                <h4>${mod.name}</h4>
+                <span class="module-counter">Активно: ${active} / ${mod.items.length}</span>
+            </div>
+            <div class="module-controls">
+                <label style="font-size:0.75rem; cursor:pointer;">
+                    <input type="checkbox" ${mod.enabled ? 'checked' : ''} onchange="toggleModifiers()" style="accent-color: var(--mods);"> Вкл
+                </label>
+                <button class="icon-btn" onclick="event.stopPropagation(); openEditModifiers()">✏️</button>
+                <button class="module-toggle">▼</button>
+            </div>
+        </div>
+    `;
+    const body = document.createElement('div');
+    body.className = 'simple-body';
+    body.innerHTML = `
+        <div class="add-row">
+            <input type="text" placeholder="Добавить..." onkeydown="if(event.key==='Enter') addModifierItem(this)">
+            <button onclick="addModifierItem(this.previousElementSibling)">+</button>
+            <button class="import-btn" onclick="openBulkImport('modifier')">📥</button>
+        </div>
+        <div class="item-list" id="modifier-list"></div>
+    `;
+    div.querySelector('.simple-header').onclick = (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'LABEL') return;
+        mod.expanded = !mod.expanded; save(); renderModules();
+    };
+    div.querySelector('.module-toggle').onclick = (e) => {
+        e.stopPropagation();
+        mod.expanded = !mod.expanded; save(); renderModules();
+    };
+    div.appendChild(body);
+    setTimeout(() => renderModifierItems(), 0);
+    return div;
+}
+
+function renderModifierItems() {
+    const container = document.getElementById('modifier-list');
+    if (!container) return;
+    container.innerHTML = '';
+    const mod = state.modifiers;
+    mod.items.forEach((item, idx) => {
+        if (!item || !item.text) return;
+        const row = document.createElement('div');
+        row.className = `item ${item.enabled ? '' : 'disabled'}`;
+        const cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.checked = item.enabled;
+        cb.onchange = () => { item.enabled = !item.enabled; save(); renderModifierItems(); };
+        const txt = document.createElement('span');
+        txt.className = 'item-text'; txt.textContent = item.text;
+        txt.onclick = () => startEditModifierItem(idx, txt);
+        const del = document.createElement('button');
+        del.className = 'icon-btn'; del.textContent = '❌';
+        del.onclick = () => { mod.items.splice(idx, 1); save(); renderModifierItems(); };
+        row.appendChild(cb); row.appendChild(txt); row.appendChild(del);
+        container.appendChild(row);
+    });
+    const header = container.closest('.simple-module').querySelector('.module-counter');
+    if (header) {
+        const active = mod.items.filter(i => i.enabled).length;
+        header.textContent = `Активно: ${active} / ${mod.items.length}`;
+    }
+}
+
+function toggleModifiers() { state.modifiers.enabled = !state.modifiers.enabled; save(); renderModules(); }
+function startEditModifierItem(idx, span) {
+    const mod = state.modifiers;
+    const old = mod.items[idx].text;
+    const inp = document.createElement('input'); inp.type = 'text'; inp.value = old;
+    span.replaceWith(inp); inp.focus();
+    const finish = () => { const v = inp.value.trim(); if (v && v !== old) { mod.items[idx].text = v; save(); } renderModifierItems(); };
+    inp.onblur = finish;
+    inp.onkeydown = (e) => { if (e.key === 'Enter') finish(); if (e.key === 'Escape') renderModifierItems(); };
+}
+function addModifierItem(inputEl) {
+    const v = inputEl.value.trim(); if (!v) return;
+    if (state.modifiers.items.some(i => i.text.toLowerCase() === v.toLowerCase())) { showToast('Уже есть!'); return; }
+    state.modifiers.items.push({ text: v, enabled: true });
+    inputEl.value = '';
+    save(); renderModifierItems();
+}
+function openEditModifiers() {
+    editContext = { type: 'modifier' };
+    document.getElementById('editTitle').textContent = `Редактирование: ${state.modifiers.name}`;
+    document.getElementById('editTextarea').value = state.modifiers.items.map(i => i.text).join('\n');
+    document.getElementById('editModal').classList.add('active');
+}
+
+// МОДУЛИ (стандартные)
 function createModule(gKey, mKey, mod) {
     const div = document.createElement('div');
     div.className = `module ${mod.enabled ? '' : 'disabled'} ${mod.expanded ? 'open' : ''}`;
@@ -1291,6 +1462,7 @@ function sortModules() {
             }
         }
     }
+    if (state.modifiers) state.modifiers.items.sort((a, b) => a.text.localeCompare(b.text));
     save(); renderModules(); showToast('Отсортировано');
 }
 function openEditSubcat(gKey, mKey, sKey) {
@@ -1302,6 +1474,279 @@ function openEditSubcat(gKey, mKey, sKey) {
 }
 
 // ============================================================
+// ПРАВИЛА 2.0
+// ============================================================
+function populateRuleSelects() {
+    const paths = getAllPaths();
+    const selects = ['newRuleActModule', 'newRuleExclModule'];
+    selects.forEach(selId => {
+        const sel = document.getElementById(selId);
+        if (!sel) return;
+        const currentVal = sel.value;
+        sel.innerHTML = '';
+        paths.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.path;
+            opt.textContent = p.name;
+            sel.appendChild(opt);
+        });
+        if (currentVal) sel.value = currentVal;
+    });
+    onRuleActModuleChange();
+    // Если нет ни одного условия — добавим первое
+    if (document.getElementById('conditionsContainer').children.length === 0) {
+        addCondition();
+    }
+}
+
+function getItemsByPath(path) {
+    if (path.startsWith('list.')) return state.lists[path.split('.')[1]].items;
+    const [g, m] = path.split('.');
+    if (!state.modules[g] || !state.modules[g].modules[m]) return [];
+    const all = [];
+    for (const sKey in state.modules[g].modules[m].subcategories) {
+        all.push(...state.modules[g].modules[m].subcategories[sKey].items);
+    }
+    return all;
+}
+
+function createConditionRow(cond) {
+    const div = document.createElement('div');
+    div.className = 'rule-row';
+    const paths = getAllPaths();
+
+    const moduleSelect = document.createElement('select');
+    moduleSelect.className = 'cond-module';
+    paths.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.path;
+        opt.textContent = p.name;
+        if (cond && cond.path === p.path) opt.selected = true;
+        moduleSelect.appendChild(opt);
+    });
+
+    const arrow = document.createElement('span');
+    arrow.className = 'arrow';
+    arrow.textContent = '=';
+
+    const valueSelect = document.createElement('select');
+    valueSelect.className = 'cond-value';
+    const fillValues = () => {
+        valueSelect.innerHTML = '';
+        const items = getItemsByPath(moduleSelect.value);
+        items.filter(i => i.enabled).forEach(i => {
+            const opt = document.createElement('option');
+            opt.value = i.text;
+            opt.textContent = i.text;
+            if (cond && cond.value === i.text) opt.selected = true;
+            valueSelect.appendChild(opt);
+        });
+    };
+    fillValues();
+    moduleSelect.onchange = fillValues;
+
+    const negateLabel = document.createElement('label');
+    negateLabel.style.fontSize = '0.75rem';
+    negateLabel.style.display = 'flex';
+    negateLabel.style.alignItems = 'center';
+    negateLabel.style.gap = '4px';
+    negateLabel.style.cursor = 'pointer';
+    const negateCb = document.createElement('input');
+    negateCb.type = 'checkbox';
+    negateCb.className = 'cond-negate';
+    if (cond && cond.negate) negateCb.checked = true;
+    negateLabel.appendChild(negateCb);
+    negateLabel.appendChild(document.createTextNode('НЕ'));
+
+    const removeBtn = document.createElement('button');
+    removeBtn.textContent = '❌';
+    removeBtn.style.background = 'none';
+    removeBtn.style.border = 'none';
+    removeBtn.style.color = 'var(--accent)';
+    removeBtn.style.cursor = 'pointer';
+    removeBtn.style.fontSize = '1rem';
+    removeBtn.onclick = () => div.remove();
+
+    div.appendChild(moduleSelect);
+    div.appendChild(arrow);
+    div.appendChild(valueSelect);
+    div.appendChild(negateLabel);
+    div.appendChild(removeBtn);
+    return div;
+}
+
+function addCondition() {
+    const container = document.getElementById('conditionsContainer');
+    container.appendChild(createConditionRow(null));
+}
+
+function onRuleTypeChange() {
+    const t = document.getElementById('newRuleType').value;
+    document.getElementById('actionReplaceRow').style.display = t === 'replace' ? 'flex' : 'none';
+    document.getElementById('actionExcludeRow').style.display = t === 'exclude' ? 'flex' : 'none';
+    document.getElementById('actionAddRow').style.display = t === 'add' ? 'flex' : 'none';
+}
+function onRuleActModuleChange() {
+    const sel = document.getElementById('newRuleActModule');
+    const valSel = document.getElementById('newRuleActValue');
+    if (!sel || !valSel) return;
+    const items = getItemsByPath(sel.value);
+    valSel.innerHTML = '';
+    items.filter(i => i.enabled).forEach(i => {
+        const opt = document.createElement('option');
+        opt.value = i.text;
+        opt.textContent = i.text;
+        valSel.appendChild(opt);
+    });
+}
+
+function addRule() {
+    const type = document.getElementById('newRuleType').value;
+
+    // Собираем условия
+    const conditions = [];
+    const condRows = document.querySelectorAll('#conditionsContainer .rule-row');
+    condRows.forEach(row => {
+        const path = row.querySelector('.cond-module').value;
+        const value = row.querySelector('.cond-value').value;
+        const negate = row.querySelector('.cond-negate').checked;
+        if (path && value) conditions.push({ path, value, negate });
+    });
+
+    if (conditions.length === 0) { showToast('Добавьте хотя бы одно условие!'); return; }
+
+    const rule = {
+        id: Date.now(),
+        type: type,
+        conditions: conditions,
+        action: {},
+        enabled: true,
+        chain: document.getElementById('newRuleChain').checked
+    };
+
+    if (type === 'replace') {
+        const actPath = document.getElementById('newRuleActModule').value;
+        const actValue = document.getElementById('newRuleActValue').value;
+        if (!actPath || !actValue) { showToast('Заполните действие!'); return; }
+        rule.action = { path: actPath, value: actValue };
+    } else if (type === 'exclude') {
+        const actPath = document.getElementById('newRuleExclModule').value;
+        const actValues = document.getElementById('newRuleExclValue').value.split(',').map(s => s.trim()).filter(s => s);
+        if (!actPath || actValues.length === 0) { showToast('Заполните действие!'); return; }
+        rule.action = { path: actPath, values: actValues };
+    } else if (type === 'add') {
+        const text = document.getElementById('newRuleAddText').value.trim();
+        if (!text) { showToast('Введите текст!'); return; }
+        rule.action = { text: text };
+    }
+
+    state.rules.push(rule);
+    save();
+    renderRules();
+    showToast('Правило добавлено');
+
+    // Очистка
+    document.getElementById('newRuleExclValue').value = '';
+    document.getElementById('newRuleAddText').value = '';
+    document.getElementById('conditionsContainer').innerHTML = '';
+    document.getElementById('newRuleChain').checked = false;
+    addCondition();
+}
+
+function renderRules() {
+    const container = document.getElementById('rulesContainer');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (state.rules.length === 0) {
+        container.innerHTML = '<div class="empty-state">Пока нет правил.<br>Создайте первое — например, «Если раса = Dragon girl → добавить Scales».</div>';
+        return;
+    }
+
+    state.rules.forEach(rule => {
+        const div = document.createElement('div');
+        div.className = `rule-card ${rule.enabled ? '' : 'disabled'}`;
+        const typeLabel = rule.type === 'replace' ? '🔵 Замена' : rule.type === 'exclude' ? '🔴 Исключение' : '🟡 Добавить';
+        const typeClass = rule.type === 'replace' ? 'rule-type-replace' : rule.type === 'exclude' ? 'rule-type-exclude' : 'rule-type-add';
+
+        let condText = rule.conditions.map(c => {
+            const name = getPathName(c.path) || c.path;
+            return `${name} ${c.negate ? '≠' : '='} <b style="color:var(--rules);">${c.value}</b>`;
+        }).join(' <b>И</b> ');
+
+        let actionText = '';
+        if (rule.type === 'replace') {
+            const actName = getPathName(rule.action.path) || rule.action.path;
+            actionText = `<b>${actName}</b> = <b style="color:var(--clothes);">${rule.action.value}</b>`;
+        } else if (rule.type === 'exclude') {
+            const actName = getPathName(rule.action.path) || rule.action.path;
+            actionText = `убрать из <b>${actName}</b>: <b style="color:var(--accent);">${rule.action.values.join(', ')}</b>`;
+        } else if (rule.type === 'add') {
+            actionText = `добавить текст: <b style="color:var(--race);">${rule.action.text}</b>`;
+        }
+
+        const chainBadge = rule.chain ? '<span class="chain-badge">🔗 ЦЕПОЧКА</span>' : '';
+
+        div.innerHTML = `
+            <div class="rule-header">
+                <span class="rule-type ${typeClass}">${typeLabel}${chainBadge}</span>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <label style="font-size:0.75rem; cursor:pointer;">
+                        <input type="checkbox" ${rule.enabled ? 'checked' : ''} onchange="toggleRule(${rule.id})" style="accent-color: var(--rules);"> Вкл
+                    </label>
+                    <button class="icon-btn" onclick="deleteRule(${rule.id})">❌</button>
+                </div>
+            </div>
+            <div class="rule-body">
+                <b>Если</b> ${condText}<br>
+                <b>Тогда</b> ${actionText}
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function toggleRule(id) {
+    const r = state.rules.find(x => x.id === id);
+    if (r) { r.enabled = !r.enabled; save(); renderRules(); }
+}
+function deleteRule(id) {
+    state.rules = state.rules.filter(x => x.id !== id);
+    save(); renderRules();
+}
+function exportRules() {
+    const data = JSON.stringify({ version: 2, rules: state.rules }, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `rules_${Date.now()}.json`;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Правила экспортированы');
+}
+function importRules(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (!data.rules || !Array.isArray(data.rules)) throw new Error('Неверный формат');
+            if (!confirm(`Загрузить ${data.rules.length} правил? Текущие будут заменены.`)) return;
+            state.rules = data.rules;
+            save();
+            renderRules();
+            showToast(`Загружено правил: ${data.rules.length}`);
+        } catch (err) {
+            alert('Ошибка: ' + err.message);
+        }
+        event.target.value = '';
+    };
+    reader.readAsText(file);
+}
+
+// ============================================================
 // МОДАЛЬНЫЕ ОКНА
 // ============================================================
 function closeEdit() { document.getElementById('editModal').classList.remove('active'); editContext = null; }
@@ -1309,14 +1754,20 @@ function saveEdit() {
     if (!editContext) return;
     const text = document.getElementById('editTextarea').value;
     const lines = text.split(/[\n,]+/).map(s => s.trim()).filter(s => s);
+
     let target;
     if (editContext.type === 'list') target = state.lists[editContext.key].items;
+    else if (editContext.type === 'modifier') target = state.modifiers.items;
     else target = state.modules[editContext.gKey].modules[editContext.mKey].subcategories[editContext.sKey].items;
+
     const oldMap = {};
     target.forEach(i => { if (i && i.text) oldMap[i.text.toLowerCase()] = i.enabled; });
     const newItems = lines.map(t => ({ text: t, enabled: oldMap[t.toLowerCase()] !== undefined ? oldMap[t.toLowerCase()] : true }));
+
     if (editContext.type === 'list') state.lists[editContext.key].items = newItems;
+    else if (editContext.type === 'modifier') state.modifiers.items = newItems;
     else state.modules[editContext.gKey].modules[editContext.mKey].subcategories[editContext.sKey].items = newItems;
+
     save(); renderLists(); renderModules();
     closeEdit(); showToast(`Сохранено: ${lines.length}`);
 }
@@ -1324,6 +1775,7 @@ function openBulkImport(type, key, mKey, sKey) {
     bulkContext = { type, key, mKey, sKey };
     let title = '';
     if (type === 'list') title = state.lists[key].name;
+    else if (type === 'modifier') title = state.modifiers.name;
     else if (type === 'subcat') title = state.modules[key].modules[mKey].subcategories[sKey].name;
     document.getElementById('bulkImportTitle').textContent = `Импорт: ${title}`;
     document.getElementById('bulkImportTextarea').value = '';
@@ -1336,6 +1788,7 @@ function confirmBulkImport() {
     const lines = text.split(/[\n,]+/).map(s => s.trim()).filter(s => s);
     let target;
     if (bulkContext.type === 'list') target = state.lists[bulkContext.key].items;
+    else if (bulkContext.type === 'modifier') target = state.modifiers.items;
     else target = state.modules[bulkContext.key].modules[bulkContext.mKey].subcategories[bulkContext.sKey].items;
     let added = 0, skipped = 0;
     lines.forEach(line => {
@@ -1349,6 +1802,7 @@ function confirmBulkImport() {
 function resetAll() {
     if (!confirm('Сбросить списки и модули? Правила сохранятся.')) return;
     state.lists = JSON.parse(JSON.stringify(DEFAULT_LISTS));
+    state.modifiers = JSON.parse(JSON.stringify(DEFAULT_MODIFIERS));
     state.modules = JSON.parse(JSON.stringify(DEFAULT_MODULES));
     save(); renderLists(); renderModules();
     showToast('Сброшено');
