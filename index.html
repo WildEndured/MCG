@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Модульный Генератор Персонажей v6.0</title>
+    <title>Модульный Генератор Персонажей v7.0</title>
     <style>
         :root {
             --bg-color: #1a1a2e;
@@ -16,6 +16,7 @@
             --group-clothes: #4a90d9;
             --group-race: #d9a441;
             --group-mods: #7b68ee;
+            --group-simple: #5cb85c;
         }
 
         * { box-sizing: border-box; }
@@ -130,7 +131,6 @@
         .history-date { font-size: 0.75rem; color: #888; }
 
         .history-details { font-size: 0.85rem; color: #ccc; line-height: 1.5; }
-        .history-details b { color: #888; font-weight: normal; }
 
         .history-actions { display: flex; gap: 5px; }
         .icon-btn {
@@ -141,7 +141,7 @@
         .icon-btn:hover { opacity: 1; transform: scale(1.1); }
         .icon-btn.fav-active { opacity: 1; color: gold; }
 
-        /* РЕДАКТОР - ТРЁХУРОВНЕВАЯ ИЕРАРХИЯ */
+        /* РЕДАКТОР */
         .editor-toolbar {
             display: flex; gap: 10px; margin-bottom: 15px;
             flex-wrap: wrap; align-items: center;
@@ -158,10 +158,34 @@
         .group-clothes { background: linear-gradient(90deg, var(--group-clothes), transparent); }
         .group-race { background: linear-gradient(90deg, var(--group-race), transparent); }
         .group-mods { background: linear-gradient(90deg, var(--group-mods), transparent); }
+        .group-simple { background: linear-gradient(90deg, var(--group-simple), transparent); }
 
         .group-title .toggle-icon { font-size: 0.9rem; opacity: 0.7; }
         .group-body { padding-left: 10px; }
         .group-body.collapsed { display: none; }
+
+        /* Простой модуль (Расы, Стили, Модификаторы) */
+        .simple-module {
+            background-color: #0d1b2a;
+            border-radius: 8px;
+            margin-top: 8px;
+            overflow: hidden;
+            border-left: 3px solid var(--group-simple);
+        }
+        .simple-module.disabled { opacity: 0.5; }
+
+        .simple-header {
+            display: flex; justify-content: space-between;
+            align-items: center; padding: 10px 15px;
+            background-color: var(--module-header); cursor: pointer;
+            user-select: none;
+        }
+        .simple-header h4 { margin: 0; font-size: 0.95rem; }
+        .simple-header .counter { font-size: 0.75rem; color: #888; }
+        .simple-header .controls { display: flex; gap: 8px; align-items: center; }
+
+        .simple-body { padding: 8px 12px 12px 12px; }
+        .simple-body.collapsed { display: none; }
 
         /* Категория (Уровень 2) */
         .category {
@@ -343,7 +367,7 @@
     </div>
 </div>
 
-<!-- МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ СПИСКА -->
+<!-- МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ -->
 <div class="modal-overlay" id="editModal">
     <div class="modal">
         <h3 id="editModalTitle">Редактирование</h3>
@@ -360,10 +384,39 @@
 
 <script>
     // ============================================================
-    // ДЕФОЛТНАЯ СТРУКТУРА (трёхуровневая)
+    // ДЕФОЛТНАЯ СТРУКТУРА
     // ============================================================
 
     const DEFAULT_DATA = {
+        // ============ ПРОСТЫЕ МОДУЛИ (один список) ============
+        simpleModules: {
+            races: {
+                name: "🧬 Расы",
+                group: "simple",
+                groupClass: "group-simple",
+                enabled: true,
+                expanded: true,
+                items: ["Cat girl", "Elf", "Demon girl", "Dragon girl", "Vampire girl", "Slime girl", "Zombie girl", "Fox girl", "Angel girl", "Succubus"]
+            },
+            styles: {
+                name: "👗 Стили одежды",
+                group: "simple",
+                groupClass: "group-simple",
+                enabled: true,
+                expanded: true,
+                items: ["Casual", "Streetwear", "Gothic Lolita", "Punk", "Techwear", "Y2K", "Gyaru", "Grunge", "Maid", "Nun"]
+            },
+            modifiers: {
+                name: "✨ Модификаторы одежды",
+                group: "simple",
+                groupClass: "group-simple",
+                enabled: true,
+                expanded: true,
+                items: ["Oversized", "Cropped", "Vintage", "Torn", "Formal", "Sporty", "Baggy", "Slim"]
+            }
+        },
+
+        // ============ МОДУЛЬ БАЗОВОЙ ВНЕШНОСТИ (трёхуровневый) ============
         appearance: {
             name: "🎨 Базовая внешность",
             groupClass: "group-appearance",
@@ -383,7 +436,8 @@
                     name: "Глаза",
                     expanded: true,
                     subcategories: {
-                        eyeShape: { name: "Форма глаз", enabled: true, expanded: false, items: ["Большие", "Узкие", "Круглые", "Закрытые"] }
+                        eyeShape: { name: "Форма глаз", enabled: true, expanded: false, items: ["Большие", "Узкие", "Круглые", "Закрытые"] },
+                        eyeColor: { name: "Цвет глаз",  enabled: true, expanded: false, items: ["Голубые", "Карие", "Зелёные", "Красные", "Фиолетовые"] }
                     }
                 },
                 torso: {
@@ -396,12 +450,13 @@
                 }
             }
         },
+
+        // ============ МОДУЛЬ ОДЕЖДЫ (трёхуровневый) ============
         clothes: {
-            name: "👗 Одежда",
+            name: "👕 Одежда (слоты)",
             groupClass: "group-clothes",
             expanded: true,
             categories: {
-                style:      { name: "Стиль", expanded: true, subcategories: { styleType: { name: "Тип стиля", enabled: true, expanded: false, items: ["Casual", "Streetwear", "Gothic Lolita", "Punk", "Techwear", "Y2K"] } } },
                 headwear:   { name: "Headwear", expanded: true, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Шляпа", "Капюшон", "Ободок", "Шапка", "Отсутствует"] } } },
                 neckwear:   { name: "Neckwear", expanded: true, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Чокер", "Шарф", "Ожерелье", "Отсутствует"] } } },
                 topwear:    { name: "Topwear",  expanded: true, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Футболка", "Худи", "Кроп-топ", "Куртка", "Свитер", "Отсутствует"] } } },
@@ -409,26 +464,24 @@
                 legwear:    { name: "Legwear",  expanded: true, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Чулки", "Носки", "Колготки", "Отсутствует"] } } },
                 footwear:   { name: "Footwear", expanded: true, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Кроссовки", "Ботинки", "Каблуки", "Сандалии", "Отсутствует"] } } },
                 acc1:       { name: "Accessory 1", expanded: true, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Серьги", "Очки", "Браслет", "Отсутствует"] } } },
-                acc2:       { name: "Accessory 2", expanded: true, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Сумка", "Зонт", "Оружие", "Отсутствует"] } } }
+                acc2:       { name: "Accessory 2", expanded: true, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Сумка", "Зонт", "Оружие", "Отсутствует"] } } },
+                acc3:       { name: "Accessory 3", expanded: true, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Шарф", "Платок", "Пояс", "Отсутствует"] } } },
+                acc4:       { name: "Accessory 4", expanded: true, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Перчатки", "Часы", "Кольцо", "Отсутствует"] } } },
+                acc5:       { name: "Accessory 5", expanded: true, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Корона", "Вуаль", "Маска", "Отсутствует"] } } }
             }
         },
-        race: {
-            name: "🧬 Раса",
+
+        // ============ МОДУЛЬ РАСОВЫХ ЧЕРТ (трёхуровневый) ============
+        raceTraits: {
+            name: "🧬 Расовые черты",
             groupClass: "group-race",
             expanded: true,
             categories: {
-                raceBase: {
-                    name: "Раса",
-                    expanded: true,
-                    subcategories: {
-                        type: { name: "Тип расы", enabled: true, expanded: false, items: ["Cat girl", "Elf", "Demon girl", "Dragon girl", "Vampire girl", "Slime girl", "Zombie girl"] }
-                    }
-                },
                 traits: {
-                    name: "Расовые черты",
+                    name: "Черты расы",
                     expanded: true,
                     subcategories: {
-                        trait1: { name: "Черта 1", enabled: true, expanded: false, items: ["Animal ears", "Horns", "Tail", "Wings", "Halos"] },
+                        trait1: { name: "Черта 1", enabled: true, expanded: false, items: ["Animal ears", "Horns", "Tail", "Wings", "Halos", "Отсутствует"] },
                         trait2: { name: "Черта 2", enabled: true, expanded: false, items: ["Fangs", "Claws", "Glowing eyes", "Scales", "Отсутствует"] },
                         trait3: { name: "Черта 3", enabled: true, expanded: false, items: ["Magic aura", "Tattoos", "Freckles", "Scars", "Отсутствует"] },
                         trait4: { name: "Черта 4", enabled: true, expanded: false, items: ["Отсутствует"] },
@@ -441,37 +494,56 @@
         }
     };
 
-    // Пресеты — какие ПОДКАТЕГОРИИ включаются (по полному пути group.category.sub)
+    // Пресеты — что включается в генерации
+    // Формат: "simple.races", "simple.styles", "appearance.hair.bangs", "clothes.topwear.type", "raceTraits.traits.trait1"
     const PRESETS = {
-        all: null,
-        portrait: ["appearance.hair.*", "appearance.eyes.*", "appearance.torso.*", "race.raceBase.*", "race.traits.*", "clothes.acc1.*"],
-        full: ["appearance.*", "clothes.*", "race.*"],
-        race: ["race.*"]
+        all: null, // всё
+        portrait: [
+            "simple.races",
+            "appearance.hair.bangs", "appearance.hair.sidelocks", "appearance.hair.backHair", "appearance.hair.additional",
+            "appearance.eyes.eyeShape", "appearance.eyes.eyeColor",
+            "appearance.torso.breastSize", "appearance.torso.skinColor",
+            "raceTraits.traits.trait1", "raceTraits.traits.trait2", "raceTraits.traits.trait3",
+            "clothes.acc1.type"
+        ],
+        full: [
+            "simple.races", "simple.styles", "simple.modifiers",
+            "appearance.hair.bangs", "appearance.hair.sidelocks", "appearance.hair.backHair", "appearance.hair.additional",
+            "appearance.eyes.eyeShape", "appearance.eyes.eyeColor",
+            "appearance.torso.breastSize", "appearance.torso.skinColor",
+            "clothes.headwear.type", "clothes.neckwear.type", "clothes.topwear.type",
+            "clothes.bottomwear.type", "clothes.legwear.type", "clothes.footwear.type",
+            "clothes.acc1.type", "clothes.acc2.type", "clothes.acc3.type",
+            "clothes.acc4.type", "clothes.acc5.type",
+            "raceTraits.traits.trait1", "raceTraits.traits.trait2", "raceTraits.traits.trait3"
+        ],
+        race: [
+            "simple.races",
+            "raceTraits.traits.trait1", "raceTraits.traits.trait2", "raceTraits.traits.trait3",
+            "raceTraits.traits.trait4", "raceTraits.traits.trait5", "raceTraits.traits.trait6", "raceTraits.traits.trait7"
+        ]
     };
 
     let state = {
-        data: {},
+        data: null,
         history: [],
         currentResult: {},
-        resultPaths: [] // порядок ключей для промпта
+        resultPaths: []
     };
 
-    let editContext = null; // { groupKey, catKey, subKey }
+    let editContext = null;
 
     // ============================================================
     // ИНИЦИАЛИЗАЦИЯ
     // ============================================================
 
     function init() {
-        const saved = localStorage.getItem('cg_data_v6');
-        const savedHistory = localStorage.getItem('cg_history_v6');
+        const saved = localStorage.getItem('cg_data_v7');
+        const savedHistory = localStorage.getItem('cg_history_v7');
 
         if (saved) {
-            try {
-                state.data = JSON.parse(saved);
-            } catch (e) {
-                state.data = JSON.parse(JSON.stringify(DEFAULT_DATA));
-            }
+            try { state.data = JSON.parse(saved); }
+            catch (e) { state.data = JSON.parse(JSON.stringify(DEFAULT_DATA)); }
         } else {
             state.data = JSON.parse(JSON.stringify(DEFAULT_DATA));
         }
@@ -483,8 +555,8 @@
     }
 
     function saveData() {
-        localStorage.setItem('cg_data_v6', JSON.stringify(state.data));
-        localStorage.setItem('cg_history_v6', JSON.stringify(state.history));
+        localStorage.setItem('cg_data_v7', JSON.stringify(state.data));
+        localStorage.setItem('cg_history_v7', JSON.stringify(state.history));
     }
 
     // ============================================================
@@ -509,7 +581,7 @@
     // ============================================================
 
     function getRandomActive(items) {
-        const active = items.filter(i => i.enabled && i.text && i.text !== "Отсутствует" && i.text !== "Отсутствуют" && i.text !== "None");
+        const active = items.filter(i => i.enabled && i.text && !["Отсутствует", "Отсутствуют", "None"].includes(i.text));
         if (active.length === 0) return null;
         return active[Math.floor(Math.random() * active.length)].text;
     }
@@ -518,21 +590,45 @@
         const result = {};
         const paths = [];
 
-        // Проходим по всем группам → категориям → подкатегориям
-        for (const groupKey in state.data) {
-            const group = state.data[groupKey];
-            for (const catKey in group.categories) {
-                const cat = group.categories[catKey];
+        // 1. Простые модули
+        for (const key in state.data.simpleModules) {
+            const mod = state.data.simpleModules[key];
+            if (!mod.enabled) continue;
+            const value = getRandomActive(mod.items);
+            if (value) {
+                const path = `simple.${key}`;
+                result[path] = value;
+                paths.push(path);
+            }
+        }
+
+        // 2. Модули с категориями и подкатегориями
+        const complexModules = ['appearance', 'clothes', 'raceTraits'];
+        for (const moduleKey of complexModules) {
+            const module = state.data[moduleKey];
+            for (const catKey in module.categories) {
+                const cat = module.categories[catKey];
                 for (const subKey in cat.subcategories) {
                     const sub = cat.subcategories[subKey];
                     if (!sub.enabled) continue;
                     const value = getRandomActive(sub.items);
                     if (value) {
-                        const path = `${groupKey}.${catKey}.${subKey}`;
+                        const path = `${moduleKey}.${catKey}.${subKey}`;
                         result[path] = value;
                         paths.push(path);
                     }
                 }
+            }
+        }
+
+        // 3. Применяем модификатор к случайной одежде
+        if (state.data.simpleModules.modifiers && state.data.simpleModules.modifiers.enabled) {
+            const modifier = getRandomActive(state.data.simpleModules.modifiers.items);
+            const clothesSlots = ['clothes.topwear.type', 'clothes.bottomwear.type', 'clothes.legwear.type', 'clothes.footwear.type', 'clothes.headwear.type'];
+            const availableSlots = clothesSlots.filter(s => result[s]);
+            if (modifier && availableSlots.length > 0) {
+                const target = availableSlots[Math.floor(Math.random() * availableSlots.length)];
+                result[target] = `${modifier} ${result[target]}`;
             }
         }
 
@@ -552,20 +648,27 @@
         box.innerHTML = '';
 
         paths.forEach(path => {
-            const { group, cat, sub } = pathToNames(path);
+            const name = getPathName(path);
             const line = document.createElement('div');
             line.className = 'result-line';
-            line.innerHTML = `<span class="result-path">${group} → ${cat} → ${sub}</span><span class="result-value">${result[path]}</span>`;
+            line.innerHTML = `<span class="result-path">${name}</span><span class="result-value">${result[path]}</span>`;
             box.appendChild(line);
         });
     }
 
-    function pathToNames(path) {
-        const [g, c, s] = path.split('.');
-        const group = state.data[g];
-        const cat = group.categories[c];
-        const sub = cat.subcategories[s];
-        return { group: group.name, cat: cat.name, sub: sub.name };
+    function getPathName(path) {
+        const parts = path.split('.');
+
+        // Простой модуль
+        if (parts[0] === 'simple') {
+            return state.data.simpleModules[parts[1]].name;
+        }
+
+        // Сложный модуль
+        const module = state.data[parts[0]];
+        const cat = module.categories[parts[1]];
+        const sub = cat.subcategories[parts[2]];
+        return `${cat.name} → ${sub.name}`;
     }
 
     function addToHistory(result, paths) {
@@ -582,10 +685,7 @@
     }
 
     function formatPrompt(result, paths) {
-        return paths.map(path => {
-            const { group, cat, sub } = pathToNames(path);
-            return `${group} / ${cat} / ${sub}: ${result[path]}`;
-        }).join('\n');
+        return paths.map(path => `${getPathName(path)}: ${result[path]}`).join('\n');
     }
 
     function formatPromptShort(result, paths) {
@@ -593,13 +693,11 @@
     }
 
     function copyResult() {
-        const text = formatPrompt(state.currentResult, state.resultPaths);
-        navigator.clipboard.writeText(text).then(() => showToast('Промпт скопирован!'));
+        navigator.clipboard.writeText(formatPrompt(state.currentResult, state.resultPaths)).then(() => showToast('Скопировано!'));
     }
 
     function copyResultShort() {
-        const text = formatPromptShort(state.currentResult, state.resultPaths);
-        navigator.clipboard.writeText(text).then(() => showToast('Кратко скопировано!'));
+        navigator.clipboard.writeText(formatPromptShort(state.currentResult, state.resultPaths)).then(() => showToast('Скопировано!'));
     }
 
     // ============================================================
@@ -609,33 +707,30 @@
     function applyPreset(name) {
         const preset = PRESETS[name];
 
-        for (const gKey in state.data) {
-            const group = state.data[gKey];
-            for (const cKey in group.categories) {
-                const cat = group.categories[cKey];
-                for (const sKey in cat.subcategories) {
-                    const sub = cat.subcategories[sKey];
-                    if (preset === null) {
-                        sub.enabled = true;
-                    } else {
-                        // Проверяем все паттерны
-                        sub.enabled = preset.some(pattern => matchPattern(pattern, gKey, cKey, sKey));
-                    }
+        // Простые модули
+        for (const key in state.data.simpleModules) {
+            const mod = state.data.simpleModules[key];
+            if (preset === null) mod.enabled = true;
+            else mod.enabled = preset.includes(`simple.${key}`);
+        }
+
+        // Сложные модули
+        const complexModules = ['appearance', 'clothes', 'raceTraits'];
+        for (const moduleKey of complexModules) {
+            const module = state.data[moduleKey];
+            for (const catKey in module.categories) {
+                const cat = module.categories[catKey];
+                for (const subKey in cat.subcategories) {
+                    const sub = cat.subcategories[subKey];
+                    if (preset === null) sub.enabled = true;
+                    else sub.enabled = preset.includes(`${moduleKey}.${catKey}.${subKey}`);
                 }
             }
         }
 
         saveData();
         renderEditor();
-        showToast(`Пресет "${name}" применён`);
-    }
-
-    function matchPattern(pattern, g, c, s) {
-        const parts = pattern.split('.');
-        if (parts[0] !== '*' && parts[0] !== g) return false;
-        if (parts[1] !== '*' && parts[1] !== c) return false;
-        if (parts[2] !== '*' && parts[2] !== s) return false;
-        return true;
+        showToast(`Пресет "${name}"`);
     }
 
     // ============================================================
@@ -704,16 +799,11 @@
     function exportHistoryCSV() {
         if (state.history.length === 0) { showToast('История пуста'); return; }
 
-        // Собираем все уникальные пути
         const allPaths = new Set();
         state.history.forEach(item => item.paths.forEach(p => allPaths.add(p)));
         const pathArray = Array.from(allPaths);
 
-        const headers = ['Дата', 'Избранное', ...pathArray.map(p => {
-            const { group, cat, sub } = pathToNames(p);
-            return `${group}/${cat}/${sub}`;
-        })];
-
+        const headers = ['Дата', 'Избранное', ...pathArray.map(p => getPathName(p))];
         const rows = state.history.map(item => {
             const row = [item.date, item.favorite ? 'Да' : 'Нет'];
             pathArray.forEach(p => row.push(item.result[p] || ''));
@@ -726,44 +816,209 @@
     }
 
     // ============================================================
-    // РЕДАКТОР (ТРЁХУРОВНЕВЫЙ)
+    // РЕДАКТОР
     // ============================================================
 
     function renderEditor() {
         const container = document.getElementById('editorContainer');
         container.innerHTML = '';
 
-        for (const groupKey in state.data) {
-            const group = state.data[groupKey];
+        // === БЛОК 1: ПРОСТЫЕ МОДУЛИ (Расы, Стили, Модификаторы) ===
+        const simpleTitle = document.createElement('div');
+        simpleTitle.className = 'group-title group-simple';
+        simpleTitle.innerHTML = `<span>📋 Основные списки</span><span class="toggle-icon">${state.data._simpleExpanded !== false ? '▼' : '▶'}</span>`;
+        simpleTitle.onclick = () => {
+            state.data._simpleExpanded = state.data._simpleExpanded === false ? true : false;
+            saveData(); renderEditor();
+        };
+        container.appendChild(simpleTitle);
 
-            // === УРОВЕНЬ 1: Группа ===
-            const groupTitle = document.createElement('div');
-            groupTitle.className = `group-title ${group.groupClass}`;
-            groupTitle.innerHTML = `
-                <span>${group.name}</span>
-                <span class="toggle-icon">${group.expanded ? '▼' : '▶'}</span>
-            `;
-            groupTitle.onclick = () => {
-                group.expanded = !group.expanded;
-                saveData();
-                renderEditor();
-            };
-            container.appendChild(groupTitle);
+        const simpleBody = document.createElement('div');
+        simpleBody.className = `group-body ${state.data._simpleExpanded !== false ? '' : 'collapsed'}`;
 
-            const groupBody = document.createElement('div');
-            groupBody.className = `group-body ${group.expanded ? '' : 'collapsed'}`;
-
-            // === УРОВЕНЬ 2: Категория ===
-            for (const catKey in group.categories) {
-                const cat = group.categories[catKey];
-                groupBody.appendChild(createCategoryElement(groupKey, catKey, cat));
-            }
-
-            container.appendChild(groupBody);
+        for (const key in state.data.simpleModules) {
+            simpleBody.appendChild(createSimpleModule(key, state.data.simpleModules[key]));
         }
+        container.appendChild(simpleBody);
+
+        // === БЛОК 2: БАЗОВАЯ ВНЕШНОСТЬ ===
+        container.appendChild(createComplexModule('appearance'));
+
+        // === БЛОК 3: ОДЕЖДА ===
+        container.appendChild(createComplexModule('clothes'));
+
+        // === БЛОК 4: РАСОВЫЕ ЧЕРТЫ ===
+        container.appendChild(createComplexModule('raceTraits'));
     }
 
-    function createCategoryElement(groupKey, catKey, cat) {
+    // --- Простой модуль (Расы, Стили) ---
+    function createSimpleModule(key, mod) {
+        const div = document.createElement('div');
+        div.className = `simple-module ${mod.enabled ? '' : 'disabled'}`;
+
+        const activeCount = mod.items.filter(i => i.enabled).length;
+
+        div.innerHTML = `
+            <div class="simple-header">
+                <div>
+                    <h4>${mod.name}</h4>
+                    <span class="counter">Активно: ${activeCount} / ${mod.items.length}</span>
+                </div>
+                <div class="controls">
+                    <label style="font-size:0.8rem; cursor:pointer;">
+                        <input type="checkbox" ${mod.enabled ? 'checked' : ''} onchange="toggleSimpleEnabled('${key}')" style="accent-color: var(--accent-color);"> Вкл
+                    </label>
+                    <button class="icon-btn" onclick="event.stopPropagation(); openEditModalSimple('${key}')" title="Редактировать">✏️</button>
+                    <span class="toggle-icon">${mod.expanded ? '▼' : '▶'}</span>
+                </div>
+            </div>
+        `;
+
+        const body = document.createElement('div');
+        body.className = `simple-body ${mod.expanded ? '' : 'collapsed'}`;
+        body.innerHTML = `
+            <div class="value-list" id="simple-values-${key}"></div>
+            <div class="add-value-row">
+                <input type="text" placeholder="Добавить..." onkeydown="if(event.key==='Enter') addSimpleValue('${key}', this)">
+                <button onclick="addSimpleValue('${key}', this.previousElementSibling)">+</button>
+            </div>
+        `;
+
+        div.querySelector('.simple-header').onclick = (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+            mod.expanded = !mod.expanded;
+            saveData(); renderEditor();
+        };
+
+        div.appendChild(body);
+        setTimeout(() => renderSimpleValues(key), 0);
+        return div;
+    }
+
+    function renderSimpleValues(key) {
+        const container = document.getElementById(`simple-values-${key}`);
+        if (!container) return;
+        container.innerHTML = '';
+        const mod = state.data.simpleModules[key];
+
+        mod.items.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = `value-item ${item.enabled ? '' : 'disabled'}`;
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = item.enabled;
+            checkbox.onchange = () => toggleSimpleValue(key, index);
+
+            const textSpan = document.createElement('span');
+            textSpan.className = 'value-item-text';
+            textSpan.textContent = item.text;
+            textSpan.onclick = () => startEditSimpleValue(key, index, textSpan);
+
+            const delBtn = document.createElement('button');
+            delBtn.className = 'icon-btn';
+            delBtn.textContent = '❌';
+            delBtn.onclick = () => removeSimpleValue(key, index);
+
+            div.appendChild(checkbox);
+            div.appendChild(textSpan);
+            div.appendChild(delBtn);
+            container.appendChild(div);
+        });
+
+        const header = container.closest('.simple-module').querySelector('.counter');
+        const activeCount = mod.items.filter(i => i.enabled).length;
+        header.textContent = `Активно: ${activeCount} / ${mod.items.length}`;
+    }
+
+    function toggleSimpleEnabled(key) {
+        state.data.simpleModules[key].enabled = !state.data.simpleModules[key].enabled;
+        saveData(); renderEditor();
+    }
+
+    function toggleSimpleValue(key, index) {
+        state.data.simpleModules[key].items[index].enabled = !state.data.simpleModules[key].items[index].enabled;
+        saveData(); renderSimpleValues(key);
+    }
+
+    function startEditSimpleValue(key, index, spanElement) {
+        const mod = state.data.simpleModules[key];
+        const currentText = mod.items[index].text;
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = currentText;
+        spanElement.replaceWith(input);
+        input.focus();
+
+        const finish = () => {
+            const newText = input.value.trim();
+            if (newText && newText !== currentText) {
+                mod.items[index].text = newText;
+                saveData();
+            }
+            renderSimpleValues(key);
+        };
+        input.onblur = finish;
+        input.onkeydown = (e) => {
+            if (e.key === 'Enter') finish();
+            if (e.key === 'Escape') renderSimpleValues(key);
+        };
+    }
+
+    function addSimpleValue(key, inputElement) {
+        const value = inputElement.value.trim();
+        if (!value) return;
+        const mod = state.data.simpleModules[key];
+        if (mod.items.some(i => i.text.toLowerCase() === value.toLowerCase())) {
+            showToast('Уже есть!'); return;
+        }
+        mod.items.push({ text: value, enabled: true });
+        inputElement.value = '';
+        saveData(); renderSimpleValues(key);
+    }
+
+    function removeSimpleValue(key, index) {
+        state.data.simpleModules[key].items.splice(index, 1);
+        saveData(); renderSimpleValues(key);
+    }
+
+    function openEditModalSimple(key) {
+        editContext = { type: 'simple', key };
+        const mod = state.data.simpleModules[key];
+        document.getElementById('editModalTitle').textContent = `Редактирование: ${mod.name}`;
+        document.getElementById('editModalTextarea').value = mod.items.map(i => i.text).join('\n');
+        document.getElementById('editModal').classList.add('active');
+    }
+
+    // --- Сложный модуль (Внешность, Одежда, Расовые черты) ---
+    function createComplexModule(moduleKey) {
+        const module = state.data[moduleKey];
+        const fragment = document.createDocumentFragment();
+
+        const groupTitle = document.createElement('div');
+        groupTitle.className = `group-title ${module.groupClass}`;
+        groupTitle.innerHTML = `
+            <span>${module.name}</span>
+            <span class="toggle-icon">${module.expanded ? '▼' : '▶'}</span>
+        `;
+        groupTitle.onclick = () => {
+            module.expanded = !module.expanded;
+            saveData(); renderEditor();
+        };
+        fragment.appendChild(groupTitle);
+
+        const groupBody = document.createElement('div');
+        groupBody.className = `group-body ${module.expanded ? '' : 'collapsed'}`;
+
+        for (const catKey in module.categories) {
+            groupBody.appendChild(createCategoryElement(moduleKey, catKey, module.categories[catKey]));
+        }
+
+        fragment.appendChild(groupBody);
+        return fragment;
+    }
+
+    function createCategoryElement(moduleKey, catKey, cat) {
         const catDiv = document.createElement('div');
         catDiv.className = 'category';
 
@@ -787,37 +1042,33 @@
 
         catDiv.querySelector('.category-header').onclick = () => {
             cat.expanded = !cat.expanded;
-            saveData();
-            renderEditor();
+            saveData(); renderEditor();
         };
 
-        // === УРОВЕНЬ 3: Подкатегория ===
         for (const subKey in cat.subcategories) {
-            const sub = cat.subcategories[subKey];
-            catBody.appendChild(createSubcategoryElement(groupKey, catKey, subKey, sub));
+            catBody.appendChild(createSubcategoryElement(moduleKey, catKey, subKey, cat.subcategories[subKey]));
         }
 
         catDiv.appendChild(catBody);
         return catDiv;
     }
 
-    function createSubcategoryElement(groupKey, catKey, subKey, sub) {
+    function createSubcategoryElement(moduleKey, catKey, subKey, sub) {
         const subDiv = document.createElement('div');
         subDiv.className = `subcategory ${sub.enabled ? '' : 'disabled off'}`;
 
         const activeItems = sub.items.filter(i => i.enabled).length;
-        const totalItems = sub.items.length;
 
         subDiv.innerHTML = `
             <div class="subcategory-header">
                 <div style="display:flex; align-items:center; gap:8px;">
-                    <input type="checkbox" ${sub.enabled ? 'checked' : ''} style="accent-color: var(--accent-color); cursor:pointer;" onclick="event.stopPropagation(); toggleSubEnabled('${groupKey}','${catKey}','${subKey}')">
+                    <input type="checkbox" ${sub.enabled ? 'checked' : ''} style="accent-color: var(--accent-color); cursor:pointer;" onclick="event.stopPropagation(); toggleSubEnabled('${moduleKey}','${catKey}','${subKey}')">
                     <span class="sub-name">${sub.name}</span>
-                    <span class="sub-counter">(${activeItems}/${totalItems})</span>
+                    <span class="sub-counter">(${activeItems}/${sub.items.length})</span>
                 </div>
                 <div class="sub-controls">
-                    <button class="icon-btn" onclick="event.stopPropagation(); openEditModal('${groupKey}','${catKey}','${subKey}')" title="Редактировать список">✏️</button>
-                    <button class="icon-btn" onclick="event.stopPropagation(); removeSubcategory('${groupKey}','${catKey}','${subKey}')" title="Удалить подкатегорию">🗑</button>
+                    <button class="icon-btn" onclick="event.stopPropagation(); openEditModalComplex('${moduleKey}','${catKey}','${subKey}')" title="Редактировать список">✏️</button>
+                    <button class="icon-btn" onclick="event.stopPropagation(); removeSubcategory('${moduleKey}','${catKey}','${subKey}')" title="Удалить">🗑</button>
                     <span class="toggle-icon">${sub.expanded ? '▼' : '▶'}</span>
                 </div>
             </div>
@@ -826,32 +1077,30 @@
         const subBody = document.createElement('div');
         subBody.className = `subcategory-body ${sub.expanded ? '' : 'collapsed'}`;
         subBody.innerHTML = `
-            <div class="value-list" id="values-${groupKey}-${catKey}-${subKey}"></div>
+            <div class="value-list" id="values-${moduleKey}-${catKey}-${subKey}"></div>
             <div class="add-value-row">
-                <input type="text" placeholder="Добавить значение..." onkeydown="if(event.key==='Enter') addValue('${groupKey}','${catKey}','${subKey}', this)">
-                <button onclick="addValue('${groupKey}','${catKey}','${subKey}', this.previousElementSibling)">+</button>
+                <input type="text" placeholder="Добавить значение..." onkeydown="if(event.key==='Enter') addComplexValue('${moduleKey}','${catKey}','${subKey}', this)">
+                <button onclick="addComplexValue('${moduleKey}','${catKey}','${subKey}', this.previousElementSibling)">+</button>
             </div>
         `;
 
         subDiv.querySelector('.subcategory-header').onclick = (e) => {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
             sub.expanded = !sub.expanded;
-            saveData();
-            renderEditor();
+            saveData(); renderEditor();
         };
 
         subDiv.appendChild(subBody);
-
-        setTimeout(() => renderSubValues(groupKey, catKey, subKey), 0);
+        setTimeout(() => renderComplexValues(moduleKey, catKey, subKey), 0);
         return subDiv;
     }
 
-    function renderSubValues(groupKey, catKey, subKey) {
-        const container = document.getElementById(`values-${groupKey}-${catKey}-${subKey}`);
+    function renderComplexValues(moduleKey, catKey, subKey) {
+        const container = document.getElementById(`values-${moduleKey}-${catKey}-${subKey}`);
         if (!container) return;
         container.innerHTML = '';
 
-        const sub = state.data[groupKey].categories[catKey].subcategories[subKey];
+        const sub = state.data[moduleKey].categories[catKey].subcategories[subKey];
 
         sub.items.forEach((item, index) => {
             const div = document.createElement('div');
@@ -860,17 +1109,17 @@
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.checked = item.enabled;
-            checkbox.onchange = () => toggleValue(groupKey, catKey, subKey, index);
+            checkbox.onchange = () => toggleComplexValue(moduleKey, catKey, subKey, index);
 
             const textSpan = document.createElement('span');
             textSpan.className = 'value-item-text';
             textSpan.textContent = item.text;
-            textSpan.onclick = () => startEditValue(groupKey, catKey, subKey, index, textSpan);
+            textSpan.onclick = () => startEditComplexValue(moduleKey, catKey, subKey, index, textSpan);
 
             const delBtn = document.createElement('button');
             delBtn.className = 'icon-btn';
             delBtn.textContent = '❌';
-            delBtn.onclick = () => removeValue(groupKey, catKey, subKey, index);
+            delBtn.onclick = () => removeComplexValue(moduleKey, catKey, subKey, index);
 
             div.appendChild(checkbox);
             div.appendChild(textSpan);
@@ -878,28 +1127,25 @@
             container.appendChild(div);
         });
 
-        // Обновляем счетчик
         const header = container.closest('.subcategory').querySelector('.sub-counter');
         const activeItems = sub.items.filter(i => i.enabled).length;
         header.textContent = `(${activeItems}/${sub.items.length})`;
     }
 
-    function toggleSubEnabled(groupKey, catKey, subKey) {
-        const sub = state.data[groupKey].categories[catKey].subcategories[subKey];
+    function toggleSubEnabled(moduleKey, catKey, subKey) {
+        const sub = state.data[moduleKey].categories[catKey].subcategories[subKey];
         sub.enabled = !sub.enabled;
-        saveData();
-        renderEditor();
+        saveData(); renderEditor();
     }
 
-    function toggleValue(groupKey, catKey, subKey, index) {
-        const sub = state.data[groupKey].categories[catKey].subcategories[subKey];
+    function toggleComplexValue(moduleKey, catKey, subKey, index) {
+        const sub = state.data[moduleKey].categories[catKey].subcategories[subKey];
         sub.items[index].enabled = !sub.items[index].enabled;
-        saveData();
-        renderSubValues(groupKey, catKey, subKey);
+        saveData(); renderComplexValues(moduleKey, catKey, subKey);
     }
 
-    function startEditValue(groupKey, catKey, subKey, index, spanElement) {
-        const sub = state.data[groupKey].categories[catKey].subcategories[subKey];
+    function startEditComplexValue(moduleKey, catKey, subKey, index, spanElement) {
+        const sub = state.data[moduleKey].categories[catKey].subcategories[subKey];
         const currentText = sub.items[index].text;
         const input = document.createElement('input');
         input.type = 'text';
@@ -907,60 +1153,56 @@
         spanElement.replaceWith(input);
         input.focus();
 
-        const finishEdit = () => {
+        const finish = () => {
             const newText = input.value.trim();
             if (newText && newText !== currentText) {
                 sub.items[index].text = newText;
                 saveData();
             }
-            renderSubValues(groupKey, catKey, subKey);
+            renderComplexValues(moduleKey, catKey, subKey);
         };
-
-        input.onblur = finishEdit;
+        input.onblur = finish;
         input.onkeydown = (e) => {
-            if (e.key === 'Enter') finishEdit();
-            if (e.key === 'Escape') renderSubValues(groupKey, catKey, subKey);
+            if (e.key === 'Enter') finish();
+            if (e.key === 'Escape') renderComplexValues(moduleKey, catKey, subKey);
         };
     }
 
-    function addValue(groupKey, catKey, subKey, inputElement) {
+    function addComplexValue(moduleKey, catKey, subKey, inputElement) {
         const value = inputElement.value.trim();
         if (!value) return;
-        const sub = state.data[groupKey].categories[catKey].subcategories[subKey];
-        const exists = sub.items.some(i => i.text.toLowerCase() === value.toLowerCase());
-        if (exists) { showToast('Уже есть!'); return; }
+        const sub = state.data[moduleKey].categories[catKey].subcategories[subKey];
+        if (sub.items.some(i => i.text.toLowerCase() === value.toLowerCase())) {
+            showToast('Уже есть!'); return;
+        }
         sub.items.push({ text: value, enabled: true });
         inputElement.value = '';
-        saveData();
-        renderSubValues(groupKey, catKey, subKey);
+        saveData(); renderComplexValues(moduleKey, catKey, subKey);
     }
 
-    function removeValue(groupKey, catKey, subKey, index) {
-        const sub = state.data[groupKey].categories[catKey].subcategories[subKey];
-        sub.items.splice(index, 1);
-        saveData();
-        renderSubValues(groupKey, catKey, subKey);
+    function removeComplexValue(moduleKey, catKey, subKey, index) {
+        state.data[moduleKey].categories[catKey].subcategories[subKey].items.splice(index, 1);
+        saveData(); renderComplexValues(moduleKey, catKey, subKey);
     }
 
-    function removeSubcategory(groupKey, catKey, subKey) {
-        const sub = state.data[groupKey].categories[catKey].subcategories[subKey];
+    function removeSubcategory(moduleKey, catKey, subKey) {
+        const sub = state.data[moduleKey].categories[catKey].subcategories[subKey];
         if (!confirm(`Удалить подкатегорию "${sub.name}"?`)) return;
-        delete state.data[groupKey].categories[catKey].subcategories[subKey];
-        saveData();
-        renderEditor();
+        delete state.data[moduleKey].categories[catKey].subcategories[subKey];
+        saveData(); renderEditor();
     }
 
-    // ============================================================
-    // МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ СПИСКА
-    // ============================================================
-
-    function openEditModal(groupKey, catKey, subKey) {
-        editContext = { groupKey, catKey, subKey };
-        const sub = state.data[groupKey].categories[catKey].subcategories[subKey];
+    function openEditModalComplex(moduleKey, catKey, subKey) {
+        editContext = { type: 'complex', moduleKey, catKey, subKey };
+        const sub = state.data[moduleKey].categories[catKey].subcategories[subKey];
         document.getElementById('editModalTitle').textContent = `Редактирование: ${sub.name}`;
         document.getElementById('editModalTextarea').value = sub.items.map(i => i.text).join('\n');
         document.getElementById('editModal').classList.add('active');
     }
+
+    // ============================================================
+    // МОДАЛЬНОЕ ОКНО
+    // ============================================================
 
     function closeEditModal() {
         document.getElementById('editModal').classList.remove('active');
@@ -972,21 +1214,22 @@
         const text = document.getElementById('editModalTextarea').value;
         const lines = text.split(/[\n,]+/).map(s => s.trim()).filter(s => s);
 
-        const sub = state.data[editContext.groupKey].categories[editContext.catKey].subcategories[editContext.subKey];
+        if (editContext.type === 'simple') {
+            const mod = state.data.simpleModules[editContext.key];
+            const oldMap = {};
+            mod.items.forEach(i => oldMap[i.text.toLowerCase()] = i.enabled);
+            mod.items = lines.map(t => ({ text: t, enabled: oldMap[t.toLowerCase()] !== undefined ? oldMap[t.toLowerCase()] : true }));
+            saveData(); renderEditor();
+        } else {
+            const sub = state.data[editContext.moduleKey].categories[editContext.catKey].subcategories[editContext.subKey];
+            const oldMap = {};
+            sub.items.forEach(i => oldMap[i.text.toLowerCase()] = i.enabled);
+            sub.items = lines.map(t => ({ text: t, enabled: oldMap[t.toLowerCase()] !== undefined ? oldMap[t.toLowerCase()] : true }));
+            saveData(); renderEditor();
+        }
 
-        // Сохраняем enabled для старых элементов
-        const oldMap = {};
-        sub.items.forEach(i => oldMap[i.text.toLowerCase()] = i.enabled);
-
-        sub.items = lines.map(text => ({
-            text: text,
-            enabled: oldMap[text.toLowerCase()] !== undefined ? oldMap[text.toLowerCase()] : true
-        }));
-
-        saveData();
-        renderEditor();
         closeEditModal();
-        showToast(`Сохранено: ${lines.length} элементов`);
+        showToast(`Сохранено: ${lines.length}`);
     }
 
     // ============================================================
@@ -994,28 +1237,33 @@
     // ============================================================
 
     function expandAll(expand) {
-        for (const gKey in state.data) {
-            const group = state.data[gKey];
-            group.expanded = expand;
-            for (const cKey in group.categories) {
-                const cat = group.categories[cKey];
+        for (const key in state.data.simpleModules) {
+            state.data.simpleModules[key].expanded = expand;
+        }
+
+        const complexModules = ['appearance', 'clothes', 'raceTraits'];
+        for (const mKey of complexModules) {
+            const module = state.data[mKey];
+            module.expanded = expand;
+            for (const cKey in module.categories) {
+                const cat = module.categories[cKey];
                 cat.expanded = expand;
                 for (const sKey in cat.subcategories) {
                     cat.subcategories[sKey].expanded = expand;
                 }
             }
         }
-        saveData();
-        renderEditor();
+        state.data._simpleExpanded = expand;
+        saveData(); renderEditor();
     }
 
     // ============================================================
-    // ЭКСПОРТ/ИМПОРТ БАЗЫ
+    // ЭКСПОРТ/ИМПОРТ
     // ============================================================
 
     function exportData() {
         const backup = {
-            version: 6,
+            version: 7,
             exported: new Date().toISOString(),
             data: state.data,
             history: state.history
@@ -1034,12 +1282,9 @@
                 const backup = JSON.parse(e.target.result);
                 if (!backup.data) throw new Error('Неверный формат');
                 if (!confirm('Загрузить базу? Текущие данные будут заменены.')) return;
-
                 state.data = backup.data;
                 state.history = backup.history || [];
-                saveData();
-                renderEditor();
-                renderHistory();
+                saveData(); renderEditor(); renderHistory();
                 showToast('База загружена!');
             } catch (err) {
                 alert('Ошибка: ' + err.message);
@@ -1053,19 +1298,16 @@
         const blob = new Blob([content], { type: mimeType });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     }
 
     function resetAllLists() {
-        if (!confirm('Сбросить всё к стандартным? Все изменения будут потеряны.')) return;
+        if (!confirm('Сбросить всё к стандартным?')) return;
         state.data = JSON.parse(JSON.stringify(DEFAULT_DATA));
-        saveData();
-        renderEditor();
+        saveData(); renderEditor();
         showToast('Сброшено');
     }
 
