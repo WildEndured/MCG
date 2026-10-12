@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Генератор Персонажей v2.0</title>
+<title>Генератор Персонажей + Изображения</title>
 <style>
 :root {
     --bg: #1a1a2e;
@@ -51,19 +51,45 @@ body {
 .result-box {
     background: var(--secondary); padding: 20px;
     border-radius: 10px; margin-bottom: 20px;
-    max-height: 500px; overflow-y: auto;
+    max-height: 600px; overflow-y: auto;
 }
 .result-line {
     display: flex; justify-content: space-between;
     padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.1);
     font-size: 0.9rem; gap: 15px;
+    align-items: center;
 }
 .result-line:last-child { border-bottom: none; }
 .result-cat { color: #888; font-weight: bold; font-size: 0.82rem; }
-.result-val { color: #fff; font-weight: bold; text-align: right; }
+.result-val { color: #fff; font-weight: bold; text-align: right; flex-grow: 1; }
 .result-line.main .result-val { color: var(--accent); font-size: 1.05rem; }
 .result-line.slot .result-cat { color: var(--clothes); }
 .result-line.extra .result-val { color: var(--rules); font-style: italic; }
+
+/* Превью значения в результате */
+.result-value-block {
+    display: flex; align-items: center; gap: 10px;
+    justify-content: flex-end; flex-grow: 1;
+    flex-wrap: wrap;
+}
+.result-thumb {
+    width: 40px; height: 40px; border-radius: 6px;
+    object-fit: cover; cursor: pointer;
+    border: 1px solid #333; transition: 0.2s;
+    flex-shrink: 0;
+}
+.result-thumb:hover { border-color: var(--accent); transform: scale(1.1); }
+.result-thumbs { display: flex; gap: 5px; flex-wrap: wrap; }
+
+/* Результат-значение из нескольких элементов (например, "Arched bangs, Medium bangs") */
+.result-values-list {
+    display: flex; flex-direction: column; gap: 6px;
+    align-items: flex-end; flex-grow: 1;
+}
+.result-value-row {
+    display: flex; align-items: center; gap: 8px;
+    justify-content: flex-end;
+}
 
 .btn-main {
     background: var(--accent); color: white; border: none;
@@ -80,7 +106,6 @@ body {
 }
 .btn-secondary:hover { background: #1a4a7a; }
 
-/* Пресеты */
 .presets-bar {
     display: flex; gap: 8px; margin-bottom: 15px;
     flex-wrap: wrap; align-items: center;
@@ -127,6 +152,7 @@ body {
 }
 .icon-btn:hover { opacity: 1; transform: scale(1.1); }
 .icon-btn.fav-active { opacity: 1; color: gold; }
+.icon-btn.img-active { color: var(--clothes); opacity: 1; }
 
 /* Списки */
 .toolbar {
@@ -163,7 +189,7 @@ body {
 }
 .add-row button.import-btn { background: var(--clothes); }
 
-.item-list { max-height: 300px; overflow-y: auto; }
+.item-list { max-height: 350px; overflow-y: auto; }
 .item {
     display: flex; align-items: center; gap: 8px;
     padding: 4px 0; border-bottom: 1px solid #1a1a2e;
@@ -184,6 +210,24 @@ body {
     cursor: pointer; width: 15px; height: 15px;
     accent-color: var(--accent); flex-shrink: 0;
 }
+
+/* Миниатюра в списке */
+.item-thumb {
+    width: 32px; height: 32px; border-radius: 4px;
+    object-fit: cover; cursor: pointer;
+    border: 1px solid #333; transition: 0.2s;
+    flex-shrink: 0;
+}
+.item-thumb:hover { border-color: var(--accent); }
+.item-thumb-placeholder {
+    width: 32px; height: 32px; border-radius: 4px;
+    background: rgba(255,255,255,0.05);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 0.8rem; color: #555;
+    border: 1px dashed #333; transition: 0.2s;
+    flex-shrink: 0;
+}
+.item-thumb-placeholder:hover { color: var(--accent); border-color: var(--accent); }
 
 /* Модули */
 .group-title {
@@ -223,7 +267,6 @@ body {
 }
 .module.open .module-toggle { transform: rotate(180deg); }
 
-/* Простой модуль (без подкатегорий) — для модификаторов */
 .simple-module {
     background: #0d1b2a; border-radius: 8px;
     margin-top: 8px; overflow: hidden;
@@ -239,7 +282,6 @@ body {
 .simple-body { padding: 10px 15px 15px; display: none; }
 .simple-module.open .simple-body { display: block; }
 
-/* Подкатегория */
 .subcat {
     background: #1a1a2e; border-radius: 6px;
     margin-top: 6px; overflow: hidden;
@@ -313,15 +355,10 @@ body {
     background: none; border: none; color: var(--accent);
     cursor: pointer; font-size: 1rem;
 }
-
 .add-rule-form {
     background: #0d1b2a; padding: 15px;
     border-radius: 8px; border: 1px dashed var(--rules);
     margin-bottom: 15px;
-}
-.rule-actions {
-    display: flex; gap: 5px; margin-top: 10px;
-    justify-content: flex-end;
 }
 .empty-state {
     text-align: center; color: #666; padding: 30px;
@@ -336,7 +373,7 @@ body {
 /* Модальное окно */
 .modal-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.8); z-index: 1000;
+    background: rgba(0,0,0,0.85); z-index: 1000;
     display: none; justify-content: center; align-items: center;
     padding: 20px;
 }
@@ -355,6 +392,18 @@ body {
 }
 .modal-actions {
     display: flex; gap: 10px; margin-top: 15px; justify-content: flex-end;
+}
+/* Просмотр изображения */
+.image-viewer-modal {
+    max-width: 90vw; max-height: 90vh;
+    background: transparent; padding: 0;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 15px;
+}
+.image-viewer-modal img {
+    max-width: 100%; max-height: 75vh;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.7);
 }
 
 .toast {
@@ -406,6 +455,7 @@ body {
         <div class="toolbar">
             <button class="btn-secondary" onclick="sortLists()">🔤 Сортировать</button>
             <button class="btn-secondary" onclick="resetAll()">↺ Сброс</button>
+            <button class="btn-secondary" onclick="clearAllImages()">🖼️ Очистить все картинки</button>
         </div>
         <div id="listsContainer"></div>
     </div>
@@ -430,7 +480,6 @@ body {
                     <option value="add">🟡 Добавить текст (если X → +текст)</option>
                 </select>
             </div>
-
             <div class="condition-block">
                 <div class="condition-header">
                     <span>Условия (И)</span>
@@ -438,7 +487,6 @@ body {
                 </div>
                 <div id="conditionsContainer"></div>
             </div>
-
             <div class="rule-row" id="actionReplaceRow">
                 <label>Действие:</label>
                 <select id="newRuleActModule"></select>
@@ -454,23 +502,19 @@ body {
                 <label>Текст:</label>
                 <input type="text" id="newRuleAddText" placeholder="torn clothes, pale skin">
             </div>
-
             <div class="rule-row">
                 <label>Цепочка:</label>
                 <label style="display:flex; align-items:center; gap:5px; font-size:0.8rem; cursor:pointer;">
                     <input type="checkbox" id="newRuleChain"> Может активировать другие правила
                 </label>
             </div>
-
             <button class="btn-main" style="width:auto; margin:10px 0 0 0; padding:10px 20px; font-size:0.85rem;" onclick="addRule()">Добавить правило</button>
         </div>
-
         <div class="toolbar">
             <button class="btn-secondary" onclick="exportRules()">💾 Экспорт правил</button>
             <button class="btn-secondary" onclick="document.getElementById('ruleFileInput').click()">📂 Импорт правил</button>
             <input type="file" id="ruleFileInput" accept=".json" style="display:none;" onchange="importRules(event)">
         </div>
-
         <div id="rulesContainer"></div>
     </div>
 </div>
@@ -500,6 +544,17 @@ body {
     </div>
 </div>
 
+<!-- ПРОСМОТР ИЗОБРАЖЕНИЯ -->
+<div class="modal-overlay" id="imageViewerModal">
+    <div class="modal image-viewer-modal">
+        <img id="imageViewerImg" src="" alt="">
+        <button class="btn-secondary" onclick="closeImageViewer()">Закрыть</button>
+    </div>
+</div>
+
+<!-- СКРЫТЫЙ INPUT ДЛЯ ФАЙЛОВ -->
+<input type="file" id="imageFileInput" accept="image/*" style="display:none;">
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -519,8 +574,7 @@ const DEFAULT_LISTS = {
 
 const DEFAULT_MODIFIERS = {
     name: "✨ Модификаторы одежды",
-    enabled: true,
-    expanded: true,
+    enabled: true, expanded: true,
     items: ["Oversized", "Cropped", "Vintage", "Torn", "Formal", "Sporty", "Baggy", "Slim", "Loose", "Tight", "Fitted"]
 };
 
@@ -610,17 +664,18 @@ let state = {
 
 let editContext = null;
 let bulkContext = null;
+let imageContext = null;
 
 // ============================================================
 // INIT
 // ============================================================
 function init() {
-    const savedLists = localStorage.getItem('cg_lists_v2');
-    const savedMods = localStorage.getItem('cg_modifiers');
-    const savedModules = localStorage.getItem('cg_modules_v2');
-    const savedRules = localStorage.getItem('cg_rules');
-    const savedHist = localStorage.getItem('cg_history');
-    const savedCount = localStorage.getItem('cg_gen_count');
+    const savedLists = localStorage.getItem('cg_lists_v3');
+    const savedMods = localStorage.getItem('cg_modifiers_v2');
+    const savedModules = localStorage.getItem('cg_modules_v3');
+    const savedRules = localStorage.getItem('cg_rules_v2');
+    const savedHist = localStorage.getItem('cg_history_v2');
+    const savedCount = localStorage.getItem('cg_gen_count_v2');
 
     state.lists = savedLists ? JSON.parse(savedLists) : null;
     state.modifiers = savedMods ? JSON.parse(savedMods) : null;
@@ -646,6 +701,19 @@ function init() {
     renderHistory();
     populateRuleSelects();
     updateCounter();
+
+    // === Автомиграция: с v2 на v3 (если нужно) ===
+    // Пробуем подхватить старые данные если новые пусты
+    if (!savedLists) {
+        const oldLists = localStorage.getItem('cg_lists_v2');
+        if (oldLists) {
+            try {
+                state.lists = JSON.parse(oldLists);
+                sanitizeData();
+                save();
+            } catch(e) {}
+        }
+    }
 }
 
 function isValidListStructure(lists) {
@@ -675,8 +743,11 @@ function sanitizeData() {
         const list = state.lists[key];
         if (!Array.isArray(list.items)) { list.items = []; continue; }
         list.items = list.items.map(i => {
-            if (typeof i === 'string') return { text: i, enabled: true };
-            if (i && typeof i === 'object' && typeof i.text === 'string') return i;
+            if (typeof i === 'string') return { text: i, enabled: true, image: null };
+            if (i && typeof i === 'object' && typeof i.text === 'string') {
+                if (i.image === undefined) i.image = null;
+                return i;
+            }
             return null;
         }).filter(i => i && i.text.trim().length > 0);
         if (list.enabled === undefined) list.enabled = true;
@@ -684,8 +755,11 @@ function sanitizeData() {
     }
     if (state.modifiers) {
         state.modifiers.items = (state.modifiers.items || []).map(i => {
-            if (typeof i === 'string') return { text: i, enabled: true };
-            if (i && typeof i === 'object' && typeof i.text === 'string') return i;
+            if (typeof i === 'string') return { text: i, enabled: true, image: null };
+            if (i && typeof i === 'object' && typeof i.text === 'string') {
+                if (i.image === undefined) i.image = null;
+                return i;
+            }
             return null;
         }).filter(i => i && i.text.trim().length > 0);
         if (state.modifiers.enabled === undefined) state.modifiers.enabled = true;
@@ -704,8 +778,11 @@ function sanitizeData() {
                 const sub = mod.subcategories[sKey];
                 if (!Array.isArray(sub.items)) { sub.items = []; continue; }
                 sub.items = sub.items.map(i => {
-                    if (typeof i === 'string') return { text: i, enabled: true };
-                    if (i && typeof i === 'object' && typeof i.text === 'string') return i;
+                    if (typeof i === 'string') return { text: i, enabled: true, image: null };
+                    if (i && typeof i === 'object' && typeof i.text === 'string') {
+                        if (i.image === undefined) i.image = null;
+                        return i;
+                    }
                     return null;
                 }).filter(i => i && i.text.trim().length > 0);
                 if (sub.enabled === undefined) sub.enabled = true;
@@ -715,12 +792,18 @@ function sanitizeData() {
     }
 }
 function save() {
-    localStorage.setItem('cg_lists_v2', JSON.stringify(state.lists));
-    localStorage.setItem('cg_modifiers', JSON.stringify(state.modifiers));
-    localStorage.setItem('cg_modules_v2', JSON.stringify(state.modules));
-    localStorage.setItem('cg_rules', JSON.stringify(state.rules));
-    localStorage.setItem('cg_history', JSON.stringify(state.history));
-    localStorage.setItem('cg_gen_count', state.genCount.toString());
+    try {
+        localStorage.setItem('cg_lists_v3', JSON.stringify(state.lists));
+        localStorage.setItem('cg_modifiers_v2', JSON.stringify(state.modifiers));
+        localStorage.setItem('cg_modules_v3', JSON.stringify(state.modules));
+        localStorage.setItem('cg_rules_v2', JSON.stringify(state.rules));
+        localStorage.setItem('cg_history_v2', JSON.stringify(state.history));
+        localStorage.setItem('cg_gen_count_v2', state.genCount.toString());
+    } catch (e) {
+        if (e.name === 'QuotaExceededError') {
+            showToast('⚠️ Память переполнена! Удали лишние картинки.');
+        }
+    }
 }
 function updateCounter() {
     const el = document.getElementById('genCounter');
@@ -740,6 +823,120 @@ function switchTab(name, btn) {
 }
 
 // ============================================================
+// ИЗОБРАЖЕНИЯ — ЗАГРУЗКА И СЖАТИЕ
+// ============================================================
+function pickImage(context) {
+    imageContext = context;
+    document.getElementById('imageFileInput').click();
+}
+
+document.getElementById('imageFileInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file || !imageContext) return;
+
+    try {
+        const dataUrl = await compressImage(file, 512, 512, 0.7);
+        applyImageToContext(dataUrl);
+    } catch (err) {
+        alert('Ошибка загрузки: ' + err.message);
+    }
+    e.target.value = '';
+    imageContext = null;
+});
+
+function compressImage(file, maxW, maxH, quality) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const img = new Image();
+            img.onload = () => {
+                let { width, height } = img;
+                if (width > maxW) { height = height * maxW / width; width = maxW; }
+                if (height > maxH) { width = width * maxH / height; height = maxH; }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                // Белый фон (для прозрачных PNG)
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, 0, width, height);
+                ctx.drawImage(img, 0, 0, width, height);
+
+                const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                resolve(dataUrl);
+            };
+            img.onerror = reject;
+            img.src = ev.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+function applyImageToContext(dataUrl) {
+    const ctx = imageContext;
+    if (!ctx) return;
+
+    let items;
+    if (ctx.type === 'list') items = state.lists[ctx.key].items;
+    else if (ctx.type === 'modifier') items = state.modifiers.items;
+    else if (ctx.type === 'subcat') items = state.modules[ctx.gKey].modules[ctx.mKey].subcategories[ctx.sKey].items;
+
+    if (items && items[ctx.index]) {
+        items[ctx.index].image = dataUrl;
+        save();
+        // Перерисовать
+        if (ctx.type === 'list') renderListItems(ctx.key);
+        else if (ctx.type === 'modifier') renderModifierItems();
+        else if (ctx.type === 'subcat') renderSubcatItems(ctx.gKey, ctx.mKey, ctx.sKey);
+        showToast('Изображение привязано');
+    }
+}
+
+function removeImage(context) {
+    const ctx = context;
+    let items;
+    if (ctx.type === 'list') items = state.lists[ctx.key].items;
+    else if (ctx.type === 'modifier') items = state.modifiers.items;
+    else if (ctx.type === 'subcat') items = state.modules[ctx.gKey].modules[ctx.mKey].subcategories[ctx.sKey].items;
+
+    if (items && items[ctx.index]) {
+        items[ctx.index].image = null;
+        save();
+        if (ctx.type === 'list') renderListItems(ctx.key);
+        else if (ctx.type === 'modifier') renderModifierItems();
+        else if (ctx.type === 'subcat') renderSubcatItems(ctx.gKey, ctx.mKey, ctx.sKey);
+        showToast('Изображение удалено');
+    }
+}
+
+function openImageViewer(src) {
+    document.getElementById('imageViewerImg').src = src;
+    document.getElementById('imageViewerModal').classList.add('active');
+}
+function closeImageViewer() {
+    document.getElementById('imageViewerModal').classList.remove('active');
+}
+
+function clearAllImages() {
+    if (!confirm('Удалить ВСЕ привязанные изображения? Тексты останутся.')) return;
+    for (const key in state.lists) {
+        state.lists[key].items.forEach(i => { i.image = null; });
+    }
+    if (state.modifiers) state.modifiers.items.forEach(i => { i.image = null; });
+    for (const gKey in state.modules) {
+        for (const mKey in state.modules[gKey].modules) {
+            for (const sKey in state.modules[gKey].modules[mKey].subcategories) {
+                state.modules[gKey].modules[mKey].subcategories[sKey].items.forEach(i => { i.image = null; });
+            }
+        }
+    }
+    save(); renderLists(); renderModules();
+    showToast('Все изображения удалены');
+}
+
+// ============================================================
 // СПИСОК ВСЕХ ПУТЕЙ
 // ============================================================
 function getAllPaths() {
@@ -751,14 +948,8 @@ function getAllPaths() {
         for (const mKey in group.modules) {
             const mod = group.modules[mKey];
             const allItems = [];
-            for (const sKey in mod.subcategories) {
-                allItems.push(...mod.subcategories[sKey].items);
-            }
-            paths.push({
-                path: `${gKey}.${mKey}`,
-                name: `${mod.name}`,
-                items: allItems
-            });
+            for (const sKey in mod.subcategories) allItems.push(...mod.subcategories[sKey].items);
+            paths.push({ path: `${gKey}.${mKey}`, name: `${mod.name}`, items: allItems });
         }
     }
     return paths;
@@ -770,71 +961,69 @@ function getAllPaths() {
 function randItem(items) {
     const active = items.filter(i => i.enabled && i.text && i.text !== "Отсутствует" && i.text !== "None");
     if (active.length === 0) return null;
-    return active[Math.floor(Math.random() * active.length)].text;
+    return active[Math.floor(Math.random() * active.length)];
 }
 function randItemExcluding(items, excludeList) {
     const excludeLower = excludeList.map(s => s.toLowerCase());
-    const active = items.filter(i => i.enabled && i.text && i.text !== "Отсутствует" && i.text !== "None" && !excludeLower.includes(i.text.toLowerCase()));
+    const active = items.filter(i => i.enabled && i.text && !excludeLower.includes(i.text.toLowerCase()) && i.text !== "Отсутствует" && i.text !== "None");
     if (active.length === 0) return null;
-    return active[Math.floor(Math.random() * active.length)].text;
+    return active[Math.floor(Math.random() * active.length)];
 }
 
 function generate() {
-    const result = {};
+    const result = {};       // { path: text }
+    const resultItems = {};  // { path: [itemObj, ...] }
     const paths = [];
     const extraTexts = [];
 
-    // 1. Первичная генерация
+    // Списки
     if (state.lists.races.enabled) {
-        const race = randItem(state.lists.races.items);
-        if (race) { result['list.races'] = race; paths.push('list.races'); }
+        const item = randItem(state.lists.races.items);
+        if (item) { result['list.races'] = item.text; resultItems['list.races'] = [item]; paths.push('list.races'); }
     }
     if (state.lists.styles.enabled) {
-        const style = randItem(state.lists.styles.items);
-        if (style) { result['list.styles'] = style; paths.push('list.styles'); }
+        const item = randItem(state.lists.styles.items);
+        if (item) { result['list.styles'] = item.text; resultItems['list.styles'] = [item]; paths.push('list.styles'); }
     }
+
+    // Модули
     for (const gKey in state.modules) {
         const group = state.modules[gKey];
         for (const mKey in group.modules) {
             const mod = group.modules[mKey];
             if (!mod.enabled) continue;
-            const slotValues = [];
+            const slotItems = [];
             for (const sKey in mod.subcategories) {
                 const sub = mod.subcategories[sKey];
                 if (!sub.enabled) continue;
-                const v = randItem(sub.items);
-                if (v) slotValues.push(v);
+                const item = randItem(sub.items);
+                if (item) slotItems.push(item);
             }
-            if (slotValues.length > 0) {
+            if (slotItems.length > 0) {
                 const path = `${gKey}.${mKey}`;
-                result[path] = slotValues.join(', ');
+                result[path] = slotItems.map(i => i.text).join(', ');
+                resultItems[path] = slotItems;
                 paths.push(path);
             }
         }
     }
 
-    // 2. Применяем модификатор к случайному предмету одежды
-    let modifierApplied = null;
+    // Модификаторы
     if (state.modifiers && state.modifiers.enabled) {
-        const modifier = randItem(state.modifiers.items);
-        if (modifier) {
+        const modItem = randItem(state.modifiers.items);
+        if (modItem) {
             const clothesSlots = ['clothes.headwear', 'clothes.neckwear', 'clothes.topwear1', 'clothes.bottomwear', 'clothes.legwear', 'clothes.footwear'];
             const available = clothesSlots.filter(s => result[s]);
             if (available.length > 0) {
                 const target = available[Math.floor(Math.random() * available.length)];
-                // Модификатор применяется к последнему значению в слоте
-                const parts = result[target].split(', ');
-                parts[parts.length - 1] = `${modifier} ${parts[parts.length - 1]}`;
-                result[target] = parts.join(', ');
-                modifierApplied = { slot: target, modifier: modifier };
+                result[target] = `${modItem.text} ${result[target]}`;
+                if (resultItems[target]) resultItems[target].unshift(modItem);
             }
         }
     }
 
-    // 3. Правила
+    // Правила (замены)
     const activeRules = state.rules.filter(r => r.enabled);
-
-    // 3.1 Замены (с проверкой всех условий)
     activeRules.filter(r => r.type === 'replace').forEach(rule => {
         if (checkConditions(rule, result)) {
             const actPath = rule.action.path;
@@ -842,21 +1031,18 @@ function generate() {
             if (actPath) {
                 result[actPath] = actVal;
                 if (!paths.includes(actPath)) paths.push(actPath);
-                // Цепочка: если правило имеет chain — проверяем ещё раз все правила
-                if (rule.chain) {
-                    // После замены могли активироваться другие правила — рекурсия 1 уровня
-                    setTimeout(() => {}, 0);
-                }
+                // Для картинок — ищем соответствующий item
+                const items = getItemsByPath(actPath);
+                const found = items.find(i => i.text === actVal);
+                resultItems[actPath] = found ? [found] : [];
             }
         }
     });
 
-    // 3.2 Цепочки: повторная проверка правил (1 проход)
-    let chainChanged = true;
-    let chainIterations = 0;
-    while (chainChanged && chainIterations < 3) {
-        chainChanged = false;
-        chainIterations++;
+    // Цепочки
+    let chainChanged = true, chainIter = 0;
+    while (chainChanged && chainIter < 3) {
+        chainChanged = false; chainIter++;
         activeRules.filter(r => r.type === 'replace' && r.chain).forEach(rule => {
             if (checkConditions(rule, result)) {
                 const actPath = rule.action.path;
@@ -864,40 +1050,45 @@ function generate() {
                 if (actPath && result[actPath] !== actVal) {
                     result[actPath] = actVal;
                     if (!paths.includes(actPath)) paths.push(actPath);
+                    const items = getItemsByPath(actPath);
+                    const found = items.find(i => i.text === actVal);
+                    resultItems[actPath] = found ? [found] : [];
                     chainChanged = true;
                 }
             }
         });
     }
 
-    // 3.3 Исключения
+    // Исключения
     activeRules.filter(r => r.type === 'exclude').forEach(rule => {
         if (checkConditions(rule, result)) {
             const exclPath = rule.action.path;
             const exclValues = rule.action.values || [];
             if (!exclPath) return;
-
             if (exclPath.startsWith('list.')) {
                 const listKey = exclPath.split('.')[1];
-                const newVal = randItemExcluding(state.lists[listKey].items, exclValues);
-                if (newVal) result[exclPath] = newVal;
+                const item = randItemExcluding(state.lists[listKey].items, exclValues);
+                if (item) { result[exclPath] = item.text; resultItems[exclPath] = [item]; }
             } else {
                 const [gKey, mKey] = exclPath.split('.');
                 const mod = state.modules[gKey] && state.modules[gKey].modules[mKey];
                 if (!mod || !mod.enabled) return;
-                const slotValues = [];
+                const slotItems = [];
                 for (const sKey in mod.subcategories) {
                     const sub = mod.subcategories[sKey];
                     if (!sub.enabled) continue;
-                    const v = randItemExcluding(sub.items, exclValues);
-                    if (v) slotValues.push(v);
+                    const item = randItemExcluding(sub.items, exclValues);
+                    if (item) slotItems.push(item);
                 }
-                if (slotValues.length > 0) result[exclPath] = slotValues.join(', ');
+                if (slotItems.length > 0) {
+                    result[exclPath] = slotItems.map(i => i.text).join(', ');
+                    resultItems[exclPath] = slotItems;
+                }
             }
         }
     });
 
-    // 3.4 Добавление текста
+    // Добавление текста
     activeRules.filter(r => r.type === 'add').forEach(rule => {
         if (checkConditions(rule, result)) {
             if (rule.action.text) extraTexts.push(rule.action.text);
@@ -908,15 +1099,15 @@ function generate() {
 
     state.current = result;
     state.currentPaths = paths;
+    state.currentItems = resultItems;
     state.extraText = extraTexts.join(', ');
     state.genCount++;
     save();
     updateCounter();
-    renderResult(result, paths, extraTexts, modifierApplied);
-    addHistory(result, paths, extraTexts);
+    renderResult(result, paths, extraTexts, resultItems);
+    addHistory(result, paths, extraTexts, resultItems);
 }
 
-// Проверка условий (все должны выполниться — AND)
 function checkConditions(rule, result) {
     if (!rule.conditions || rule.conditions.length === 0) return false;
     for (const cond of rule.conditions) {
@@ -924,18 +1115,13 @@ function checkConditions(rule, result) {
     }
     return true;
 }
-
 function matchesCondition(result, condPath, condVal, negate) {
     if (!condPath) return false;
     const currentVal = result[condPath];
     const isEmpty = !currentVal;
     const currentParts = currentVal ? currentVal.split(',').map(s => s.trim().toLowerCase()) : [];
     const match = !isEmpty && currentParts.includes((condVal || '').toLowerCase());
-
-    if (negate) {
-        // Условие "отсутствует"
-        return isEmpty || !match;
-    }
+    if (negate) return isEmpty || !match;
     return match;
 }
 
@@ -944,17 +1130,56 @@ function getPathName(path) {
     const [g, m] = path.split('.');
     return state.modules[g].modules[m].name;
 }
+function getItemsByPath(path) {
+    if (path.startsWith('list.')) return state.lists[path.split('.')[1]].items;
+    const [g, m] = path.split('.');
+    if (!state.modules[g] || !state.modules[g].modules[m]) return [];
+    const all = [];
+    for (const sKey in state.modules[g].modules[m].subcategories) {
+        all.push(...state.modules[g].modules[m].subcategories[sKey].items);
+    }
+    return all;
+}
 
-function renderResult(result, paths, extraTexts, modifierApplied) {
+function renderResult(result, paths, extraTexts, resultItems) {
     const box = document.getElementById('resultBox');
     box.innerHTML = '';
     paths.forEach(path => {
         const name = getPathName(path);
         const isMain = path === 'list.races' || path === 'list.styles';
         const isSlot = !path.startsWith('list.');
+
         const line = document.createElement('div');
         line.className = `result-line ${isMain ? 'main' : ''} ${isSlot ? 'slot' : ''}`;
-        line.innerHTML = `<span class="result-cat">${name}</span><span class="result-val">${result[path]}</span>`;
+        line.innerHTML = `<span class="result-cat">${name}</span>`;
+
+        const valueBlock = document.createElement('div');
+        valueBlock.className = 'result-value-block';
+
+        // Соберём картинки из items, у которых есть image
+        const items = resultItems[path] || [];
+        const withImages = items.filter(i => i && i.image);
+
+        const valueText = document.createElement('span');
+        valueText.className = 'result-val';
+        valueText.textContent = result[path];
+        valueBlock.appendChild(valueText);
+
+        if (withImages.length > 0) {
+            const thumbs = document.createElement('div');
+            thumbs.className = 'result-thumbs';
+            withImages.forEach(item => {
+                const img = document.createElement('img');
+                img.className = 'result-thumb';
+                img.src = item.image;
+                img.title = item.text;
+                img.onclick = () => openImageViewer(item.image);
+                thumbs.appendChild(img);
+            });
+            valueBlock.appendChild(thumbs);
+        }
+
+        line.appendChild(valueBlock);
         box.appendChild(line);
     });
     if (extraTexts && extraTexts.length > 0) {
@@ -965,12 +1190,18 @@ function renderResult(result, paths, extraTexts, modifierApplied) {
     }
 }
 
-function addHistory(result, paths, extraTexts) {
+function addHistory(result, paths, extraTexts, resultItems) {
+    // Сохраняем только ID-подобные данные + картинки для превью
+    const itemsForHistory = {};
+    for (const path in resultItems) {
+        itemsForHistory[path] = resultItems[path].map(i => ({ text: i.text, image: i.image || null }));
+    }
     state.history.unshift({
         id: Date.now(),
         result: JSON.parse(JSON.stringify(result)),
         paths: [...paths],
         extraTexts: extraTexts || [],
+        items: itemsForHistory,
         date: new Date().toLocaleString('ru-RU'),
         favorite: false
     });
@@ -1008,23 +1239,16 @@ const PRESETS = {
     full: ['list.races', 'list.styles', 'appearance.bangs', 'appearance.sidelocks', 'appearance.backHair', 'appearance.addHair', 'appearance.eyeShape', 'appearance.skinColor', 'clothes.headwear', 'clothes.neckwear', 'clothes.handwear', 'clothes.topwear1', 'clothes.bottomwear', 'clothes.legwear', 'clothes.footwear', 'clothes.acc1', 'clothes.acc2', 'clothes.acc3', 'clothes.acc4', 'clothes.acc5', 'race.trait1', 'race.trait2', 'race.trait3'],
     race: ['list.races', 'race.trait1', 'race.trait2', 'race.trait3', 'race.trait4', 'race.trait5', 'race.trait6', 'race.trait7']
 };
-
 function applyPreset(name) {
     const preset = PRESETS[name];
-
-    // Списки
     for (const key in state.lists) {
         if (preset === null) state.lists[key].enabled = true;
         else state.lists[key].enabled = preset.includes(`list.${key}`);
     }
-
-    // Модификаторы
     if (state.modifiers) {
         if (preset === null) state.modifiers.enabled = true;
-        else state.modifiers.enabled = false; // по умолчанию выкл в пресетах кроме full
+        else state.modifiers.enabled = false;
     }
-
-    // Модули
     for (const gKey in state.modules) {
         const group = state.modules[gKey];
         for (const mKey in group.modules) {
@@ -1033,12 +1257,8 @@ function applyPreset(name) {
             else mod.enabled = preset.includes(`${gKey}.${mKey}`);
         }
     }
-
     if (name === 'full' && state.modifiers) state.modifiers.enabled = true;
-
-    save();
-    renderLists();
-    renderModules();
+    save(); renderLists(); renderModules();
     showToast(`Пресет "${name}"`);
 }
 
@@ -1080,9 +1300,7 @@ function delHist(id) {
     save(); renderHistory();
 }
 function clearHistory() {
-    if (confirm('Удалить всю историю?')) {
-        state.history = []; save(); renderHistory();
-    }
+    if (confirm('Удалить всю историю?')) { state.history = []; save(); renderHistory(); }
 }
 function copyHist(id) {
     const it = state.history.find(i => i.id === id);
@@ -1101,9 +1319,13 @@ function createListBlock(key, list) {
     const div = document.createElement('div');
     div.className = `list-block ${list.enabled ? '' : 'disabled'} ${list.expanded ? 'open' : ''}`;
     const active = list.items.filter(i => i.enabled).length;
+    const withImages = list.items.filter(i => i.image).length;
     div.innerHTML = `
         <div class="list-header">
-            <div><h3>${list.name}</h3><span class="list-counter">Активно: ${active} / ${list.items.length}</span></div>
+            <div>
+                <h3>${list.name}</h3>
+                <span class="list-counter">Активно: ${active} / ${list.items.length}${withImages ? ` · 🖼️ ${withImages}` : ''}</span>
+            </div>
             <div class="list-controls">
                 <label style="font-size:0.75rem; cursor:pointer;">
                     <input type="checkbox" ${list.enabled ? 'checked' : ''} onchange="toggleList('${key}')" style="accent-color: var(--accent);"> Вкл
@@ -1140,21 +1362,48 @@ function renderListItems(key) {
         if (!item || !item.text) return;
         const row = document.createElement('div');
         row.className = `item ${item.enabled ? '' : 'disabled'}`;
+
+        // Чекбокс
         const cb = document.createElement('input');
         cb.type = 'checkbox'; cb.checked = item.enabled;
         cb.onchange = () => { item.enabled = !item.enabled; save(); renderListItems(key); };
+
+        // Миниатюра
+        const thumbWrap = document.createElement('div');
+        if (item.image) {
+            const img = document.createElement('img');
+            img.className = 'item-thumb';
+            img.src = item.image;
+            img.title = 'Нажми чтобы открыть · ПКМ чтобы удалить';
+            img.onclick = () => openImageViewer(item.image);
+            img.oncontextmenu = (e) => { e.preventDefault(); removeImage({ type: 'list', key, index: idx }); };
+            thumbWrap.appendChild(img);
+        } else {
+            const ph = document.createElement('div');
+            ph.className = 'item-thumb-placeholder';
+            ph.textContent = '🖼️';
+            ph.title = 'Прикрепить изображение';
+            ph.onclick = () => pickImage({ type: 'list', key, index: idx });
+            thumbWrap.appendChild(ph);
+        }
+
+        // Текст
         const txt = document.createElement('span');
         txt.className = 'item-text'; txt.textContent = item.text;
         txt.onclick = () => startEditListItem(key, idx, txt);
+
+        // Удалить
         const del = document.createElement('button');
         del.className = 'icon-btn'; del.textContent = '❌';
         del.onclick = () => { list.items.splice(idx, 1); save(); renderListItems(key); };
-        row.appendChild(cb); row.appendChild(txt); row.appendChild(del);
+
+        row.appendChild(cb); row.appendChild(thumbWrap); row.appendChild(txt); row.appendChild(del);
         container.appendChild(row);
     });
     const header = container.closest('.list-block').querySelector('.list-counter');
     const active = list.items.filter(i => i.enabled).length;
-    header.textContent = `Активно: ${active} / ${list.items.length}`;
+    const withImages = list.items.filter(i => i.image).length;
+    header.textContent = `Активно: ${active} / ${list.items.length}${withImages ? ` · 🖼️ ${withImages}` : ''}`;
 }
 function toggleList(key) { state.lists[key].enabled = !state.lists[key].enabled; save(); renderLists(); }
 function startEditListItem(key, idx, span) {
@@ -1169,7 +1418,7 @@ function addListItem(key, inputEl) {
     const v = inputEl.value.trim(); if (!v) return;
     const list = state.lists[key];
     if (list.items.some(i => i.text.toLowerCase() === v.toLowerCase())) { showToast('Уже есть!'); return; }
-    list.items.push({ text: v, enabled: true }); inputEl.value = '';
+    list.items.push({ text: v, enabled: true, image: null }); inputEl.value = '';
     save(); renderListItems(key);
 }
 function sortLists() {
@@ -1185,7 +1434,7 @@ function openEditList(key) {
 }
 
 // ============================================================
-// МОДУЛИ + МОДИФИКАТОРЫ
+// МОДУЛИ
 // ============================================================
 function renderModules() {
     const container = document.getElementById('modulesContainer');
@@ -1194,8 +1443,6 @@ function renderModules() {
 
     for (const gKey in state.modules) {
         const group = state.modules[gKey];
-
-        // Фильтрация модулей
         const visibleModules = {};
         for (const mKey in group.modules) {
             const mod = group.modules[mKey];
@@ -1211,7 +1458,6 @@ function renderModules() {
             }
             if (modMatch || subMatch) visibleModules[mKey] = mod;
         }
-
         if (Object.keys(visibleModules).length === 0 && q) continue;
 
         const title = document.createElement('div');
@@ -1222,13 +1468,11 @@ function renderModules() {
 
         const body = document.createElement('div');
         body.className = `group-body ${group.expanded ? '' : 'collapsed'}`;
-        for (const mKey in visibleModules) {
-            body.appendChild(createModule(gKey, mKey, visibleModules[mKey]));
-        }
+        for (const mKey in visibleModules) body.appendChild(createModule(gKey, mKey, visibleModules[mKey]));
         container.appendChild(body);
     }
 
-    // Модификаторы (отдельный блок)
+    // Модификаторы
     if (state.modifiers && (!q || state.modifiers.name.toLowerCase().includes(q) || state.modifiers.items.some(i => i.text.toLowerCase().includes(q)))) {
         const title = document.createElement('div');
         title.className = 'group-title group-mods';
@@ -1277,15 +1521,11 @@ function createSimpleModule() {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'LABEL') return;
         mod.expanded = !mod.expanded; save(); renderModules();
     };
-    div.querySelector('.module-toggle').onclick = (e) => {
-        e.stopPropagation();
-        mod.expanded = !mod.expanded; save(); renderModules();
-    };
+    div.querySelector('.module-toggle').onclick = (e) => { e.stopPropagation(); mod.expanded = !mod.expanded; save(); renderModules(); };
     div.appendChild(body);
     setTimeout(() => renderModifierItems(), 0);
     return div;
 }
-
 function renderModifierItems() {
     const container = document.getElementById('modifier-list');
     if (!container) return;
@@ -1298,13 +1538,28 @@ function renderModifierItems() {
         const cb = document.createElement('input');
         cb.type = 'checkbox'; cb.checked = item.enabled;
         cb.onchange = () => { item.enabled = !item.enabled; save(); renderModifierItems(); };
+
+        const thumbWrap = document.createElement('div');
+        if (item.image) {
+            const img = document.createElement('img');
+            img.className = 'item-thumb'; img.src = item.image;
+            img.onclick = () => openImageViewer(item.image);
+            img.oncontextmenu = (e) => { e.preventDefault(); removeImage({ type: 'modifier', index: idx }); };
+            thumbWrap.appendChild(img);
+        } else {
+            const ph = document.createElement('div');
+            ph.className = 'item-thumb-placeholder'; ph.textContent = '🖼️';
+            ph.onclick = () => pickImage({ type: 'modifier', index: idx });
+            thumbWrap.appendChild(ph);
+        }
+
         const txt = document.createElement('span');
         txt.className = 'item-text'; txt.textContent = item.text;
         txt.onclick = () => startEditModifierItem(idx, txt);
         const del = document.createElement('button');
         del.className = 'icon-btn'; del.textContent = '❌';
         del.onclick = () => { mod.items.splice(idx, 1); save(); renderModifierItems(); };
-        row.appendChild(cb); row.appendChild(txt); row.appendChild(del);
+        row.appendChild(cb); row.appendChild(thumbWrap); row.appendChild(txt); row.appendChild(del);
         container.appendChild(row);
     });
     const header = container.closest('.simple-module').querySelector('.module-counter');
@@ -1313,11 +1568,9 @@ function renderModifierItems() {
         header.textContent = `Активно: ${active} / ${mod.items.length}`;
     }
 }
-
 function toggleModifiers() { state.modifiers.enabled = !state.modifiers.enabled; save(); renderModules(); }
 function startEditModifierItem(idx, span) {
-    const mod = state.modifiers;
-    const old = mod.items[idx].text;
+    const mod = state.modifiers; const old = mod.items[idx].text;
     const inp = document.createElement('input'); inp.type = 'text'; inp.value = old;
     span.replaceWith(inp); inp.focus();
     const finish = () => { const v = inp.value.trim(); if (v && v !== old) { mod.items[idx].text = v; save(); } renderModifierItems(); };
@@ -1327,7 +1580,7 @@ function startEditModifierItem(idx, span) {
 function addModifierItem(inputEl) {
     const v = inputEl.value.trim(); if (!v) return;
     if (state.modifiers.items.some(i => i.text.toLowerCase() === v.toLowerCase())) { showToast('Уже есть!'); return; }
-    state.modifiers.items.push({ text: v, enabled: true });
+    state.modifiers.items.push({ text: v, enabled: true, image: null });
     inputEl.value = '';
     save(); renderModifierItems();
 }
@@ -1338,7 +1591,6 @@ function openEditModifiers() {
     document.getElementById('editModal').classList.add('active');
 }
 
-// МОДУЛИ (стандартные)
 function createModule(gKey, mKey, mod) {
     const div = document.createElement('div');
     div.className = `module ${mod.enabled ? '' : 'disabled'} ${mod.expanded ? 'open' : ''}`;
@@ -1378,12 +1630,13 @@ function createSubcat(gKey, mKey, sKey, sub) {
     const div = document.createElement('div');
     div.className = `subcat ${sub.enabled ? '' : 'disabled'} ${sub.expanded ? 'open' : ''}`;
     const active = sub.items.filter(i => i.enabled).length;
+    const withImages = sub.items.filter(i => i.image).length;
     div.innerHTML = `
         <div class="subcat-header">
             <div style="display:flex; align-items:center; gap:8px;">
                 <input type="checkbox" ${sub.enabled ? 'checked' : ''} style="accent-color: var(--accent); cursor:pointer;" onclick="event.stopPropagation(); toggleSubcat('${gKey}','${mKey}','${sKey}')">
                 <span class="subcat-name">${sub.name}</span>
-                <span class="subcat-counter">(${active}/${sub.items.length})</span>
+                <span class="subcat-counter">(${active}/${sub.items.length}${withImages ? ` · 🖼️${withImages}` : ''})</span>
             </div>
             <div class="subcat-controls">
                 <button class="icon-btn" onclick="event.stopPropagation(); openEditSubcat('${gKey}','${mKey}','${sKey}')">✏️</button>
@@ -1422,18 +1675,34 @@ function renderSubcatItems(gKey, mKey, sKey) {
         const cb = document.createElement('input');
         cb.type = 'checkbox'; cb.checked = item.enabled;
         cb.onchange = () => { item.enabled = !item.enabled; save(); renderSubcatItems(gKey, mKey, sKey); };
+
+        const thumbWrap = document.createElement('div');
+        if (item.image) {
+            const img = document.createElement('img');
+            img.className = 'item-thumb'; img.src = item.image;
+            img.onclick = () => openImageViewer(item.image);
+            img.oncontextmenu = (e) => { e.preventDefault(); removeImage({ type: 'subcat', gKey, mKey, sKey, index: idx }); };
+            thumbWrap.appendChild(img);
+        } else {
+            const ph = document.createElement('div');
+            ph.className = 'item-thumb-placeholder'; ph.textContent = '🖼️';
+            ph.onclick = () => pickImage({ type: 'subcat', gKey, mKey, sKey, index: idx });
+            thumbWrap.appendChild(ph);
+        }
+
         const txt = document.createElement('span');
         txt.className = 'item-text'; txt.textContent = item.text;
         txt.onclick = () => startEditSubcatItem(gKey, mKey, sKey, idx, txt);
         const del = document.createElement('button');
         del.className = 'icon-btn'; del.textContent = '❌';
         del.onclick = () => { sub.items.splice(idx, 1); save(); renderSubcatItems(gKey, mKey, sKey); };
-        row.appendChild(cb); row.appendChild(txt); row.appendChild(del);
+        row.appendChild(cb); row.appendChild(thumbWrap); row.appendChild(txt); row.appendChild(del);
         container.appendChild(row);
     });
     const header = container.closest('.subcat').querySelector('.subcat-counter');
     const active = sub.items.filter(i => i.enabled).length;
-    header.textContent = `(${active}/${sub.items.length})`;
+    const withImages = sub.items.filter(i => i.image).length;
+    header.textContent = `(${active}/${sub.items.length}${withImages ? ` · 🖼️${withImages}` : ''})`;
 }
 function toggleModule(gKey, mKey) { state.modules[gKey].modules[mKey].enabled = !state.modules[gKey].modules[mKey].enabled; save(); renderModules(); }
 function toggleSubcat(gKey, mKey, sKey) { state.modules[gKey].modules[mKey].subcategories[sKey].enabled = !state.modules[gKey].modules[mKey].subcategories[sKey].enabled; save(); renderModules(); }
@@ -1450,7 +1719,7 @@ function addSubcatItem(gKey, mKey, sKey, inputEl) {
     const v = inputEl.value.trim(); if (!v) return;
     const sub = state.modules[gKey].modules[mKey].subcategories[sKey];
     if (sub.items.some(i => i.text.toLowerCase() === v.toLowerCase())) { showToast('Уже есть!'); return; }
-    sub.items.push({ text: v, enabled: true });
+    sub.items.push({ text: v, enabled: true, image: null });
     inputEl.value = '';
     save(); renderSubcatItems(gKey, mKey, sKey);
 }
@@ -1474,7 +1743,7 @@ function openEditSubcat(gKey, mKey, sKey) {
 }
 
 // ============================================================
-// ПРАВИЛА 2.0
+// ПРАВИЛА
 // ============================================================
 function populateRuleSelects() {
     const paths = getAllPaths();
@@ -1486,30 +1755,14 @@ function populateRuleSelects() {
         sel.innerHTML = '';
         paths.forEach(p => {
             const opt = document.createElement('option');
-            opt.value = p.path;
-            opt.textContent = p.name;
+            opt.value = p.path; opt.textContent = p.name;
             sel.appendChild(opt);
         });
         if (currentVal) sel.value = currentVal;
     });
     onRuleActModuleChange();
-    // Если нет ни одного условия — добавим первое
-    if (document.getElementById('conditionsContainer').children.length === 0) {
-        addCondition();
-    }
+    if (document.getElementById('conditionsContainer').children.length === 0) addCondition();
 }
-
-function getItemsByPath(path) {
-    if (path.startsWith('list.')) return state.lists[path.split('.')[1]].items;
-    const [g, m] = path.split('.');
-    if (!state.modules[g] || !state.modules[g].modules[m]) return [];
-    const all = [];
-    for (const sKey in state.modules[g].modules[m].subcategories) {
-        all.push(...state.modules[g].modules[m].subcategories[sKey].items);
-    }
-    return all;
-}
-
 function createConditionRow(cond) {
     const div = document.createElement('div');
     div.className = 'rule-row';
@@ -1519,15 +1772,13 @@ function createConditionRow(cond) {
     moduleSelect.className = 'cond-module';
     paths.forEach(p => {
         const opt = document.createElement('option');
-        opt.value = p.path;
-        opt.textContent = p.name;
+        opt.value = p.path; opt.textContent = p.name;
         if (cond && cond.path === p.path) opt.selected = true;
         moduleSelect.appendChild(opt);
     });
 
     const arrow = document.createElement('span');
-    arrow.className = 'arrow';
-    arrow.textContent = '=';
+    arrow.className = 'arrow'; arrow.textContent = '=';
 
     const valueSelect = document.createElement('select');
     valueSelect.className = 'cond-value';
@@ -1536,8 +1787,7 @@ function createConditionRow(cond) {
         const items = getItemsByPath(moduleSelect.value);
         items.filter(i => i.enabled).forEach(i => {
             const opt = document.createElement('option');
-            opt.value = i.text;
-            opt.textContent = i.text;
+            opt.value = i.text; opt.textContent = i.text;
             if (cond && cond.value === i.text) opt.selected = true;
             valueSelect.appendChild(opt);
         });
@@ -1567,19 +1817,13 @@ function createConditionRow(cond) {
     removeBtn.style.fontSize = '1rem';
     removeBtn.onclick = () => div.remove();
 
-    div.appendChild(moduleSelect);
-    div.appendChild(arrow);
-    div.appendChild(valueSelect);
-    div.appendChild(negateLabel);
-    div.appendChild(removeBtn);
+    div.appendChild(moduleSelect); div.appendChild(arrow); div.appendChild(valueSelect);
+    div.appendChild(negateLabel); div.appendChild(removeBtn);
     return div;
 }
-
 function addCondition() {
-    const container = document.getElementById('conditionsContainer');
-    container.appendChild(createConditionRow(null));
+    document.getElementById('conditionsContainer').appendChild(createConditionRow(null));
 }
-
 function onRuleTypeChange() {
     const t = document.getElementById('newRuleType').value;
     document.getElementById('actionReplaceRow').style.display = t === 'replace' ? 'flex' : 'none';
@@ -1594,16 +1838,12 @@ function onRuleActModuleChange() {
     valSel.innerHTML = '';
     items.filter(i => i.enabled).forEach(i => {
         const opt = document.createElement('option');
-        opt.value = i.text;
-        opt.textContent = i.text;
+        opt.value = i.text; opt.textContent = i.text;
         valSel.appendChild(opt);
     });
 }
-
 function addRule() {
     const type = document.getElementById('newRuleType').value;
-
-    // Собираем условия
     const conditions = [];
     const condRows = document.querySelectorAll('#conditionsContainer .rule-row');
     condRows.forEach(row => {
@@ -1612,17 +1852,8 @@ function addRule() {
         const negate = row.querySelector('.cond-negate').checked;
         if (path && value) conditions.push({ path, value, negate });
     });
-
-    if (conditions.length === 0) { showToast('Добавьте хотя бы одно условие!'); return; }
-
-    const rule = {
-        id: Date.now(),
-        type: type,
-        conditions: conditions,
-        action: {},
-        enabled: true,
-        chain: document.getElementById('newRuleChain').checked
-    };
+    if (conditions.length === 0) { showToast('Добавьте условие!'); return; }
+    const rule = { id: Date.now(), type, conditions, action: {}, enabled: true, chain: document.getElementById('newRuleChain').checked };
 
     if (type === 'replace') {
         const actPath = document.getElementById('newRuleActModule').value;
@@ -1632,7 +1863,7 @@ function addRule() {
     } else if (type === 'exclude') {
         const actPath = document.getElementById('newRuleExclModule').value;
         const actValues = document.getElementById('newRuleExclValue').value.split(',').map(s => s.trim()).filter(s => s);
-        if (!actPath || actValues.length === 0) { showToast('Заполните действие!'); return; }
+        if (!actPath || actValues.length === 0) { showToast('Заполните!'); return; }
         rule.action = { path: actPath, values: actValues };
     } else if (type === 'add') {
         const text = document.getElementById('newRuleAddText').value.trim();
@@ -1641,39 +1872,31 @@ function addRule() {
     }
 
     state.rules.push(rule);
-    save();
-    renderRules();
+    save(); renderRules();
     showToast('Правило добавлено');
-
-    // Очистка
     document.getElementById('newRuleExclValue').value = '';
     document.getElementById('newRuleAddText').value = '';
     document.getElementById('conditionsContainer').innerHTML = '';
     document.getElementById('newRuleChain').checked = false;
     addCondition();
 }
-
 function renderRules() {
     const container = document.getElementById('rulesContainer');
     if (!container) return;
     container.innerHTML = '';
-
     if (state.rules.length === 0) {
-        container.innerHTML = '<div class="empty-state">Пока нет правил.<br>Создайте первое — например, «Если раса = Dragon girl → добавить Scales».</div>';
+        container.innerHTML = '<div class="empty-state">Пока нет правил.</div>';
         return;
     }
-
     state.rules.forEach(rule => {
         const div = document.createElement('div');
         div.className = `rule-card ${rule.enabled ? '' : 'disabled'}`;
         const typeLabel = rule.type === 'replace' ? '🔵 Замена' : rule.type === 'exclude' ? '🔴 Исключение' : '🟡 Добавить';
         const typeClass = rule.type === 'replace' ? 'rule-type-replace' : rule.type === 'exclude' ? 'rule-type-exclude' : 'rule-type-add';
-
         let condText = rule.conditions.map(c => {
             const name = getPathName(c.path) || c.path;
             return `${name} ${c.negate ? '≠' : '='} <b style="color:var(--rules);">${c.value}</b>`;
         }).join(' <b>И</b> ');
-
         let actionText = '';
         if (rule.type === 'replace') {
             const actName = getPathName(rule.action.path) || rule.action.path;
@@ -1684,9 +1907,7 @@ function renderRules() {
         } else if (rule.type === 'add') {
             actionText = `добавить текст: <b style="color:var(--race);">${rule.action.text}</b>`;
         }
-
         const chainBadge = rule.chain ? '<span class="chain-badge">🔗 ЦЕПОЧКА</span>' : '';
-
         div.innerHTML = `
             <div class="rule-header">
                 <span class="rule-type ${typeClass}">${typeLabel}${chainBadge}</span>
@@ -1705,15 +1926,8 @@ function renderRules() {
         container.appendChild(div);
     });
 }
-
-function toggleRule(id) {
-    const r = state.rules.find(x => x.id === id);
-    if (r) { r.enabled = !r.enabled; save(); renderRules(); }
-}
-function deleteRule(id) {
-    state.rules = state.rules.filter(x => x.id !== id);
-    save(); renderRules();
-}
+function toggleRule(id) { const r = state.rules.find(x => x.id === id); if (r) { r.enabled = !r.enabled; save(); renderRules(); } }
+function deleteRule(id) { state.rules = state.rules.filter(x => x.id !== id); save(); renderRules(); }
 function exportRules() {
     const data = JSON.stringify({ version: 2, rules: state.rules }, null, 2);
     const blob = new Blob([data], { type: 'application/json' });
@@ -1721,8 +1935,7 @@ function exportRules() {
     const a = document.createElement('a');
     a.href = url; a.download = `rules_${Date.now()}.json`;
     document.body.appendChild(a); a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    document.body.removeChild(a); URL.revokeObjectURL(url);
     showToast('Правила экспортированы');
 }
 function importRules(event) {
@@ -1733,14 +1946,11 @@ function importRules(event) {
         try {
             const data = JSON.parse(e.target.result);
             if (!data.rules || !Array.isArray(data.rules)) throw new Error('Неверный формат');
-            if (!confirm(`Загрузить ${data.rules.length} правил? Текущие будут заменены.`)) return;
+            if (!confirm(`Загрузить ${data.rules.length} правил?`)) return;
             state.rules = data.rules;
-            save();
-            renderRules();
-            showToast(`Загружено правил: ${data.rules.length}`);
-        } catch (err) {
-            alert('Ошибка: ' + err.message);
-        }
+            save(); renderRules();
+            showToast(`Загружено: ${data.rules.length}`);
+        } catch (err) { alert('Ошибка: ' + err.message); }
         event.target.value = '';
     };
     reader.readAsText(file);
@@ -1760,9 +1970,13 @@ function saveEdit() {
     else if (editContext.type === 'modifier') target = state.modifiers.items;
     else target = state.modules[editContext.gKey].modules[editContext.mKey].subcategories[editContext.sKey].items;
 
+    // Сохраняем старые картинки по тексту
     const oldMap = {};
-    target.forEach(i => { if (i && i.text) oldMap[i.text.toLowerCase()] = i.enabled; });
-    const newItems = lines.map(t => ({ text: t, enabled: oldMap[t.toLowerCase()] !== undefined ? oldMap[t.toLowerCase()] : true }));
+    target.forEach(i => { if (i && i.text) oldMap[i.text.toLowerCase()] = { enabled: i.enabled, image: i.image || null }; });
+    const newItems = lines.map(t => {
+        const old = oldMap[t.toLowerCase()];
+        return { text: t, enabled: old ? old.enabled : true, image: old ? old.image : null };
+    });
 
     if (editContext.type === 'list') state.lists[editContext.key].items = newItems;
     else if (editContext.type === 'modifier') state.modifiers.items = newItems;
@@ -1793,14 +2007,14 @@ function confirmBulkImport() {
     let added = 0, skipped = 0;
     lines.forEach(line => {
         if (target.some(i => i.text.toLowerCase() === line.toLowerCase())) skipped++;
-        else { target.push({ text: line, enabled: true }); added++; }
+        else { target.push({ text: line, enabled: true, image: null }); added++; }
     });
     save(); renderLists(); renderModules();
     closeBulkImport();
     showToast(`Добавлено: ${added}${skipped ? `, пропущено: ${skipped}` : ''}`);
 }
 function resetAll() {
-    if (!confirm('Сбросить списки и модули? Правила сохранятся.')) return;
+    if (!confirm('Сбросить списки и модули? Правила и картинки сохранятся.')) return;
     state.lists = JSON.parse(JSON.stringify(DEFAULT_LISTS));
     state.modifiers = JSON.parse(JSON.stringify(DEFAULT_MODIFIERS));
     state.modules = JSON.parse(JSON.stringify(DEFAULT_MODULES));
