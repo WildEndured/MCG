@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор Персонажей: Раса + Стиль</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a2e;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+
+        .container {
+            background-color: #16213e;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid #0f3460;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #e94560;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .result-box {
+            background-color: #0f3460;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .race-text {
+            font-size: 1.2rem;
+            color: #a8a8a8;
+            margin-bottom: 5px;
+        }
+
+        .style-text {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
+        }
+
+        .plus {
+            font-size: 1.5rem;
+            color: #e94560;
+            margin: 5px 0;
+        }
+
+        button {
+            background-color: #e94560;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            background-color: #ff2e63;
+            transform: scale(1.05);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Генератор Персонажей</h1>
+        
+        <div class="result-box">
+            <div class="race-text" id="raceDisplay">Нажмите кнопку</div>
+            <div class="plus">+</div>
+            <div class="style-text" id="styleDisplay">...</div>
+        </div>
+
+        <button onclick="generateCharacter()">Сгенерировать!</button>
+    </div>
+
+    <script>
+        // --- СПИСОК РАС (из второго скриншота) ---
+        const races = [
+            "Angel girl", "Arapaima girl", "Bat girl", "Bird girl", "Chimera", 
+            "Crocodile girl", "Crow girl", "Cat girl", "Cow girl", "Capybara girl", 
+            "Chicken girl", "Demon girl", "Doll girl", "Dragon girl", "Deer girl", 
+            "Elf", "Fish girl", "Fox girl", "Gargoyle girl", "Ghost girl", 
+            "Horse girl", "Insect girl", "Jackal girl", "Kitsune girl", "Mimic", 
+            "Orca girl", "Program girl", "Panda girl", "Rat girl", "Rabbit girl", 
+            "Reptile girl", "Snake girl", "Slime girl", "Serval girl", "Shark girl", 
+            "Succubus", "Sheep girl", "Tiger girl", "Vampire girl", "Wolf girl", 
+            "Wyrm girl", "Zombie girl"
+        ];
+
+        // --- СПИСОК СТИЛЕЙ (из первого скриншота) ---
+        const styles = [
+            "Ancient Egyptian", "Boho-chic", "Casual", "Gyaru", "Grunge", 
+            "Gothic Lolita", "Jester", "Japanese clothes", "Jirai key", 
+            "Maid", "Nun", "Naval", "Punk", "Prison", "Rags", 
+            "Sportswear", "Swimsuit", "Streetwear", "Techwear", "Witch", 
+            "Winter clothes", "Y2K"
+        ];
+
+        function getRandomItem(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function generateCharacter() {
+            const randomRace = getRandomItem(races);
+            const randomStyle = getRandomItem(styles);
+
+            // Анимация смены текста (небольшой эффект)
+            const raceEl = document.getElementById('raceDisplay');
+            const styleEl = document.getElementById('styleDisplay');
+            
+            raceEl.style.opacity = 0;
+            styleEl.style.opacity = 0;
+
+            setTimeout(() => {
+                raceEl.textContent = randomRace;
+                styleEl.textContent = randomStyle;
+                raceEl.style.opacity = 1;
+                styleEl.style.opacity = 1;
+            }, 150);
+        }
+
+        // Генерируем персонажа сразу при загрузке страницы
+        window.onload = generateCharacter;
+    </script>
+
+</body>
+</html>
