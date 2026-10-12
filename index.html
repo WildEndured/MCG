@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Генератор Персонажей v3.0</title>
+    <title>Модульный Генератор Персонажей v5.0</title>
     <style>
         :root {
             --bg-color: #1a1a2e;
@@ -11,11 +11,17 @@
             --accent-color: #e94560;
             --text-color: #fff;
             --secondary-bg: #0f3460;
-            --disabled-color: #555;
+            --module-header: #0d1b2a;
+            --group-appearance: #e94560;
+            --group-clothes: #4a90d9;
+            --group-race: #d9a441;
+            --group-mods: #7b68ee;
         }
 
+        * { box-sizing: border-box; }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
@@ -27,286 +33,217 @@
 
         .app-container {
             width: 100%;
-            max-width: 900px;
+            max-width: 950px;
             background-color: var(--container-bg);
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
             height: fit-content;
         }
 
-        /* Вкладки */
-        .tabs {
-            display: flex;
-            background-color: #0d1b2a;
-        }
-
+        .tabs { display: flex; background-color: #0d1b2a; }
         .tab-btn {
-            flex: 1;
-            padding: 15px;
-            background: none;
-            border: none;
-            color: #888;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: 0.3s;
-            font-weight: bold;
-            border-bottom: 3px solid transparent;
+            flex: 1; padding: 15px; background: none; border: none;
+            color: #888; font-size: 1rem; cursor: pointer; font-weight: bold;
+            border-bottom: 3px solid transparent; transition: 0.3s;
         }
-
         .tab-btn.active {
             color: var(--text-color);
             border-bottom: 3px solid var(--accent-color);
             background-color: var(--container-bg);
         }
 
-        .tab-btn:hover { color: var(--text-color); }
-
-        /* Контент */
-        .tab-content {
-            padding: 20px;
-            display: none;
-        }
-
+        .tab-content { padding: 20px; display: none; }
         .tab-content.active { display: block; }
 
         /* Генератор */
         .result-box {
             background-color: var(--secondary-bg);
-            padding: 20px;
-            border-radius: 10px;
+            padding: 20px; border-radius: 10px;
             margin-bottom: 20px;
-            text-align: center;
-            position: relative;
+            max-height: 450px; overflow-y: auto;
         }
 
-        .race-text { font-size: 1.2rem; color: #a8a8a8; margin-bottom: 5px; }
-        .style-text { font-size: 2rem; font-weight: bold; color: #fff; text-shadow: 0 0 10px rgba(233, 69, 96, 0.5); }
-        .plus { font-size: 1.5rem; color: var(--accent-color); margin: 5px 0; }
+        .result-line {
+            display: flex; justify-content: space-between;
+            padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 0.95rem;
+        }
+        .result-line:last-child { border-bottom: none; }
+        .result-category { color: #888; font-weight: bold; }
+        .result-value { color: #fff; font-weight: bold; text-align: right; }
 
         .btn-main {
-            background-color: var(--accent-color);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: 1rem;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: 0.2s;
-            font-weight: bold;
-            text-transform: uppercase;
-            width: 100%;
-            margin-bottom: 15px;
+            background-color: var(--accent-color); color: white; border: none;
+            padding: 15px 30px; font-size: 1rem; border-radius: 50px;
+            cursor: pointer; font-weight: bold; text-transform: uppercase;
+            width: 100%; margin-bottom: 10px; transition: 0.2s;
         }
-
         .btn-main:hover { background-color: #ff2e63; transform: scale(1.02); }
 
         .btn-secondary {
-            background-color: var(--secondary-bg);
-            color: white;
-            border: 1px solid #555;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9rem;
+            background-color: var(--secondary-bg); color: white;
+            border: 1px solid #555; padding: 10px 20px;
+            border-radius: 5px; cursor: pointer; font-size: 0.9rem;
             transition: 0.2s;
         }
         .btn-secondary:hover { background-color: #1a4a7a; }
 
-        /* История */
-        .history-controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
+        .presets-bar {
+            display: flex; gap: 8px; margin-bottom: 15px;
+            flex-wrap: wrap; align-items: center;
         }
+        .presets-bar span { font-size: 0.85rem; color: #888; }
+        .preset-btn {
+            padding: 6px 12px; font-size: 0.8rem;
+            border-radius: 20px; cursor: pointer;
+            background: var(--secondary-bg); color: white;
+            border: 1px solid #555; transition: 0.2s;
+        }
+        .preset-btn:hover { background: var(--accent-color); border-color: var(--accent-color); }
 
+        /* История */
+        .history-controls { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .search-input {
-            flex-grow: 1;
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #333;
-            background-color: #0d1b2a;
-            color: white;
+            flex-grow: 1; padding: 10px; border-radius: 5px;
+            border: 1px solid #333; background-color: #0d1b2a; color: white;
         }
 
         .history-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-height: 400px;
-            overflow-y: auto;
+            display: flex; flex-direction: column; gap: 10px;
+            max-height: 500px; overflow-y: auto;
         }
 
         .history-item {
-            background-color: #0d1b2a;
-            padding: 15px;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-left: 4px solid var(--secondary-bg);
-            transition: 0.2s;
+            background-color: #0d1b2a; padding: 15px;
+            border-radius: 8px; border-left: 4px solid var(--secondary-bg);
         }
-
         .history-item.favorite { border-left-color: gold; }
 
-        .history-info { flex-grow: 1; }
-        .history-text { font-size: 1rem; font-weight: bold; }
-        .history-date { font-size: 0.75rem; color: #888; margin-top: 5px; }
+        .history-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 8px;
+        }
+        .history-date { font-size: 0.75rem; color: #888; }
+
+        .history-details { font-size: 0.85rem; color: #ccc; line-height: 1.4; }
 
         .history-actions { display: flex; gap: 5px; }
-
         .icon-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1.2rem;
-            padding: 5px;
-            opacity: 0.6;
-            transition: 0.2s;
-            color: white;
+            background: none; border: none; cursor: pointer;
+            font-size: 1.1rem; padding: 3px; opacity: 0.6;
+            transition: 0.2s; color: white;
         }
-
         .icon-btn:hover { opacity: 1; transform: scale(1.1); }
         .icon-btn.fav-active { opacity: 1; color: gold; }
 
-        /* Редактор списков */
+        /* Редактор */
         .editor-toolbar {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        
-        .editor-toolbar button {
-            padding: 8px 15px;
-            font-size: 0.85rem;
+            display: flex; gap: 10px; margin-bottom: 15px;
+            flex-wrap: wrap; align-items: center;
         }
 
-        .editor-section {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
+        .group-title {
+            font-size: 1.1rem; font-weight: bold;
+            padding: 10px 15px; margin-top: 20px;
+            border-radius: 8px; color: white;
+        }
+        .group-appearance { background: linear-gradient(90deg, var(--group-appearance), transparent); }
+        .group-clothes { background: linear-gradient(90deg, var(--group-clothes), transparent); }
+        .group-race { background: linear-gradient(90deg, var(--group-race), transparent); }
+        .group-mods { background: linear-gradient(90deg, var(--group-mods), transparent); }
+
+        .module {
+            background-color: #0d1b2a; border-radius: 8px;
+            margin-top: 10px; overflow: hidden;
         }
 
-        .editor-column {
-            flex: 1;
-            min-width: 300px;
-            background-color: #0d1b2a;
-            padding: 15px;
-            border-radius: 10px;
+        .module-header {
+            display: flex; justify-content: space-between;
+            align-items: center; padding: 12px 15px;
+            background-color: var(--module-header); cursor: pointer;
         }
 
-        .editor-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
+        .module-header h4 { margin: 0; font-size: 0.95rem; }
+        .module-header .module-counter { font-size: 0.75rem; color: #888; }
+
+        .module-toggle {
+            background: none; border: none; color: white;
+            font-size: 1.2rem; cursor: pointer; padding: 5px;
         }
 
-        .editor-counter {
-            font-size: 0.8rem;
-            color: #888;
+        .module-body { padding: 10px 15px 15px 15px; display: none; }
+        .module.open .module-body { display: block; }
+        .module.open .module-toggle { transform: rotate(180deg); }
+        .module.disabled { opacity: 0.5; }
+
+        .module-input-group { display: flex; gap: 5px; margin-bottom: 10px; }
+        .module-input-group input {
+            flex-grow: 1; padding: 6px 10px; border-radius: 5px;
+            border: 1px solid #333; background-color: #1a1a2e;
+            color: white; font-size: 0.85rem;
+        }
+        .module-input-group button {
+            padding: 6px 12px; background-color: var(--accent-color);
+            color: white; border: none; border-radius: 5px;
+            cursor: pointer; font-size: 0.85rem;
         }
 
-        .editor-list {
-            max-height: 350px;
-            overflow-y: auto;
-            margin-top: 10px;
-            padding-right: 5px;
-        }
+        .module-list { max-height: 200px; overflow-y: auto; }
 
         .editor-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 6px 0;
-            border-bottom: 1px solid #1a1a2e;
-            gap: 10px;
+            display: flex; align-items: center; gap: 8px;
+            padding: 5px 0; border-bottom: 1px solid #1a1a2e;
+            font-size: 0.85rem;
         }
-
-        .editor-item.disabled {
-            opacity: 0.4;
-            text-decoration: line-through;
-        }
+        .editor-item.disabled { opacity: 0.4; text-decoration: line-through; }
 
         .editor-item-text {
-            flex-grow: 1;
-            cursor: pointer;
-            padding: 5px;
-            border-radius: 4px;
-            transition: 0.2s;
+            flex-grow: 1; cursor: pointer; padding: 3px;
+            border-radius: 3px;
         }
-
-        .editor-item-text:hover {
-            background-color: rgba(255,255,255,0.1);
-        }
-
-        .editor-item-text.editing {
-            background-color: #1a1a2e;
-            outline: 1px solid var(--accent-color);
-        }
+        .editor-item-text:hover { background-color: rgba(255,255,255,0.1); }
 
         .editor-item input[type="text"] {
-            flex-grow: 1;
-            padding: 5px;
-            border-radius: 4px;
+            flex-grow: 1; padding: 4px 8px; border-radius: 4px;
             border: 1px solid var(--accent-color);
-            background-color: #1a1a2e;
-            color: white;
-            font-size: 0.9rem;
+            background-color: #1a1a2e; color: white; font-size: 0.85rem;
         }
 
         .editor-item input[type="checkbox"] {
-            cursor: pointer;
-            width: 18px;
-            height: 18px;
+            cursor: pointer; width: 16px; height: 16px;
             accent-color: var(--accent-color);
         }
 
-        .editor-input-group {
-            display: flex;
-            gap: 5px;
-            margin-top: 10px;
+        /* Модальное окно */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0,0,0,0.8); z-index: 1000;
+            display: none; justify-content: center; align-items: center;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background-color: var(--container-bg); padding: 25px;
+            border-radius: 12px; max-width: 500px; width: 100%;
+        }
+        .modal h3 { margin-top: 0; }
+        .modal textarea {
+            width: 100%; height: 200px; padding: 10px;
+            background-color: #0d1b2a; color: white;
+            border: 1px solid #333; border-radius: 8px;
+            font-family: inherit; font-size: 0.9rem; resize: vertical;
+        }
+        .modal-actions {
+            display: flex; gap: 10px; margin-top: 15px; justify-content: flex-end;
         }
 
-        .editor-input-group input {
-            flex-grow: 1;
-            padding: 8px;
-            border-radius: 5px;
-            border: 1px solid #333;
-            background-color: #1a1a2e;
-            color: white;
-        }
-
-        .editor-input-group button {
-            padding: 8px 15px;
-            background-color: var(--accent-color);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        /* Уведомление */
         .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #333;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
-            opacity: 0;
-            transition: 0.3s;
-            pointer-events: none;
-            z-index: 1000;
+            position: fixed; bottom: 20px; left: 50%;
+            transform: translateX(-50%); background-color: #333;
+            color: white; padding: 10px 20px; border-radius: 20px;
+            opacity: 0; transition: 0.3s; pointer-events: none; z-index: 2000;
         }
         .toast.show { opacity: 1; }
     </style>
@@ -314,220 +251,293 @@
 <body>
 
 <div class="app-container">
-    <!-- Вкладки -->
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('generator')">Генератор</button>
-        <button class="tab-btn" onclick="switchTab('history')">История</button>
-        <button class="tab-btn" onclick="switchTab('editor')">Списки</button>
+        <button class="tab-btn active" onclick="switchTab('generator')">🎲 Генератор</button>
+        <button class="tab-btn" onclick="switchTab('history')">📜 История</button>
+        <button class="tab-btn" onclick="switchTab('editor')">⚙️ Модули</button>
     </div>
 
-    <!-- Вкладка 1: Генератор -->
+    <!-- ГЕНЕРАТОР -->
     <div id="tab-generator" class="tab-content active">
-        <div class="result-box">
-            <div class="race-text" id="raceDisplay">Нажмите кнопку</div>
-            <div class="plus">+</div>
-            <div class="style-text" id="styleDisplay">...</div>
+        <div class="presets-bar">
+            <span>Пресеты:</span>
+            <button class="preset-btn" onclick="applyPreset('portrait')">👤 Портрет</button>
+            <button class="preset-btn" onclick="applyPreset('full')">🧍 Полный рост</button>
+            <button class="preset-btn" onclick="applyPreset('race')">🧬 Только раса</button>
+            <button class="preset-btn" onclick="applyPreset('all')">✅ Все модули</button>
+        </div>
+        <div class="result-box" id="resultBox">
+            <p style="text-align:center; color:#888;">Нажмите «Сгенерировать»</p>
         </div>
         <button class="btn-main" onclick="generateCharacter()">Сгенерировать!</button>
-        <button class="btn-secondary" style="width: 100%;" onclick="copyResult()">📋 Скопировать результат</button>
+        <button class="btn-secondary" style="width:100%; margin-bottom:10px;" onclick="copyResult()">📋 Скопировать промпт (полный)</button>
+        <button class="btn-secondary" style="width:100%;" onclick="copyResultShort()">📋 Скопировать кратко</button>
     </div>
 
-    <!-- Вкладка 2: История -->
+    <!-- ИСТОРИЯ -->
     <div id="tab-history" class="tab-content">
         <div class="history-controls">
-            <input type="text" id="searchInput" class="search-input" placeholder="Поиск по истории..." oninput="renderHistory()">
+            <input type="text" id="searchInput" class="search-input" placeholder="Поиск..." oninput="renderHistory()">
+            <button class="btn-secondary" onclick="exportHistoryCSV()">📊 CSV</button>
             <button class="btn-secondary" onclick="clearHistory()">🗑 Удалить всё</button>
         </div>
         <div class="history-list" id="historyList"></div>
     </div>
 
-    <!-- Вкладка 3: Редактор списков -->
+    <!-- РЕДАКТОР МОДУЛЕЙ -->
     <div id="tab-editor" class="tab-content">
-        
-        <!-- Панель инструментов -->
         <div class="editor-toolbar">
-            <button class="btn-secondary" onclick="sortLists()">🔤 Сортировать А-Я</button>
-            <button class="btn-secondary" onclick="resetLists()">↺ Сбросить к стандартным</button>
-            <span style="font-size:0.8rem; color:#888; margin-left:auto;">Клик по тексту — редактировать</span>
+            <button class="btn-secondary" onclick="sortAllLists()">🔤 Сортировать все</button>
+            <button class="btn-secondary" onclick="resetAllLists()">↺ Сброс к стандартным</button>
+            <button class="btn-secondary" onclick="exportData()">💾 Скачать базу</button>
+            <button class="btn-secondary" onclick="document.getElementById('fileInput').click()">📂 Загрузить базу</button>
+            <input type="file" id="fileInput" accept=".json" style="display:none;" onchange="importData(event)">
         </div>
+        <div id="editorContainer"></div>
+    </div>
+</div>
 
-        <div class="editor-section">
-            <!-- Редактор Рас -->
-            <div class="editor-column">
-                <div class="editor-header">
-                    <h3 style="margin:0;">Расы</h3>
-                    <span class="editor-counter" id="raceCounter">Активно: 0 / 0</span>
-                </div>
-                <div class="editor-input-group">
-                    <input type="text" id="newRace" placeholder="Новая раса..." onkeydown="if(event.key==='Enter') addItem('races')">
-                    <button onclick="addItem('races')">+</button>
-                </div>
-                <div class="editor-list" id="raceList"></div>
-            </div>
-            <!-- Редактор Стилей -->
-            <div class="editor-column">
-                <div class="editor-header">
-                    <h3 style="margin:0;">Стили</h3>
-                    <span class="editor-counter" id="styleCounter">Активно: 0 / 0</span>
-                </div>
-                <div class="editor-input-group">
-                    <input type="text" id="newStyle" placeholder="Новый стиль..." onkeydown="if(event.key==='Enter') addItem('styles')">
-                    <button onclick="addItem('styles')">+</button>
-                </div>
-                <div class="editor-list" id="styleList"></div>
-            </div>
+<!-- МОДАЛЬНОЕ ОКНО ИМПОРТА -->
+<div class="modal-overlay" id="importModal">
+    <div class="modal">
+        <h3 id="importTitle">Импорт списка</h3>
+        <p style="color:#888; font-size:0.85rem;">Введите по одному элементу на строку (или через запятую).</p>
+        <textarea id="importTextarea" placeholder="Cat girl&#10;Dog girl&#10;Fox girl"></textarea>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeImportModal()">Отмена</button>
+            <button class="btn-main" style="width:auto; margin:0;" onclick="confirmImport()">Загрузить</button>
         </div>
     </div>
 </div>
 
-<div id="toast" class="toast">Скопировано!</div>
+<div id="toast" class="toast"></div>
 
 <script>
-    // --- БАЗОВЫЕ ДАННЫЕ ---
-    const DEFAULT_RACES = [
-        "Angel girl", "Arapaima girl", "Bat girl", "Bird girl", "Chimera", "Crocodile girl", 
-        "Crow girl", "Cat girl", "Cow girl", "Capybara girl", "Chicken girl", "Demon girl", 
-        "Doll girl", "Dragon girl", "Deer girl", "Elf", "Fish girl", "Fox girl", "Gargoyle girl", 
-        "Ghost girl", "Horse girl", "Insect girl", "Jackal girl", "Kitsune girl", "Mimic", 
-        "Orca girl", "Program girl", "Panda girl", "Rat girl", "Rabbit girl", "Reptile girl", 
-        "Snake girl", "Slime girl", "Serval girl", "Shark girl", "Succubus", "Sheep girl", 
-        "Tiger girl", "Vampire girl", "Wolf girl", "Wyrm girl", "Zombie girl"
-    ];
+    // ============================================================
+    // СТРУКТУРА ДАННЫХ
+    // ============================================================
 
-    const DEFAULT_STYLES = [
-        "Ancient Egyptian", "Boho-chic", "Casual", "Gyaru", "Grunge", "Gothic Lolita", 
-        "Jester", "Japanese clothes", "Jirai key", "Maid", "Nun", "Naval", "Punk", 
-        "Prison", "Rags", "Sportswear", "Swimsuit", "Streetwear", "Techwear", 
-        "Witch", "Winter clothes", "Y2K"
-    ];
+    const DEFAULT_DATA = {
+        // Модуль базовой внешности
+        hair: { name: "Волосы", group: "appearance", items: ["Bangs", "Sidelocks", "Back hair", "Additional hair"] },
+        eyes: { name: "Форма глаз", group: "appearance", items: ["Big anime", "Narrow", "Closed", "Round"] },
+        skin: { name: "Цвет кожи", group: "appearance", items: ["Pale", "Tan", "Dark", "Olive"] },
 
-    // --- СОСТОЯНИЕ ---
-    // Теперь элементы хранятся как объекты: { text: "Cat girl", enabled: true }
-    let state = {
-        races: [],
-        styles: [],
-        history: [],
-        currentResult: { race: '', style: '' }
+        // Модуль одежды
+        style:      { name: "Стиль одежды", group: "clothes", items: ["Casual", "Streetwear", "Gothic Lolita", "Punk", "Techwear", "Y2K"] },
+        headwear:   { name: "Headwear",     group: "clothes", items: ["Hat", "Hood", "Headband", "Beanie", "None"] },
+        neckwear:   { name: "Neckwear",     group: "clothes", items: ["Choker", "Scarf", "Necklace", "None"] },
+        topwear:    { name: "Topwear",      group: "clothes", items: ["T-shirt", "Hoodie", "Crop top", "Jacket", "Sweater", "None"] },
+        bottomwear: { name: "Bottomwear",   group: "clothes", items: ["Skirt", "Jeans", "Shorts", "Cargo pants", "None"] },
+        legwear:    { name: "Legwear",      group: "clothes", items: ["Thigh-highs", "Socks", "Stockings", "None"] },
+        footwear:   { name: "Footwear",     group: "clothes", items: ["Sneakers", "Boots", "Heels", "Sandals", "None"] },
+        acc1:       { name: "Accessory 1",  group: "clothes", items: ["Earrings", "Glasses", "Bracelet", "None"] },
+        acc2:       { name: "Accessory 2",  group: "clothes", items: ["Bag", "Umbrella", "Weapon", "None"] },
+
+        // Модуль модификаторов (применяются к одежде)
+        modifier: { name: "Модификатор одежды", group: "mods", items: ["Oversized", "Cropped", "Vintage", "Torn", "Formal", "Sporty"] },
+
+        // Модуль расы
+        race:      { name: "Раса",          group: "race", items: ["Cat girl", "Elf", "Demon girl", "Dragon girl", "Vampire girl", "Slime girl", "Zombie girl"] },
+        raceT1:    { name: "Расовая черта 1", group: "race", items: ["Animal ears", "Horns", "Tail", "Wings", "Halos"] },
+        raceT2:    { name: "Расовая черта 2", group: "race", items: ["Fangs", "Claws", "Glowing eyes", "Scales", "None"] },
+        raceT3:    { name: "Расовая черта 3", group: "race", items: ["Magic aura", "Tattoos", "Freckles", "Scars", "None"] },
     };
 
-    // --- ИНИЦИАЛИЗАЦИЯ ---
+    // Пресеты — какие модули включаются
+    const PRESETS = {
+        all:      null, // всё включено
+        portrait: ["hair", "eyes", "skin", "race", "raceT1", "raceT2", "raceT3", "acc1"],
+        full:     ["hair", "eyes", "skin", "style", "headwear", "neckwear", "topwear", "bottomwear", "legwear", "footwear", "acc1", "acc2", "modifier", "race", "raceT1", "raceT2", "raceT3"],
+        race:     ["race", "raceT1", "raceT2", "raceT3"]
+    };
+
+    let state = {
+        data: {},
+        history: [],
+        currentResult: {}
+    };
+
+    let importContext = null;
+
+    // ============================================================
+    // ИНИЦИАЛИЗАЦИЯ
+    // ============================================================
+
     function init() {
-        const savedRaces = localStorage.getItem('cg_races_v3');
-        const savedStyles = localStorage.getItem('cg_styles_v3');
-        const savedHistory = localStorage.getItem('cg_history');
+        const saved = localStorage.getItem('cg_data_v5');
+        const savedHistory = localStorage.getItem('cg_history_v5');
 
-        if (savedRaces) {
-            state.races = JSON.parse(savedRaces);
+        if (saved) {
+            state.data = JSON.parse(saved);
         } else {
-            state.races = DEFAULT_RACES.map(text => ({ text, enabled: true }));
-        }
-
-        if (savedStyles) {
-            state.styles = JSON.parse(savedStyles);
-        } else {
-            state.styles = DEFAULT_STYLES.map(text => ({ text, enabled: true }));
+            state.data = {};
+            for (const key in DEFAULT_DATA) {
+                const mod = DEFAULT_DATA[key];
+                state.data[key] = {
+                    name: mod.name,
+                    group: mod.group,
+                    enabled: true,
+                    items: mod.items.map(text => ({ text, enabled: true }))
+                };
+            }
         }
 
         state.history = savedHistory ? JSON.parse(savedHistory) : [];
-
-        // Защита от пустых списков
-        if (state.races.length === 0) state.races = DEFAULT_RACES.map(text => ({ text, enabled: true }));
-        if (state.styles.length === 0) state.styles = DEFAULT_STYLES.map(text => ({ text, enabled: true }));
-
         saveData();
         renderEditor();
         renderHistory();
-        generateCharacter();
     }
 
     function saveData() {
-        localStorage.setItem('cg_races_v3', JSON.stringify(state.races));
-        localStorage.setItem('cg_styles_v3', JSON.stringify(state.styles));
-        localStorage.setItem('cg_history', JSON.stringify(state.history));
+        localStorage.setItem('cg_data_v5', JSON.stringify(state.data));
+        localStorage.setItem('cg_history_v5', JSON.stringify(state.history));
     }
 
-    // --- НАВИГАЦИЯ ---
-    function switchTab(tabName) {
+    // ============================================================
+    // НАВИГАЦИЯ
+    // ============================================================
+
+    function switchTab(name) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-        
-        document.getElementById(`tab-${tabName}`).classList.add('active');
-        const btns = document.querySelectorAll('.tab-btn');
-        if(tabName === 'generator') btns[0].classList.add('active');
-        if(tabName === 'history') btns[1].classList.add('active');
-        if(tabName === 'editor') btns[2].classList.add('active');
 
-        if (tabName === 'history') renderHistory();
+        document.getElementById(`tab-${name}`).classList.add('active');
+        const btns = document.querySelectorAll('.tab-btn');
+        if (name === 'generator') btns[0].classList.add('active');
+        if (name === 'history') btns[1].classList.add('active');
+        if (name === 'editor') btns[2].classList.add('active');
+
+        if (name === 'history') renderHistory();
     }
 
-    // --- ГЕНЕРАЦИЯ ---
-    // Теперь учитываем только enabled: true
-    function getRandomItem(arr) {
-        const activeItems = arr.filter(item => item.enabled);
-        if (activeItems.length === 0) return { text: "???" }; // Заглушка, если все выключены
-        return activeItems[Math.floor(Math.random() * activeItems.length)];
+    // ============================================================
+    // ГЕНЕРАЦИЯ
+    // ============================================================
+
+    function getRandomActive(items) {
+        const active = items.filter(i => i.enabled && i.text && i.text !== "None");
+        if (active.length === 0) return null;
+        return active[Math.floor(Math.random() * active.length)].text;
     }
 
     function generateCharacter() {
-        const raceObj = getRandomItem(state.races);
-        const styleObj = getRandomItem(state.styles);
-        
-        const race = raceObj.text;
-        const style = styleObj.text;
+        const result = {};
+        const order = ['race', 'raceT1', 'raceT2', 'raceT3', 'hair', 'eyes', 'skin', 'style', 'headwear', 'neckwear', 'topwear', 'bottomwear', 'legwear', 'footwear', 'acc1', 'acc2'];
 
-        if (race === "???" || style === "???") {
-            showToast("Ошибка: Все элементы отключены!");
+        for (const key of order) {
+            const mod = state.data[key];
+            if (!mod || !mod.enabled) continue;
+            const value = getRandomActive(mod.items);
+            if (value) result[key] = value;
+        }
+
+        // Применяем модификатор к случайному предмету одежды
+        if (state.data.modifier && state.data.modifier.enabled) {
+            const modifier = getRandomActive(state.data.modifier.items);
+            const clothesKeys = ['headwear', 'topwear', 'bottomwear', 'legwear', 'footwear'];
+            const availableKeys = clothesKeys.filter(k => result[k]);
+            if (modifier && availableKeys.length > 0) {
+                const targetKey = availableKeys[Math.floor(Math.random() * availableKeys.length)];
+                result[targetKey] = `${modifier} ${result[targetKey]}`;
+                result._modifierAppliedTo = targetKey;
+            }
+        }
+
+        if (Object.keys(result).length === 0) {
+            showToast("Все модули отключены!");
             return;
         }
 
-        state.currentResult = { race, style };
-
-        const raceEl = document.getElementById('raceDisplay');
-        const styleEl = document.getElementById('styleDisplay');
-        raceEl.style.opacity = 0;
-        styleEl.style.opacity = 0;
-
-        setTimeout(() => {
-            raceEl.textContent = race;
-            styleEl.textContent = style;
-            raceEl.style.opacity = 1;
-            styleEl.style.opacity = 1;
-        }, 150);
-
-        addToHistory(race, style);
+        state.currentResult = result;
+        renderResult(result);
+        addToHistory(result);
     }
 
-    function addToHistory(race, style) {
+    function renderResult(result) {
+        const box = document.getElementById('resultBox');
+        box.innerHTML = '';
+        const order = ['race', 'raceT1', 'raceT2', 'raceT3', 'hair', 'eyes', 'skin', 'style', 'headwear', 'neckwear', 'topwear', 'bottomwear', 'legwear', 'footwear', 'acc1', 'acc2'];
+
+        for (const key of order) {
+            if (result[key]) {
+                const line = document.createElement('div');
+                line.className = 'result-line';
+                line.innerHTML = `<span class="result-category">${state.data[key].name}</span><span class="result-value">${result[key]}</span>`;
+                box.appendChild(line);
+            }
+        }
+    }
+
+    function addToHistory(result) {
         const newItem = {
             id: Date.now(),
-            race: race,
-            style: style,
+            result: JSON.parse(JSON.stringify(result)),
             date: new Date().toLocaleString('ru-RU'),
             favorite: false
         };
         state.history.unshift(newItem);
-        if (state.history.length > 100) state.history.pop();
+        if (state.history.length > 200) state.history.pop();
         saveData();
     }
 
-    function copyResult() {
-        const text = `${state.currentResult.race} + ${state.currentResult.style}`;
-        navigator.clipboard.writeText(text).then(() => showToast('Скопировано!'));
+    function formatPrompt(result) {
+        const parts = [];
+        const order = ['race', 'raceT1', 'raceT2', 'raceT3', 'hair', 'eyes', 'skin', 'style', 'headwear', 'neckwear', 'topwear', 'bottomwear', 'legwear', 'footwear', 'acc1', 'acc2'];
+        for (const key of order) {
+            if (result[key]) parts.push(`${state.data[key].name}: ${result[key]}`);
+        }
+        return parts.join(', ');
     }
 
-    // --- ИСТОРИЯ ---
+    function formatPromptShort(result) {
+        const order = ['race', 'raceT1', 'raceT2', 'raceT3', 'hair', 'eyes', 'skin', 'style', 'headwear', 'neckwear', 'topwear', 'bottomwear', 'legwear', 'footwear', 'acc1', 'acc2'];
+        const values = [];
+        for (const key of order) {
+            if (result[key]) values.push(result[key]);
+        }
+        return values.join(', ');
+    }
+
+    function copyResult() {
+        navigator.clipboard.writeText(formatPrompt(state.currentResult)).then(() => showToast('Промпт скопирован!'));
+    }
+
+    function copyResultShort() {
+        navigator.clipboard.writeText(formatPromptShort(state.currentResult)).then(() => showToast('Кратко скопировано!'));
+    }
+
+    // ============================================================
+    // ПРЕСЕТЫ МОДУЛЕЙ
+    // ============================================================
+
+    function applyPreset(name) {
+        const preset = PRESETS[name];
+        for (const key in state.data) {
+            if (preset === null) {
+                state.data[key].enabled = true;
+            } else {
+                state.data[key].enabled = preset.includes(key);
+            }
+        }
+        saveData();
+        renderEditor();
+        showToast(`Пресет "${name}" применён`);
+    }
+
+    // ============================================================
+    // ИСТОРИЯ
+    // ============================================================
+
     function renderHistory() {
         const list = document.getElementById('historyList');
         const query = document.getElementById('searchInput').value.toLowerCase();
         list.innerHTML = '';
 
-        const filtered = state.history.filter(item => 
-            item.race.toLowerCase().includes(query) || 
-            item.style.toLowerCase().includes(query)
-        );
+        const filtered = state.history.filter(item => formatPromptShort(item.result).toLowerCase().includes(query));
 
         if (filtered.length === 0) {
-            list.innerHTML = '<p style="text-align:center; color:#666;">История пуста или ничего не найдено.</p>';
+            list.innerHTML = '<p style="text-align:center; color:#666;">История пуста.</p>';
             return;
         }
 
@@ -535,15 +545,15 @@
             const div = document.createElement('div');
             div.className = `history-item ${item.favorite ? 'favorite' : ''}`;
             div.innerHTML = `
-                <div class="history-info">
-                    <div class="history-text">${item.race} + ${item.style}</div>
-                    <div class="history-date">${item.date}</div>
+                <div class="history-header">
+                    <span class="history-date">${item.date}</span>
+                    <div class="history-actions">
+                        <button class="icon-btn ${item.favorite ? 'fav-active' : ''}" onclick="toggleFavorite(${item.id})">${item.favorite ? '★' : '☆'}</button>
+                        <button class="icon-btn" onclick="copyHistoryItem(${item.id})">📋</button>
+                        <button class="icon-btn" onclick="deleteHistoryItem(${item.id})">❌</button>
+                    </div>
                 </div>
-                <div class="history-actions">
-                    <button class="icon-btn ${item.favorite ? 'fav-active' : ''}" onclick="toggleFavorite(${item.id})">${item.favorite ? '★' : '☆'}</button>
-                    <button class="icon-btn" onclick="copyHistoryItem(${item.id})">📋</button>
-                    <button class="icon-btn" onclick="deleteHistoryItem(${item.id})">❌</button>
-                </div>
+                <div class="history-details">${formatPromptShort(item.result)}</div>
             `;
             list.appendChild(div);
         });
@@ -567,139 +577,312 @@
 
     function copyHistoryItem(id) {
         const item = state.history.find(i => i.id === id);
-        if (item) { navigator.clipboard.writeText(`${item.race} + ${item.style}`); showToast('Скопировано!'); }
+        if (item) {
+            navigator.clipboard.writeText(formatPrompt(item.result));
+            showToast('Скопировано!');
+        }
     }
 
-    // --- РЕДАКТОР СПИСКОВ (ОБНОВЛЕНО) ---
+    function exportHistoryCSV() {
+        if (state.history.length === 0) { showToast('История пуста'); return; }
+
+        const order = ['race', 'raceT1', 'raceT2', 'raceT3', 'hair', 'eyes', 'skin', 'style', 'headwear', 'neckwear', 'topwear', 'bottomwear', 'legwear', 'footwear', 'acc1', 'acc2'];
+        const headers = ['Дата', 'Избранное', ...order.map(k => state.data[k].name)];
+        const rows = state.history.map(item => {
+            const row = [item.date, item.favorite ? 'Да' : 'Нет'];
+            order.forEach(k => row.push(item.result[k] || ''));
+            return row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',');
+        });
+
+        const csv = '\uFEFF' + headers.join(',') + '\n' + rows.join('\n');
+        downloadFile(csv, 'character_history.csv', 'text/csv');
+        showToast('CSV скачан!');
+    }
+
+    // ============================================================
+    // РЕДАКТОР
+    // ============================================================
+
     function renderEditor() {
-        renderList('races', 'raceList');
-        renderList('styles', 'styleList');
-        updateCounters();
-    }
-
-    function updateCounters() {
-        const activeRaces = state.races.filter(i => i.enabled).length;
-        const totalRaces = state.races.length;
-        const activeStyles = state.styles.filter(i => i.enabled).length;
-        const totalStyles = state.styles.length;
-
-        document.getElementById('raceCounter').textContent = `Активно: ${activeRaces} / ${totalRaces}`;
-        document.getElementById('styleCounter').textContent = `Активно: ${activeStyles} / ${totalStyles}`;
-    }
-
-    function renderList(type, elementId) {
-        const container = document.getElementById(elementId);
+        const container = document.getElementById('editorContainer');
         container.innerHTML = '';
-        
-        state[type].forEach((item, index) => {
+
+        const groups = {
+            appearance: { title: "🎨 Модуль базовой внешности", class: "group-appearance" },
+            clothes:    { title: "👗 Модуль одежды",           class: "group-clothes" },
+            mods:       { title: "✨ Модификаторы",            class: "group-mods" },
+            race:       { title: "🧬 Модуль расы",             class: "group-race" }
+        };
+
+        for (const groupKey in groups) {
+            const groupTitle = document.createElement('div');
+            groupTitle.className = `group-title ${groups[groupKey].class}`;
+            groupTitle.textContent = groups[groupKey].title;
+            container.appendChild(groupTitle);
+
+            for (const key in state.data) {
+                const mod = state.data[key];
+                if (mod.group !== groupKey) continue;
+                container.appendChild(createModuleElement(key, mod));
+            }
+        }
+    }
+
+    function createModuleElement(key, mod) {
+        const moduleDiv = document.createElement('div');
+        moduleDiv.className = `module ${mod.enabled ? '' : 'disabled'}`;
+
+        const activeCount = mod.items.filter(i => i.enabled).length;
+        const totalCount = mod.items.length;
+
+        moduleDiv.innerHTML = `
+            <div class="module-header">
+                <div>
+                    <h4>${mod.name}</h4>
+                    <span class="module-counter">Активно: ${activeCount} / ${totalCount}</span>
+                </div>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <label style="font-size:0.8rem; cursor:pointer;">
+                        <input type="checkbox" ${mod.enabled ? 'checked' : ''} onchange="toggleModule('${key}')" style="accent-color: var(--accent-color);"> Вкл
+                    </label>
+                    <button class="module-toggle">▼</button>
+                </div>
+            </div>
+            <div class="module-body">
+                <div class="module-input-group">
+                    <input type="text" placeholder="Добавить..." onkeydown="if(event.key==='Enter') addItem('${key}', this)">
+                    <button onclick="addItem('${key}', this.previousElementSibling)">+</button>
+                    <button onclick="openImportModal('${key}')" title="Массовый импорт">📥</button>
+                </div>
+                <div class="module-list" id="list-${key}"></div>
+            </div>
+        `;
+
+        moduleDiv.querySelector('.module-header').addEventListener('click', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+            moduleDiv.classList.toggle('open');
+        });
+        moduleDiv.querySelector('.module-toggle').addEventListener('click', (e) => {
+            e.stopPropagation();
+            moduleDiv.classList.toggle('open');
+        });
+
+        setTimeout(() => renderModuleList(key), 0);
+        return moduleDiv;
+    }
+
+    function renderModuleList(key) {
+        const container = document.getElementById(`list-${key}`);
+        if (!container) return;
+        container.innerHTML = '';
+        const mod = state.data[key];
+
+        mod.items.forEach((item, index) => {
             const div = document.createElement('div');
             div.className = `editor-item ${item.enabled ? '' : 'disabled'}`;
-            
-            // Чекбокс (включение/отключение)
+
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.checked = item.enabled;
-            checkbox.onchange = () => toggleItem(type, index);
-            
-            // Текст (с возможностью редактирования)
+            checkbox.onchange = () => toggleItem(key, index);
+
             const textSpan = document.createElement('span');
             textSpan.className = 'editor-item-text';
             textSpan.textContent = item.text;
-            textSpan.onclick = () => startEdit(type, index, textSpan);
-            
-            // Кнопка удаления
+            textSpan.onclick = () => startEdit(key, index, textSpan);
+
             const delBtn = document.createElement('button');
             delBtn.className = 'icon-btn';
             delBtn.textContent = '❌';
-            delBtn.onclick = () => removeItem(type, index);
+            delBtn.onclick = () => removeItem(key, index);
 
             div.appendChild(checkbox);
             div.appendChild(textSpan);
             div.appendChild(delBtn);
             container.appendChild(div);
         });
+
+        const header = container.closest('.module').querySelector('.module-counter');
+        const activeCount = mod.items.filter(i => i.enabled).length;
+        header.textContent = `Активно: ${activeCount} / ${mod.items.length}`;
     }
 
-    // Включение/Отключение
-    function toggleItem(type, index) {
-        state[type][index].enabled = !state[type][index].enabled;
+    function toggleModule(key) {
+        state.data[key].enabled = !state.data[key].enabled;
         saveData();
-        renderEditor(); // Перерисовываем, чтобы обновить зачеркивание
+        renderEditor();
     }
 
-    // Редактирование (Inline)
-    function startEdit(type, index, spanElement) {
-        const currentText = state[type][index].text;
+    function toggleItem(key, index) {
+        state.data[key].items[index].enabled = !state.data[key].items[index].enabled;
+        saveData();
+        renderModuleList(key);
+    }
+
+    function startEdit(key, index, spanElement) {
+        const currentText = state.data[key].items[index].text;
         const input = document.createElement('input');
         input.type = 'text';
         input.value = currentText;
-        
-        // Заменяем span на input
         spanElement.replaceWith(input);
         input.focus();
 
         const finishEdit = () => {
             const newText = input.value.trim();
             if (newText && newText !== currentText) {
-                state[type][index].text = newText;
+                state.data[key].items[index].text = newText;
                 saveData();
             }
-            renderEditor(); // Перерисовываем список
+            renderModuleList(key);
         };
 
         input.onblur = finishEdit;
         input.onkeydown = (e) => {
             if (e.key === 'Enter') finishEdit();
-            if (e.key === 'Escape') renderEditor(); // Отмена
+            if (e.key === 'Escape') renderModuleList(key);
         };
     }
 
-    function addItem(type) {
-        const inputId = type === 'races' ? 'newRace' : 'newStyle';
-        const input = document.getElementById(inputId);
-        const value = input.value.trim();
+    function addItem(key, inputElement) {
+        const value = inputElement.value.trim();
+        if (!value) return;
+        const exists = state.data[key].items.some(i => i.text.toLowerCase() === value.toLowerCase());
+        if (exists) { showToast('Такой элемент уже есть!'); return; }
+        state.data[key].items.push({ text: value, enabled: true });
+        inputElement.value = '';
+        saveData();
+        renderModuleList(key);
+    }
 
-        if (value) {
-            // Проверка на дубликат (без учета регистра)
-            const exists = state[type].some(item => item.text.toLowerCase() === value.toLowerCase());
-            if (exists) {
-                showToast('Такой элемент уже есть!');
-                return;
+    function removeItem(key, index) {
+        state.data[key].items.splice(index, 1);
+        saveData();
+        renderModuleList(key);
+    }
+
+    // ============================================================
+    // ИМПОРТ СПИСКА
+    // ============================================================
+
+    function openImportModal(key) {
+        importContext = { key };
+        document.getElementById('importTitle').textContent = `Импорт: ${state.data[key].name}`;
+        document.getElementById('importTextarea').value = '';
+        document.getElementById('importModal').classList.add('active');
+    }
+
+    function closeImportModal() {
+        document.getElementById('importModal').classList.remove('active');
+        importContext = null;
+    }
+
+    function confirmImport() {
+        if (!importContext) return;
+        const text = document.getElementById('importTextarea').value;
+        const lines = text.split(/[\n,]+/).map(s => s.trim()).filter(s => s);
+
+        let added = 0;
+        lines.forEach(line => {
+            const exists = state.data[importContext.key].items.some(i => i.text.toLowerCase() === line.toLowerCase());
+            if (!exists) {
+                state.data[importContext.key].items.push({ text: line, enabled: true });
+                added++;
             }
-            state[type].push({ text: value, enabled: true });
-            input.value = '';
-            saveData();
-            renderEditor();
-        }
+        });
+
+        saveData();
+        renderModuleList(importContext.key);
+        closeImportModal();
+        showToast(`Добавлено: ${added}`);
     }
 
-    function removeItem(type, index) {
-        state[type].splice(index, 1);
+    // ============================================================
+    // ЭКСПОРТ/ИМПОРТ ВСЕЙ БАЗЫ
+    // ============================================================
+
+    function exportData() {
+        const backup = {
+            version: 5,
+            exported: new Date().toISOString(),
+            data: state.data,
+            history: state.history
+        };
+        downloadFile(JSON.stringify(backup, null, 2), `character_generator_backup_${Date.now()}.json`, 'application/json');
+        showToast('База скачана!');
+    }
+
+    function importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const backup = JSON.parse(e.target.result);
+                if (!backup.data) throw new Error('Неверный формат файла');
+
+                if (!confirm('Загрузить базу из файла? Текущие данные будут заменены.')) return;
+
+                state.data = backup.data;
+                state.history = backup.history || [];
+                saveData();
+                renderEditor();
+                renderHistory();
+                showToast('База загружена!');
+            } catch (err) {
+                alert('Ошибка загрузки: ' + err.message);
+            }
+            event.target.value = '';
+        };
+        reader.readAsText(file);
+    }
+
+    function downloadFile(content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    // ============================================================
+    // СОРТИРОВКА И СБРОС
+    // ============================================================
+
+    function sortAllLists() {
+        for (const key in state.data) {
+            state.data[key].items.sort((a, b) => a.text.localeCompare(b.text));
+        }
         saveData();
         renderEditor();
+        showToast('Все списки отсортированы');
     }
 
-    // Сортировка списков
-    function sortLists() {
-        state.races.sort((a, b) => a.text.localeCompare(b.text));
-        state.styles.sort((a, b) => a.text.localeCompare(b.text));
+    function resetAllLists() {
+        if (!confirm('Сбросить все списки к стандартным? Ваши изменения будут потеряны.')) return;
+        state.data = {};
+        for (const key in DEFAULT_DATA) {
+            const mod = DEFAULT_DATA[key];
+            state.data[key] = {
+                name: mod.name,
+                group: mod.group,
+                enabled: true,
+                items: mod.items.map(text => ({ text, enabled: true }))
+            };
+        }
         saveData();
         renderEditor();
-        showToast('Списки отсортированы');
+        showToast('Списки сброшены');
     }
 
-    // Сброс к стандартным
-    function resetLists() {
-        if (confirm('Сбросить списки к стандартным? Ваши изменения будут потеряны.')) {
-            state.races = DEFAULT_RACES.map(text => ({ text, enabled: true }));
-            state.styles = DEFAULT_STYLES.map(text => ({ text, enabled: true }));
-            saveData();
-            renderEditor();
-            showToast('Списки сброшены');
-        }
-    }
+    // ============================================================
+    // ВСПОМОГАТЕЛЬНЫЕ
+    // ============================================================
 
-    // --- ВСПОМОГАТЕЛЬНЫЕ ---
     function showToast(msg) {
         const toast = document.getElementById('toast');
         toast.textContent = msg;
