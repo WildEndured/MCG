@@ -21,6 +21,8 @@
     --mods: #7b68ee;
     --table: #20b2aa;
     --pos: #f39c12;
+    --prop: #17a2b8;
+    --mannequin: #3498db;
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { overscroll-behavior: none; }
@@ -39,10 +41,10 @@ body {
 }
 .tabs { display: flex; background: var(--header); flex-wrap: wrap; }
 .tab-btn {
-    flex: 1; padding: 12px 4px; background: none; border: none;
-    color: #888; font-size: 0.8rem; cursor: pointer; font-weight: bold;
+    flex: 1; padding: 11px 4px; background: none; border: none;
+    color: #888; font-size: 0.78rem; cursor: pointer; font-weight: bold;
     border-bottom: 3px solid transparent; transition: 0.3s;
-    min-width: 60px;
+    min-width: 50px;
 }
 .tab-btn.active {
     color: var(--text); border-bottom-color: var(--accent);
@@ -54,16 +56,16 @@ body {
 /* Кнопки */
 .btn-main {
     background: var(--accent); color: white; border: none;
-    padding: 12px 20px; font-size: 0.9rem; border-radius: 8px;
+    padding: 11px 18px; font-size: 0.88rem; border-radius: 8px;
     cursor: pointer; font-weight: bold; transition: 0.2s;
     min-height: 40px;
 }
 .btn-main:active { transform: scale(0.97); }
 .btn-secondary {
     background: var(--secondary); color: white;
-    border: 1px solid #555; padding: 9px 14px;
-    border-radius: 6px; cursor: pointer; font-size: 0.82rem;
-    transition: 0.2s; min-height: 38px;
+    border: 1px solid #555; padding: 8px 12px;
+    border-radius: 6px; cursor: pointer; font-size: 0.78rem;
+    min-height: 36px; transition: 0.2s;
     display: inline-flex; align-items: center; gap: 4px;
     justify-content: center;
 }
@@ -75,8 +77,12 @@ body {
 .btn-table {
     background: var(--table); color: white; border: none;
     padding: 9px 14px; border-radius: 6px; cursor: pointer;
-    font-size: 0.82rem; transition: 0.2s; font-weight: bold;
-    min-height: 38px;
+    font-size: 0.8rem; min-height: 38px; font-weight: bold;
+}
+.btn-prop {
+    background: var(--prop); color: white; border: none;
+    padding: 9px 14px; border-radius: 6px; cursor: pointer;
+    font-size: 0.8rem; min-height: 38px; font-weight: bold;
 }
 
 /* ============ КОНСТРУКТОР ============ */
@@ -107,9 +113,6 @@ body {
     max-width: 700px;
     margin: 0 auto;
     overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     position: relative;
     touch-action: none;
 }
@@ -120,11 +123,8 @@ body {
     cursor: crosshair;
     touch-action: none;
 }
-.canvas-frame.position-mode #mainCanvas {
-    cursor: move;
-}
+.canvas-frame.position-mode #mainCanvas { cursor: move; }
 
-/* Подсказка в режиме позиции */
 .position-hint {
     position: absolute;
     top: 10px; left: 50%;
@@ -136,6 +136,28 @@ body {
     pointer-events: none;
 }
 .canvas-frame.position-mode .position-hint { display: block; }
+
+/* Ползунки фигуры в конструкторе */
+.figure-sliders {
+    background: #0d1b2a;
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: none;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 14px;
+}
+.figure-sliders.open { display: grid; }
+.figure-sliders .fs-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.figure-sliders label {
+    font-size: 0.72rem; color: #888;
+}
+.figure-sliders input[type="range"] {
+    width: 100%; accent-color: var(--prop);
+}
 
 /* Панель категорий */
 .builder-panel {
@@ -151,7 +173,7 @@ body {
     align-items: center;
     margin-bottom: 8px;
 }
-.builder-panel h3 { margin: 0 0 10px 0; font-size: 0.95rem; }
+.builder-panel h3 { margin: 0 0 8px 0; font-size: 0.92rem; }
 
 .cat-group {
     background: #1a1a2e;
@@ -168,14 +190,12 @@ body {
 
 .cat-header {
     display: flex; justify-content: space-between;
-    align-items: center; padding: 10px 12px;
+    align-items: center; padding: 9px 12px;
     cursor: pointer; user-select: none;
-    font-size: 0.85rem; font-weight: bold;
+    font-size: 0.82rem; font-weight: bold;
     background: rgba(255,255,255,0.02);
-    min-height: 40px;
+    min-height: 38px;
 }
-.cat-header:active { background: rgba(255,255,255,0.05); }
-
 .cat-body {
     padding: 8px 10px;
     border-top: 1px solid #0d1b2a;
@@ -195,7 +215,7 @@ body {
     align-items: center; padding: 8px 10px;
     cursor: pointer; user-select: none;
     font-size: 0.78rem;
-    min-height: 38px;
+    min-height: 36px;
 }
 .slot-name { font-weight: bold; color: #ccc; }
 .slot-current {
@@ -211,13 +231,11 @@ body {
 .slot.open .slot-body { display: block; }
 .slot.open .slot-header .slot-current { display: none; }
 
-/* Сетка плиток */
 .tiles-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
     gap: 5px;
 }
-
 .tile {
     background: rgba(255,255,255,0.03);
     border: 2px solid transparent;
@@ -230,8 +248,8 @@ body {
     align-items: center;
     gap: 3px;
     min-height: 76px;
-    overflow: hidden;
     position: relative;
+    overflow: hidden;
 }
 .tile:active { background: rgba(255,255,255,0.08); }
 .tile.active {
@@ -255,18 +273,17 @@ body {
     font-size: 1.5rem; color: #444;
 }
 .tile-text {
-    font-size: 0.62rem;
+    font-size: 0.6rem;
     text-align: center;
     line-height: 1.1;
     color: #bbb;
     word-break: break-word;
-    max-height: 24px;
+    max-height: 22px;
     overflow: hidden;
     width: 100%;
 }
 .tile.active .tile-text { color: #fff; font-weight: bold; }
 
-/* Кнопка позиции для значения */
 .tile-pos-btn {
     position: absolute;
     top: 2px; right: 2px;
@@ -296,7 +313,6 @@ body {
     cursor: pointer;
     min-height: 32px;
 }
-.tile-remove-btn:active { background: var(--accent); color: white; }
 .tile-pos-default-btn {
     background: rgba(243,156,18,0.15);
     color: var(--pos);
@@ -307,9 +323,201 @@ body {
     cursor: pointer;
     min-height: 32px;
 }
-.tile-pos-default-btn:active { background: var(--pos); color: #1a1a2e; }
 
-/* ============ Остальные вкладки (сокращённо) ============ */
+/* ============ ВКЛАДКА ПРОПОРЦИИ ============ */
+.prop-layout {
+    display: flex; gap: 12px;
+    flex-wrap: wrap;
+}
+.prop-list {
+    flex: 1;
+    min-width: 250px;
+}
+.prop-list-item {
+    background: #0d1b2a;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-left: 3px solid var(--prop);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+.prop-list-item.active {
+    border-left-color: var(--table);
+    background: rgba(32,178,170,0.08);
+}
+.prop-list-item .info { flex-grow: 1; }
+.prop-list-item h4 { margin: 0 0 4px 0; font-size: 0.88rem; }
+.prop-list-item .meta { font-size: 0.7rem; color: #888; }
+.prop-list-item .actions {
+    display: flex; gap: 4px;
+}
+
+.prop-editor {
+    flex: 2;
+    min-width: 320px;
+    background: #0d1b2a;
+    border-radius: 10px;
+    padding: 12px;
+    display: none;
+}
+.prop-editor.open { display: block; }
+
+.prop-editor-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+@media (max-width: 700px) {
+    .prop-editor-layout { grid-template-columns: 1fr; }
+}
+
+.prop-canvas-wrap {
+    background: repeating-conic-gradient(#2a2a3e 0% 25%, #1a1a2e 0% 50%) 50% / 15px 15px;
+    border: 1px solid #333;
+    border-radius: 8px;
+    aspect-ratio: 1 / 1;
+    position: relative;
+    overflow: hidden;
+    touch-action: none;
+}
+#propCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: crosshair;
+    touch-action: none;
+}
+
+.prop-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+.prop-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.prop-row label {
+    font-size: 0.75rem;
+    min-width: 90px;
+    color: #ccc;
+}
+.prop-row input[type="range"] {
+    flex-grow: 1;
+    accent-color: var(--prop);
+}
+.prop-row input[type="number"] {
+    width: 60px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    border: 1px solid #333;
+    background: #1a1a2e;
+    color: white;
+    font-size: 0.78rem;
+}
+
+.prop-section {
+    background: #1a1a2e;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+}
+.prop-section h5 {
+    margin: 0 0 6px 0;
+    font-size: 0.78rem;
+    color: var(--prop);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.mannequin-preview {
+    background: #1a1a2e;
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 8px;
+}
+.mannequin-preview h5 {
+    margin: 0 0 6px 0;
+    font-size: 0.78rem;
+    color: var(--mannequin);
+}
+
+/* ============ МОДАЛКИ ============ */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.85); z-index: 1000;
+    display: none; justify-content: center; align-items: center;
+    padding: 15px;
+}
+.modal-overlay.active { display: flex; }
+.modal {
+    background: var(--container); padding: 18px;
+    border-radius: 12px; max-width: 500px; width: 100%;
+    max-height: 85vh; overflow-y: auto;
+}
+.modal h3 { margin-top: 0; font-size: 1rem; }
+.modal textarea {
+    width: 100%; height: 160px; padding: 8px;
+    background: #0d1b2a; color: white;
+    border: 1px solid #333; border-radius: 8px;
+    font-family: inherit; font-size: 0.85rem; resize: vertical;
+}
+.modal-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; flex-wrap: wrap; }
+.image-viewer-modal {
+    max-width: 95vw; max-height: 95vh;
+    background: transparent; padding: 0;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+}
+.image-viewer-modal img {
+    max-width: 100%; max-height: 80vh;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+    background: repeating-conic-gradient(#2a2a3e 0% 25%, #1a1a2e 0% 50%) 50% / 20px 20px;
+}
+.pos-modal { max-width: 420px; }
+.pos-row {
+    display: flex; gap: 10px; align-items: center;
+    margin-bottom: 10px;
+}
+.pos-row label {
+    font-size: 0.8rem; min-width: 80px; color: #ccc;
+}
+.pos-row input[type="range"] {
+    flex-grow: 1; accent-color: var(--pos);
+}
+.pos-row input[type="number"] {
+    width: 70px; padding: 5px 8px; border-radius: 5px;
+    border: 1px solid #333; background: #1a1a2e;
+    color: white; font-size: 0.8rem;
+}
+.pos-preview {
+    background: repeating-conic-gradient(#2a2a3e 0% 25%, #1a1a2e 0% 50%) 50% / 15px 15px;
+    border-radius: 8px;
+    aspect-ratio: 1/1;
+    width: 100%;
+    max-width: 300px;
+    margin: 10px auto;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #333;
+    touch-action: none;
+}
+.pos-preview img {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+    transform-origin: center;
+}
+
+/* ============ ОСТАЛЬНЫЕ ВКЛАДКИ ============ */
 .result-box {
     background: var(--secondary); padding: 12px;
     border-radius: 10px; margin-bottom: 12px;
@@ -318,8 +526,7 @@ body {
 .result-line {
     display: flex; justify-content: space-between;
     padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.1);
-    font-size: 0.82rem; gap: 8px; align-items: center;
-    flex-wrap: wrap;
+    font-size: 0.82rem; gap: 8px; align-items: center; flex-wrap: wrap;
 }
 .result-line:last-child { border-bottom: none; }
 .result-cat { color: #888; font-weight: bold; font-size: 0.75rem; }
@@ -339,15 +546,15 @@ body {
     display: flex; gap: 5px; margin-bottom: 10px;
     flex-wrap: wrap; align-items: center;
 }
-.presets-bar span { font-size: 0.78rem; color: #888; }
+.presets-bar span { font-size: 0.75rem; color: #888; }
 .preset-btn {
-    padding: 5px 10px; font-size: 0.75rem;
+    padding: 5px 10px; font-size: 0.72rem;
     border-radius: 15px; cursor: pointer;
     background: var(--secondary); color: white;
     border: 1px solid #555;
 }
 .counter-badge {
-    font-size: 0.7rem; color: #888; margin-left: auto;
+    font-size: 0.68rem; color: #888; margin-left: auto;
     padding: 3px 8px; background: rgba(0,0,0,0.3); border-radius: 10px;
 }
 
@@ -355,8 +562,7 @@ body {
 .search-input {
     flex-grow: 1; padding: 8px; border-radius: 5px;
     border: 1px solid #333; background: #0d1b2a; color: white;
-    font-size: 0.85rem; min-height: 38px;
-    min-width: 150px;
+    font-size: 0.82rem; min-height: 36px; min-width: 120px;
 }
 .history-list { display: flex; flex-direction: column; gap: 6px; max-height: 500px; overflow-y: auto; }
 .history-item {
@@ -389,10 +595,10 @@ body {
     display: flex; justify-content: space-between;
     align-items: center; padding: 10px 12px;
     background: var(--header); cursor: pointer; user-select: none;
-    min-height: 44px;
+    min-height: 42px;
 }
-.list-header h3 { margin: 0; font-size: 0.9rem; }
-.list-counter { font-size: 0.68rem; color: #888; }
+.list-header h3 { margin: 0; font-size: 0.88rem; }
+.list-counter { font-size: 0.66rem; color: #888; }
 .list-controls { display: flex; gap: 6px; align-items: center; }
 .list-body { padding: 10px 12px; display: none; }
 .list-block.open .list-body { display: block; }
@@ -401,13 +607,12 @@ body {
 .add-row input {
     flex-grow: 1; padding: 6px 8px; border-radius: 5px;
     border: 1px solid #333; background: #1a1a2e;
-    color: white; font-size: 0.8rem; min-height: 36px;
-    min-width: 100px;
+    color: white; font-size: 0.78rem; min-height: 34px; min-width: 100px;
 }
 .add-row button {
     padding: 6px 10px; background: var(--accent);
     color: white; border: none; border-radius: 5px;
-    cursor: pointer; font-size: 0.8rem; min-height: 36px;
+    cursor: pointer; font-size: 0.78rem; min-height: 34px;
 }
 .add-row button.import-btn { background: var(--clothes); }
 
@@ -415,31 +620,40 @@ body {
 .item {
     display: flex; align-items: center; gap: 6px;
     padding: 5px 0; border-bottom: 1px solid #1a1a2e;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
 }
 .item.disabled { opacity: 0.4; text-decoration: line-through; }
 .item-text { flex-grow: 1; cursor: pointer; padding: 4px; border-radius: 3px; word-break: break-word; }
 .item input[type="text"] {
     flex-grow: 1; padding: 4px 8px; border-radius: 4px;
     border: 1px solid var(--accent); background: #1a1a2e;
-    color: white; font-size: 0.8rem; min-height: 32px;
+    color: white; font-size: 0.78rem; min-height: 30px;
 }
 .item input[type="checkbox"] {
     cursor: pointer; width: 16px; height: 16px;
     accent-color: var(--accent); flex-shrink: 0;
 }
 .item-thumb {
-    width: 32px; height: 32px; border-radius: 4px;
+    width: 30px; height: 30px; border-radius: 4px;
     object-fit: contain; cursor: pointer;
     border: 1px solid #333; flex-shrink: 0;
     background: rgba(0,0,0,0.2);
 }
 .item-thumb-placeholder {
-    width: 32px; height: 32px; border-radius: 4px;
+    width: 30px; height: 30px; border-radius: 4px;
     background: rgba(255,255,255,0.05);
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer; font-size: 0.75rem; color: #555;
+    cursor: pointer; font-size: 0.72rem; color: #555;
     border: 1px dashed #333; flex-shrink: 0;
+}
+.item-anchor-select {
+    font-size: 0.7rem;
+    padding: 3px 5px;
+    border-radius: 4px;
+    border: 1px solid var(--pos);
+    background: #1a1a2e;
+    color: var(--pos);
+    max-width: 100px;
 }
 .item-pos-btn {
     background: rgba(243,156,18,0.15);
@@ -450,20 +664,19 @@ body {
     font-size: 0.68rem;
     cursor: pointer;
     flex-shrink: 0;
-    min-height: 30px;
+    min-height: 28px;
 }
-.item-pos-btn:active { background: var(--pos); color: #1a1a2e; }
 .item-pos-btn.has-pos {
     background: var(--pos); color: #1a1a2e; font-weight: bold;
 }
 
 .group-title {
-    font-size: 0.9rem; font-weight: bold;
+    font-size: 0.88rem; font-weight: bold;
     padding: 10px 12px; margin-top: 10px;
     border-radius: 8px; color: white;
     cursor: pointer; user-select: none;
     display: flex; justify-content: space-between; align-items: center;
-    min-height: 42px;
+    min-height: 40px;
 }
 .group-appearance { background: linear-gradient(90deg, var(--appearance), transparent); }
 .group-clothes { background: linear-gradient(90deg, var(--clothes), transparent); }
@@ -482,16 +695,16 @@ body {
     display: flex; justify-content: space-between;
     align-items: center; padding: 8px 12px;
     background: var(--header); cursor: pointer; user-select: none;
-    min-height: 40px;
+    min-height: 38px;
 }
-.module-header h4 { margin: 0; font-size: 0.82rem; }
-.module-counter { font-size: 0.65rem; color: #888; }
+.module-header h4 { margin: 0; font-size: 0.8rem; }
+.module-counter { font-size: 0.64rem; color: #888; }
 .module-controls { display: flex; gap: 5px; align-items: center; }
 .module-body { padding: 8px 12px 12px; display: none; }
 .module.open .module-body { display: block; }
 .module-toggle {
     background: none; border: none; color: white;
-    font-size: 0.9rem; cursor: pointer; padding: 4px; transition: 0.2s;
+    font-size: 0.85rem; cursor: pointer; padding: 4px; transition: 0.2s;
 }
 .module.open .module-toggle { transform: rotate(180deg); }
 
@@ -504,11 +717,11 @@ body {
 .subcat-header {
     display: flex; justify-content: space-between;
     align-items: center; padding: 7px 10px;
-    cursor: pointer; user-select: none; font-size: 0.78rem;
-    min-height: 36px;
+    cursor: pointer; user-select: none; font-size: 0.76rem;
+    min-height: 34px;
 }
 .subcat-name { font-weight: bold; }
-.subcat-counter { font-size: 0.65rem; color: #888; margin-left: 6px; }
+.subcat-counter { font-size: 0.64rem; color: #888; margin-left: 6px; }
 .subcat-controls { display: flex; gap: 4px; align-items: center; }
 .subcat-body {
     padding: 6px 10px 10px;
@@ -518,7 +731,7 @@ body {
 .subcat.open .subcat-body { display: block; }
 .subcat-toggle {
     background: none; border: none; color: white;
-    font-size: 0.75rem; cursor: pointer; padding: 4px; transition: 0.2s;
+    font-size: 0.72rem; cursor: pointer; padding: 4px; transition: 0.2s;
 }
 .subcat.open .subcat-toggle { transform: rotate(180deg); }
 
@@ -532,9 +745,9 @@ body {
     display: flex; justify-content: space-between;
     align-items: center; padding: 8px 12px;
     background: var(--header); cursor: pointer; user-select: none;
-    min-height: 40px;
+    min-height: 38px;
 }
-.simple-header h4 { margin: 0; font-size: 0.82rem; }
+.simple-header h4 { margin: 0; font-size: 0.8rem; }
 .simple-body { padding: 8px 12px 12px; display: none; }
 .simple-module.open .simple-body { display: block; }
 
@@ -551,21 +764,20 @@ body {
     background: var(--header);
 }
 .rule-header .rule-type {
-    font-size: 0.65rem; padding: 2px 8px; border-radius: 10px;
+    font-size: 0.62rem; padding: 2px 8px; border-radius: 10px;
     background: var(--rules); color: white; font-weight: bold;
     text-transform: uppercase;
 }
 .rule-type-replace { background: var(--clothes); }
 .rule-type-exclude { background: var(--accent); }
 .rule-type-add { background: var(--race); color: #1a1a2e; }
-.rule-body { padding: 10px 12px; font-size: 0.78rem; line-height: 1.4; }
+.rule-body { padding: 10px 12px; font-size: 0.76rem; line-height: 1.4; }
 .rule-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; flex-wrap: wrap; }
-.rule-row label { font-size: 0.75rem; color: #888; min-width: 80px; }
+.rule-row label { font-size: 0.72rem; color: #888; min-width: 75px; }
 .rule-row select, .rule-row input[type="text"] {
     flex-grow: 1; padding: 6px 8px; border-radius: 5px;
     border: 1px solid #333; background: #1a1a2e;
-    color: white; font-size: 0.78rem; min-width: 100px;
-    min-height: 36px;
+    color: white; font-size: 0.76rem; min-width: 100px; min-height: 34px;
 }
 .rule-row .arrow { color: var(--rules); font-weight: bold; }
 .condition-block {
@@ -574,7 +786,7 @@ body {
 }
 .condition-header {
     display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 6px; font-size: 0.75rem; color: var(--rules); font-weight: bold;
+    margin-bottom: 6px; font-size: 0.72rem; color: var(--rules); font-weight: bold;
 }
 .condition-header button {
     background: none; border: none; color: var(--accent);
@@ -586,93 +798,13 @@ body {
     margin-bottom: 12px;
 }
 .empty-state {
-    text-align: center; color: #666; padding: 25px; font-size: 0.82rem;
+    text-align: center; color: #666; padding: 25px; font-size: 0.8rem;
 }
 .chain-badge {
-    font-size: 0.6rem; padding: 2px 6px; border-radius: 8px;
+    font-size: 0.58rem; padding: 2px 6px; border-radius: 8px;
     background: var(--race); color: #1a1a2e; font-weight: bold;
     margin-left: 6px;
 }
-
-/* Модалки */
-.modal-overlay {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.85); z-index: 1000;
-    display: none; justify-content: center; align-items: center;
-    padding: 15px;
-}
-.modal-overlay.active { display: flex; }
-.modal {
-    background: var(--container); padding: 18px;
-    border-radius: 12px; max-width: 500px; width: 100%;
-    max-height: 85vh; overflow-y: auto;
-}
-.modal h3 { margin-top: 0; font-size: 1rem; }
-.modal textarea {
-    width: 100%; height: 160px; padding: 8px;
-    background: #0d1b2a; color: white;
-    border: 1px solid #333; border-radius: 8px;
-    font-family: inherit; font-size: 0.85rem; resize: vertical;
-}
-.modal-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; flex-wrap: wrap; }
-.image-viewer-modal {
-    max-width: 95vw; max-height: 95vh;
-    background: transparent; padding: 0;
-    display: flex; flex-direction: column; align-items: center; gap: 12px;
-}
-.image-viewer-modal img {
-    max-width: 100%; max-height: 80vh;
-    border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.7);
-    background: repeating-conic-gradient(#2a2a3e 0% 25%, #1a1a2e 0% 50%) 50% / 20px 20px;
-}
-
-/* Позиционная модалка */
-.pos-modal {
-    max-width: 420px;
-}
-.pos-row {
-    display: flex; gap: 10px; align-items: center;
-    margin-bottom: 10px;
-}
-.pos-row label {
-    font-size: 0.82rem; min-width: 80px; color: #ccc;
-}
-.pos-row input[type="range"] {
-    flex-grow: 1; accent-color: var(--pos);
-}
-.pos-row input[type="number"] {
-    width: 70px; padding: 5px 8px; border-radius: 5px;
-    border: 1px solid #333; background: #1a1a2e;
-    color: white; font-size: 0.82rem;
-}
-.pos-preview {
-    background: repeating-conic-gradient(#2a2a3e 0% 25%, #1a1a2e 0% 50%) 50% / 15px 15px;
-    border-radius: 8px;
-    aspect-ratio: 1/1;
-    width: 100%;
-    max-width: 300px;
-    margin: 10px auto;
-    position: relative;
-    overflow: hidden;
-    border: 1px solid #333;
-    touch-action: none;
-}
-.pos-preview img {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    pointer-events: none;
-    transform-origin: center;
-}
-.pos-preview-tint {
-    position: absolute;
-    inset: 0;
-    background: rgba(243,156,18,0.15);
-    display: none;
-}
-.pos-preview.draggable .pos-preview-tint { display: block; }
 
 .toast {
     position: fixed; bottom: 20px; left: 50%;
@@ -684,50 +816,23 @@ body {
 }
 .toast.show { opacity: 1; }
 
-/* ============ МОБИЛЬНАЯ АДАПТАЦИЯ ============ */
+/* ============ МОБИЛЬНАЯ ============ */
 @media (max-width: 800px) {
     body { padding: 0; }
-
-    .app {
-        border-radius: 0;
-        min-height: 100vh;
-    }
-
+    .app { border-radius: 0; min-height: 100vh; }
     .tabs { position: sticky; top: 0; z-index: 100; }
-
-    .tab-btn {
-        font-size: 0.72rem; padding: 10px 2px; min-width: 50px;
-    }
-
+    .tab-btn { font-size: 0.68rem; padding: 9px 2px; min-width: 42px; }
     .tab-content { padding: 8px; }
-
-    .builder-layout {
-        grid-template-columns: 1fr;
-        gap: 8px;
-    }
-
-    .builder-canvas-area {
-        position: relative;
-    }
-
-    .builder-toolbar {
-        gap: 4px;
-    }
-
+    .builder-layout { grid-template-columns: 1fr; gap: 8px; }
     .builder-toolbar .btn-main,
     .builder-toolbar .btn-secondary {
         flex: 1 1 calc(33% - 4px);
-        font-size: 0.72rem;
-        padding: 8px 6px;
-        min-height: 42px;
+        font-size: 0.68rem;
+        padding: 7px 5px;
+        min-height: 40px;
         min-width: 0;
     }
-
-    .canvas-frame {
-        max-width: 100%;
-    }
-
-    /* Панель категорий — как bottom sheet */
+    .canvas-frame { max-width: 100%; }
     .builder-panel {
         position: fixed;
         bottom: 0; left: 0; right: 0;
@@ -739,67 +844,36 @@ body {
         box-shadow: 0 -10px 30px rgba(0,0,0,0.6);
         padding-bottom: env(safe-area-inset-bottom, 10px);
     }
-    .builder-panel.open {
-        transform: translateY(0);
-    }
-
-    .builder-panel-header {
-        display: flex;
-    }
-
+    .builder-panel.open { transform: translateY(0); }
+    .builder-panel-header { display: flex; }
     .builder-panel-header button {
-        background: none;
-        border: none;
-        color: var(--accent);
-        font-size: 1.5rem;
-        cursor: pointer;
-        padding: 0 10px;
+        background: none; border: none;
+        color: var(--accent); font-size: 1.5rem;
+        cursor: pointer; padding: 0 10px;
     }
-
-    /* Затемнение фона под панелью */
     .panel-overlay {
-        position: fixed;
-        inset: 0;
+        position: fixed; inset: 0;
         background: rgba(0,0,0,0.5);
-        z-index: 150;
-        display: none;
+        z-index: 150; display: none;
     }
     .panel-overlay.active { display: block; }
-
-    /* Кнопка открытия панели */
     .open-panel-btn {
-        position: fixed;
-        bottom: 20px; right: 20px;
-        z-index: 100;
-        width: 60px; height: 60px;
+        position: fixed; bottom: 20px; right: 20px;
+        z-index: 100; width: 58px; height: 58px;
         border-radius: 50%;
-        background: var(--accent);
-        color: white;
-        border: none;
-        font-size: 1.5rem;
+        background: var(--accent); color: white;
+        border: none; font-size: 1.4rem;
         cursor: pointer;
         box-shadow: 0 5px 20px rgba(233,69,96,0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding-bottom: env(safe-area-inset-bottom, 0);
+        display: flex; justify-content: center; align-items: center;
     }
-
-    .tiles-grid {
-        grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
-    }
-
-    .tile-thumb { height: 46px; }
-    .tile-no-thumb { height: 46px; }
-
-    .modal {
-        max-width: 100%;
-        padding: 15px;
-    }
-
+    .figure-sliders { grid-template-columns: 1fr; }
+    .tiles-grid { grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); }
+    .tile-thumb { height: 44px; }
+    .tile-no-thumb { height: 44px; }
+    .modal { max-width: 100%; padding: 14px; }
     .item input[type="checkbox"] { width: 20px; height: 20px; }
-
-    .icon-btn { font-size: 1.15rem; padding: 6px; }
+    .icon-btn { font-size: 1.1rem; padding: 6px; }
 }
 </style>
 </head>
@@ -808,6 +882,7 @@ body {
 <div class="app">
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('builder', this)">🎨 Конструктор</button>
+        <button class="tab-btn" onclick="switchTab('prop', this)">📏 Пропорции</button>
         <button class="tab-btn" onclick="switchTab('gen', this)">🎲</button>
         <button class="tab-btn" onclick="switchTab('hist', this)">📜</button>
         <button class="tab-btn" onclick="switchTab('lists', this)">📋</button>
@@ -820,24 +895,47 @@ body {
         <div class="builder-layout">
             <div class="builder-canvas-area">
                 <div class="builder-toolbar">
-                    <button class="btn-main" onclick="randomizeAll()">🎲 Случайно</button>
-                    <button class="btn-secondary" onclick="togglePositionMode()" id="posModeBtn">📐 Позиция</button>
-                    <button class="btn-secondary" onclick="addCustomLayer()">📤 Своя</button>
-                    <button class="btn-secondary" onclick="clearCanvas()">🗑 Сброс</button>
+                    <button class="btn-main" onclick="randomizeAll()">🎲</button>
+                    <button class="btn-secondary" onclick="toggleFigureSliders()" id="figBtn">👤 Фигура</button>
+                    <button class="btn-secondary" onclick="toggleMannequin()" id="mannequinBtn">👻 Манекен</button>
+                    <button class="btn-secondary" onclick="togglePositionMode()" id="posModeBtn">📐</button>
+                    <button class="btn-secondary" onclick="addCustomLayer()">📤</button>
+                    <button class="btn-secondary" onclick="clearCanvas()">🗑</button>
                     <button class="btn-secondary" onclick="saveOutfit()">💾</button>
                     <button class="btn-secondary" onclick="document.getElementById('outfitFileInput').click()">📂</button>
                     <input type="file" id="outfitFileInput" accept=".json" style="display:none;" onchange="loadOutfitFromFile(event)">
-                    <button class="btn-secondary" onclick="exportPNG()">🖼️ PNG</button>
-                    <button class="btn-secondary" onclick="exportPSD()">📄 PSD</button>
+                    <button class="btn-secondary" onclick="exportPNG()">🖼️</button>
+                    <button class="btn-secondary" onclick="exportPSD()">📄</button>
                     <button class="btn-secondary" onclick="undoCanvas()" id="undoBtn" disabled>↶</button>
                     <button class="btn-secondary" onclick="redoCanvas()" id="redoBtn" disabled>↷</button>
                     <button class="btn-secondary" onclick="toggleEraser()" id="eraserBtn">🧽</button>
-                    <span id="eraserSizeLabel" style="display:none; align-items:center; gap:6px; font-size:0.75rem; flex:1 1 100%;">
-                        🧽 Размер: <input type="range" id="eraserSize" min="10" max="400" value="80" style="flex-grow:1;">
+                    <span id="eraserSizeLabel" style="display:none; align-items:center; gap:6px; font-size:0.72rem; flex:1 1 100%;">
+                        🧽 <input type="range" id="eraserSize" min="10" max="400" value="80" style="flex-grow:1;">
                     </span>
                 </div>
+
+                <!-- Ползунки фигуры -->
+                <div class="figure-sliders" id="figureSliders">
+                    <div class="fs-row">
+                        <label>Плечи: <span id="fsShoulderVal">50</span>%</label>
+                        <input type="range" min="0" max="100" value="50" oninput="updateFigure('shoulderWidth', this.value)">
+                    </div>
+                    <div class="fs-row">
+                        <label>Грудь: <span id="fsBreastVal">30</span>%</label>
+                        <input type="range" min="0" max="100" value="30" oninput="updateFigure('breastSize', this.value)">
+                    </div>
+                    <div class="fs-row">
+                        <label>Талия: <span id="fsWaistVal">40</span>%</label>
+                        <input type="range" min="0" max="100" value="40" oninput="updateFigure('waistWidth', this.value)">
+                    </div>
+                    <div class="fs-row">
+                        <label>Бёдра: <span id="fsHipVal">55</span>%</label>
+                        <input type="range" min="0" max="100" value="55" oninput="updateFigure('hipWidth', this.value)">
+                    </div>
+                </div>
+
                 <div class="canvas-frame" id="canvasFrame">
-                    <div class="position-hint">📐 Режим позиции: тяни слой. Клик — выбрать.</div>
+                    <div class="position-hint">📐 Тяни слой. Клик — выбрать.</div>
                     <canvas id="mainCanvas" width="4096" height="4096"></canvas>
                 </div>
             </div>
@@ -847,13 +945,83 @@ body {
                     <h3 style="margin:0;">📚 Категории</h3>
                     <button onclick="closePanel()">✕</button>
                 </div>
-                <h3 class="desktop-title">📚 Категории</h3>
+                <h3>📚 Категории</h3>
                 <div id="builderCategories"></div>
             </div>
         </div>
 
         <button class="open-panel-btn" onclick="openPanel()" id="openPanelBtn">📚</button>
         <div class="panel-overlay" id="panelOverlay" onclick="closePanel()"></div>
+    </div>
+
+    <!-- ================== ПРОПОРЦИИ ================== -->
+    <div id="tab-prop" class="tab-content">
+        <div class="prop-layout">
+            <div class="prop-list">
+                <h3 style="margin-top:0;">📏 Конфигурации</h3>
+                <div id="propListContainer"></div>
+                <button class="btn-prop" style="width:100%; margin-top:6px;" onclick="createPropConfig()">➕ Новая конфигурация</button>
+            </div>
+            <div class="prop-editor" id="propEditor">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:6px;">
+                    <h3 id="propEditorTitle" style="margin:0; font-size:0.9rem;">Редактор</h3>
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn-secondary" onclick="savePropConfig()">💾 Сохранить</button>
+                        <button class="btn-secondary" onclick="closePropEditor()">✕</button>
+                    </div>
+                </div>
+
+                <div class="mannequin-preview">
+                    <h5>👤 Манекен</h5>
+                    <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+                        <button class="btn-secondary" onclick="document.getElementById('mannequinFileInput').click()">📥 Загрузить манекен</button>
+                        <button class="btn-secondary" onclick="resetMannequin()">↺ Рисовать кодом</button>
+                        <input type="file" id="mannequinFileInput" accept="image/*" style="display:none;" onchange="loadMannequinFile(event)">
+                        <span id="mannequinStatus" style="font-size:0.72rem; color:#888;">Схема (код)</span>
+                    </div>
+                </div>
+
+                <div class="prop-editor-layout">
+                    <div>
+                        <div class="prop-canvas-wrap">
+                            <canvas id="propCanvas" width="1200" height="1200"></canvas>
+                        </div>
+                        <p style="font-size:0.68rem; color:#888; margin:6px 0 0 0; text-align:center;">
+                            Тяни точки-якоря мышью
+                        </p>
+                    </div>
+                    <div class="prop-controls">
+                        <div class="prop-section">
+                            <h5>Вертикальные якоря</h5>
+                            <div id="propAnchorsList"></div>
+                        </div>
+                        <div class="prop-section">
+                            <h5>Ширина тела</h5>
+                            <div class="prop-row">
+                                <label>Плечи</label>
+                                <input type="range" id="pwShoulder" min="0" max="100" value="50" oninput="onPropSliderChange()">
+                                <input type="number" id="pwShoulderNum" min="0" max="100" value="50" oninput="document.getElementById('pwShoulder').value=this.value;onPropSliderChange()">
+                            </div>
+                            <div class="prop-row">
+                                <label>Грудь</label>
+                                <input type="range" id="pwBreast" min="0" max="100" value="30" oninput="onPropSliderChange()">
+                                <input type="number" id="pwBreastNum" min="0" max="100" value="30" oninput="document.getElementById('pwBreast').value=this.value;onPropSliderChange()">
+                            </div>
+                            <div class="prop-row">
+                                <label>Талия</label>
+                                <input type="range" id="pwWaist" min="0" max="100" value="40" oninput="onPropSliderChange()">
+                                <input type="number" id="pwWaistNum" min="0" max="100" value="40" oninput="document.getElementById('pwWaist').value=this.value;onPropSliderChange()">
+                            </div>
+                            <div class="prop-row">
+                                <label>Бёдра</label>
+                                <input type="range" id="pwHip" min="0" max="100" value="55" oninput="onPropSliderChange()">
+                                <input type="number" id="pwHipNum" min="0" max="100" value="55" oninput="document.getElementById('pwHip').value=this.value;onPropSliderChange()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- ================== ГЕНЕРАТОР ================== -->
@@ -870,7 +1038,7 @@ body {
             <p style="text-align:center; color:#888;">Нажмите «Сгенерировать»</p>
         </div>
         <button class="btn-main" style="width:100%; margin-bottom:6px;" onclick="generate()">Сгенерировать!</button>
-        <button class="btn-secondary" style="width:100%; margin-bottom:4px;" onclick="copyResult()">📋 Скопировать промпт</button>
+        <button class="btn-secondary" style="width:100%; margin-bottom:4px;" onclick="copyResult()">📋 Промпт</button>
         <button class="btn-secondary" style="width:100%;" onclick="copyShort()">📋 Кратко</button>
     </div>
 
@@ -886,9 +1054,9 @@ body {
     <!-- ================== СПИСКИ ================== -->
     <div id="tab-lists" class="tab-content">
         <div style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
-            <button class="btn-secondary" onclick="sortLists()">🔤 Сорт.</button>
-            <button class="btn-secondary" onclick="resetAll()">↺ Сброс</button>
-            <button class="btn-secondary" onclick="clearAllImages()">🖼️ Очистить картинки</button>
+            <button class="btn-secondary" onclick="sortLists()">🔤</button>
+            <button class="btn-secondary" onclick="resetAll()">↺</button>
+            <button class="btn-secondary" onclick="clearAllImages()">🖼️ Очистить</button>
         </div>
         <div id="listsContainer"></div>
     </div>
@@ -896,7 +1064,7 @@ body {
     <!-- ================== МОДУЛИ ================== -->
     <div id="tab-mod" class="tab-content">
         <div style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
-            <input type="text" id="moduleSearch" class="search-input" placeholder="🔍 Поиск..." oninput="renderModules()" style="flex-grow:1; min-width:120px;">
+            <input type="text" id="moduleSearch" class="search-input" placeholder="🔍" oninput="renderModules()" style="flex-grow:1; min-width:120px;">
             <button class="btn-secondary" onclick="sortModules()">🔤</button>
             <button class="btn-secondary" onclick="resetAll()">↺</button>
         </div>
@@ -906,7 +1074,7 @@ body {
     <!-- ================== ПРАВИЛА ================== -->
     <div id="tab-rules" class="tab-content">
         <div class="add-rule-form">
-            <h4 style="margin-top:0; font-size:0.9rem;">➕ Новое правило</h4>
+            <h4 style="margin-top:0; font-size:0.88rem;">➕ Новое правило</h4>
             <div class="rule-row">
                 <label>Тип:</label>
                 <select id="newRuleType" onchange="onRuleTypeChange()">
@@ -939,7 +1107,7 @@ body {
             </div>
             <div class="rule-row">
                 <label>Цепочка:</label>
-                <label style="display:flex; align-items:center; gap:5px; font-size:0.75rem; cursor:pointer;">
+                <label style="display:flex; align-items:center; gap:5px; font-size:0.72rem; cursor:pointer;">
                     <input type="checkbox" id="newRuleChain"> Активирует другие
                 </label>
             </div>
@@ -958,7 +1126,7 @@ body {
 <div class="modal-overlay" id="editModal">
     <div class="modal">
         <h3 id="editTitle">Редактирование</h3>
-        <p style="color:#888; font-size:0.78rem;">Один элемент на строку (или через запятую).</p>
+        <p style="color:#888; font-size:0.76rem;">Один элемент на строку (или через запятую).</p>
         <textarea id="editTextarea"></textarea>
         <div class="modal-actions">
             <button class="btn-secondary" onclick="closeEdit()">Отмена</button>
@@ -970,7 +1138,7 @@ body {
 <div class="modal-overlay" id="bulkImportModal">
     <div class="modal">
         <h3 id="bulkImportTitle">Массовый импорт</h3>
-        <p style="color:#888; font-size:0.78rem;">Один элемент на строку (или через запятую).</p>
+        <p style="color:#888; font-size:0.76rem;">Один элемент на строку (или через запятую).</p>
         <textarea id="bulkImportTextarea"></textarea>
         <div class="modal-actions">
             <button class="btn-secondary" onclick="closeBulkImport()">Отмена</button>
@@ -986,14 +1154,18 @@ body {
     </div>
 </div>
 
-<!-- МОДАЛКА ПОЗИЦИИ -->
 <div class="modal-overlay" id="posModal">
     <div class="modal pos-modal">
-        <h3 id="posTitle">📐 Позиция слоя</h3>
-        <p style="color:#888; font-size:0.78rem;" id="posSubtitle">Тяни картинку — или настрой ползунки.</p>
+        <h3 id="posTitle">📐 Позиция</h3>
+        <p style="color:#888; font-size:0.76rem;">Тяни картинку или настрой ползунки.</p>
         <div class="pos-preview" id="posPreview">
             <img id="posPreviewImg" src="" alt="">
-            <div class="pos-preview-tint"></div>
+        </div>
+        <div class="pos-row">
+            <label>Якорь</label>
+            <select id="posAnchor" style="flex-grow:1; padding:6px 8px; border-radius:5px; border:1px solid #333; background:#1a1a2e; color:white; font-size:0.78rem;">
+                <option value="">— не использовать —</option>
+            </select>
         </div>
         <div class="pos-row">
             <label>X (%)</label>
@@ -1006,7 +1178,7 @@ body {
             <input type="number" id="posY" value="0" oninput="document.getElementById('posYRange').value=this.value;updatePosPreview()">
         </div>
         <div class="pos-row">
-            <label>Scale (%)</label>
+            <label>Scale</label>
             <input type="range" id="posScaleRange" min="10" max="300" value="100" oninput="document.getElementById('posScale').value=this.value;updatePosPreview()">
             <input type="number" id="posScale" value="100" oninput="document.getElementById('posScaleRange').value=this.value;updatePosPreview()">
         </div>
@@ -1016,7 +1188,7 @@ body {
             <input type="number" id="posRot" value="0" oninput="document.getElementById('posRotRange').value=this.value;updatePosPreview()">
         </div>
         <div class="modal-actions">
-            <button class="btn-secondary" onclick="resetPosition()">↺ Сброс</button>
+            <button class="btn-secondary" onclick="resetPosition()">↺</button>
             <button class="btn-secondary" onclick="closePosModal()">Отмена</button>
             <button class="btn-main" onclick="savePosition()">Сохранить</button>
         </div>
@@ -1034,17 +1206,17 @@ body {
 const DEFAULT_LISTS = {
     races: {
         name: "🧬 Расы", enabled: true, expanded: true,
-        items: ["Angel girl", "Arapaima girl", "Bat girl", "Bird girl", "Chimera", "Crocodile girl", "Crow girl", "Cat girl", "Cow girl", "Capybara girl", "Chicken girl", "Demon girl", "Doll girl", "Dragon girl", "Deer girl", "Elf", "Fish girl", "Fox girl", "Gargoyle girl", "Ghost girl", "Horse girl", "Insect girl", "Jackal girl", "Kitsune girl", "Mimic", "Orca girl", "Program girl", "Panda girl", "Rat girl", "Rabbit girl", "Reptile girl", "Snake girl", "Slime girl", "Serval girl", "Shark girl", "Succubus", "Sheep girl", "Tiger girl", "Vampire girl", "Wolf girl", "Wyrm girl", "Zombie girl"]
+        items: ["Angel girl", "Arapaima girl", "Bat girl", "Bird girl", "Cat girl", "Demon girl", "Dragon girl", "Elf", "Fox girl", "Ghost girl", "Kitsune girl", "Slime girl", "Vampire girl", "Wolf girl", "Zombie girl"]
     },
     styles: {
         name: "👗 Стили", enabled: true, expanded: true,
-        items: ["Ancient Egyptian", "Boho-chic", "Casual", "Gyaru", "Grunge", "Gothic Lolita", "Jester", "Japanese clothes", "Jirai key", "Maid", "Nun", "Naval", "Punk", "Prison", "Rags", "Sportswear", "Swimsuit", "Streetwear", "Techwear", "Witch", "Winter clothes", "Y2K"]
+        items: ["Casual", "Streetwear", "Gothic Lolita", "Punk", "Techwear", "Y2K", "Gyaru", "Grunge", "Maid", "Nun", "Sportswear", "Swimsuit", "Witch", "Winter clothes"]
     }
 };
 
 const DEFAULT_MODIFIERS = {
     name: "✨ Модификаторы", enabled: true, expanded: true,
-    items: ["Oversized", "Cropped", "Vintage", "Torn", "Formal", "Sporty", "Baggy", "Slim", "Loose", "Tight", "Fitted"]
+    items: ["Oversized", "Cropped", "Vintage", "Torn", "Formal", "Sporty", "Baggy", "Slim", "Loose", "Tight"]
 };
 
 const DEFAULT_MODULES = {
@@ -1053,7 +1225,8 @@ const DEFAULT_MODULES = {
         modules: {
             bangs: {
                 name: "Bangs", enabled: true, expanded: false,
-                position: { x: 0, y: -30, scale: 100, rotation: 0 },
+                anchor: "headTop",
+                position: { x: 0, y: 0, scale: 100, rotation: 0 },
                 subcategories: {
                     shape: { name: "Форма", enabled: true, expanded: false, items: ["Arched bangs", "Asymmetrical bangs", "Blunt bangs", "Crossed", "Curtained bangs", "Diagonal bangs", "Hime cut", "Wispy bangs", "Choppy bangs", "Fanged bangs", "Parted bangs", "Double-parted bangs", "Middle part", "Swept bangs", "Side part", "Bangs pinned back", "Center flap bangs"] },
                     length: { name: "Длина", enabled: true, expanded: false, items: ["Short bangs", "Medium bangs", "Long bangs"] },
@@ -1062,61 +1235,156 @@ const DEFAULT_MODULES = {
             },
             sidelocks: {
                 name: "Sidelocks", enabled: true, expanded: false,
+                anchor: "headCenter",
                 position: { x: 0, y: 0, scale: 100, rotation: 0 },
                 subcategories: {
                     shape: { name: "Форма", enabled: true, expanded: false, items: ["Single sidelock", "Long single sidelock", "Ring sidelocks", "Drill sidelocks", "Flipped sidelocks", "Wavy sidelocks", "Curly sidelocks"] },
                     length: { name: "Длина", enabled: true, expanded: false, items: ["Medium sidelock", "Long sidelocks", "Very long sidelocks"] }
                 }
             },
-            backHair: { name: "Back hair", enabled: true, expanded: false, position: { x: 0, y: 20, scale: 100, rotation: 0 }, subcategories: { shape: { name: "Форма", enabled: true, expanded: false, items: ["Хвост", "Косички", "Распущенные", "Пучок"] } } },
-            eyeShape: { name: "Глаза", enabled: true, expanded: false, position: { x: 0, y: -10, scale: 100, rotation: 0 }, subcategories: { type: { name: "Форма", enabled: true, expanded: false, items: ["Большие", "Узкие", "Круглые", "Закрытые"] } } }
+            backHair: {
+                name: "Back hair", enabled: true, expanded: false,
+                anchor: "headCenter",
+                position: { x: 0, y: 0, scale: 100, rotation: 0 },
+                subcategories: { shape: { name: "Форма", enabled: true, expanded: false, items: ["Хвост", "Косички", "Распущенные", "Пучок"] } }
+            },
+            eyeShape: {
+                name: "Глаза", enabled: true, expanded: false,
+                anchor: "eyes",
+                position: { x: 0, y: 0, scale: 100, rotation: 0 },
+                subcategories: { type: { name: "Форма", enabled: true, expanded: false, items: ["Большие", "Узкие", "Круглые", "Закрытые"] } }
+            }
         }
     },
     clothes: {
         name: "👗 Одежда", groupClass: "group-clothes", expanded: true,
         modules: {
-            headwear:   { name: "Headwear",   enabled: true, expanded: false, position: { x: 0, y: -50, scale: 100, rotation: 0 }, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Шляпа", "Капюшон", "Ободок", "Шапка"] } } },
-            neckwear:   { name: "Neckwear",   enabled: true, expanded: false, position: { x: 0, y: 10, scale: 100, rotation: 0 }, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Чокер", "Шарф", "Ожерелье"] } } },
-            topwear1:   { name: "Topwear",    enabled: true, expanded: false, position: { x: 0, y: 20, scale: 100, rotation: 0 }, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Футболка", "Худи", "Кроп-топ", "Куртка", "Свитер"] } } },
-            bottomwear: { name: "Bottomwear", enabled: true, expanded: false, position: { x: 0, y: 40, scale: 100, rotation: 0 }, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Юбка", "Джинсы", "Шорты", "Карго"] } } },
-            footwear:   { name: "Footwear",   enabled: true, expanded: false, position: { x: 0, y: 70, scale: 100, rotation: 0 }, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Кроссовки", "Ботинки", "Каблуки", "Сандалии"] } } }
+            headwear:   { name: "Headwear",   enabled: true, expanded: false, anchor: "headTop", position: { x: 0, y: 0, scale: 100, rotation: 0 }, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Шляпа", "Капюшон", "Ободок", "Шапка"] } } },
+            neckwear:   { name: "Neckwear",   enabled: true, expanded: false, anchor: "neck", position: { x: 0, y: 0, scale: 100, rotation: 0 }, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Чокер", "Шарф", "Ожерелье"] } } },
+            topwear1:   { name: "Topwear",    enabled: true, expanded: false, anchor: "chest", position: { x: 0, y: 0, scale: 100, rotation: 0 }, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Футболка", "Худи", "Кроп-топ", "Куртка", "Свитер"] } } },
+            bottomwear: { name: "Bottomwear", enabled: true, expanded: false, anchor: "hips", position: { x: 0, y: 0, scale: 100, rotation: 0 }, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Юбка", "Джинсы", "Шорты", "Карго"] } } },
+            footwear:   { name: "Footwear",   enabled: true, expanded: false, anchor: "ankles", position: { x: 0, y: 0, scale: 100, rotation: 0 }, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Кроссовки", "Ботинки", "Каблуки", "Сандалии"] } } }
         }
     },
     race: {
         name: "🧬 Раса", groupClass: "group-race", expanded: true,
         modules: {
-            trait1:  { name: "Черта 1", enabled: true, expanded: false, position: { x: 0, y: -30, scale: 100, rotation: 0 }, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Animal ears", "Horns", "Tail", "Wings", "Halos"] } } },
-            trait2:  { name: "Черта 2", enabled: true, expanded: false, position: { x: 0, y: 0, scale: 100, rotation: 0 }, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Fangs", "Claws", "Glowing eyes", "Scales"] } } },
-            trait3:  { name: "Черта 3", enabled: true, expanded: false, position: { x: 0, y: 0, scale: 100, rotation: 0 }, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Отсутствует"] } } }
+            trait1:  { name: "Черта 1", enabled: true, expanded: false, anchor: "headTop", position: { x: 0, y: 0, scale: 100, rotation: 0 }, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Animal ears", "Horns", "Tail", "Wings", "Halos"] } } },
+            trait2:  { name: "Черта 2", enabled: true, expanded: false, anchor: "eyes", position: { x: 0, y: 0, scale: 100, rotation: 0 }, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Fangs", "Claws", "Glowing eyes", "Scales"] } } }
         }
     }
 };
+
+// Якоря по умолчанию (в %)
+const DEFAULT_ANCHORS = {
+    headTop:    { x: 50, y: 5 },
+    headCenter: { x: 50, y: 12 },
+    eyes:       { x: 50, y: 14 },
+    neck:       { x: 50, y: 20 },
+    shoulders:  { x: 50, y: 24 },
+    chest:      { x: 50, y: 30 },
+    waist:      { x: 50, y: 42 },
+    hips:       { x: 50, y: 50 },
+    knees:      { x: 50, y: 70 },
+    ankles:     { x: 50, y: 90 },
+    feetBottom: { x: 50, y: 98 }
+};
+
+const ANCHOR_LABELS = {
+    headTop: 'Верх головы',
+    headCenter: 'Центр головы',
+    eyes: 'Глаза',
+    neck: 'Шея',
+    shoulders: 'Плечи',
+    chest: 'Грудь',
+    waist: 'Талия',
+    hips: 'Бёдра',
+    knees: 'Колени',
+    ankles: 'Щиколотки',
+    feetBottom: 'Стопы'
+};
+
+// Конфигурации пропорций
+const DEFAULT_PROP_CONFIGS = [
+    {
+        id: 'realism',
+        name: 'Реализм',
+        anchors: JSON.parse(JSON.stringify(DEFAULT_ANCHORS)),
+        figure: { shoulderWidth: 50, breastSize: 30, waistWidth: 40, hipWidth: 55 },
+        mannequin: null
+    },
+    {
+        id: 'anime',
+        name: 'Аниме',
+        anchors: {
+            headTop: { x: 50, y: 4 },
+            headCenter: { x: 50, y: 14 },
+            eyes: { x: 50, y: 16 },
+            neck: { x: 50, y: 25 },
+            shoulders: { x: 50, y: 28 },
+            chest: { x: 50, y: 34 },
+            waist: { x: 50, y: 44 },
+            hips: { x: 50, y: 52 },
+            knees: { x: 50, y: 72 },
+            ankles: { x: 50, y: 91 },
+            feetBottom: { x: 50, y: 98 }
+        },
+        figure: { shoulderWidth: 45, breastSize: 35, waistWidth: 35, hipWidth: 50 },
+        mannequin: null
+    },
+    {
+        id: 'chibi',
+        name: 'Chibi',
+        anchors: {
+            headTop: { x: 50, y: 8 },
+            headCenter: { x: 50, y: 22 },
+            eyes: { x: 50, y: 24 },
+            neck: { x: 50, y: 36 },
+            shoulders: { x: 50, y: 40 },
+            chest: { x: 50, y: 46 },
+            waist: { x: 50, y: 54 },
+            hips: { x: 50, y: 60 },
+            knees: { x: 50, y: 76 },
+            ankles: { x: 50, y: 90 },
+            feetBottom: { x: 50, y: 96 }
+        },
+        figure: { shoulderWidth: 40, breastSize: 25, waistWidth: 35, hipWidth: 45 },
+        mannequin: null
+    }
+];
 
 let state = {
     lists: null, modifiers: null, modules: null, rules: [], history: [],
     current: {}, currentPaths: [], currentItems: {}, extraText: '',
     genCount: 0,
-    outfit: {},        // { path: item }
-    customLayers: []   // [{ id, name, image, position }]
+    outfit: {},
+    customLayers: [],
+    propConfigs: [],
+    activePropId: 'realism',
+    showMannequin: true
 };
 
 let editContext = null;
 let bulkContext = null;
 let imageContext = null;
-let posContext = null;  // для модалки позиции
+let posContext = null;
+let propEditingId = null;
 
 // ============================================================
 // INIT
 // ============================================================
 function init() {
-    const savedLists = localStorage.getItem('cg_lists_v8');
-    const savedMods = localStorage.getItem('cg_modifiers_v7');
-    const savedModules = localStorage.getItem('cg_modules_v8');
-    const savedRules = localStorage.getItem('cg_rules_v7');
-    const savedHist = localStorage.getItem('cg_history_v7');
-    const savedCount = localStorage.getItem('cg_gen_count_v7');
-    const savedOutfit = localStorage.getItem('cg_outfit_v2');
-    const savedCustom = localStorage.getItem('cg_custom_layers');
+    const savedLists = localStorage.getItem('cg_lists_v9');
+    const savedMods = localStorage.getItem('cg_modifiers_v8');
+    const savedModules = localStorage.getItem('cg_modules_v9');
+    const savedRules = localStorage.getItem('cg_rules_v8');
+    const savedHist = localStorage.getItem('cg_history_v8');
+    const savedCount = localStorage.getItem('cg_gen_count_v8');
+    const savedOutfit = localStorage.getItem('cg_outfit_v3');
+    const savedCustom = localStorage.getItem('cg_custom_layers_v2');
+    const savedProp = localStorage.getItem('cg_prop_configs');
+    const savedActiveProp = localStorage.getItem('cg_active_prop');
+    const savedShowMannequin = localStorage.getItem('cg_show_mannequin');
 
     state.lists = savedLists ? JSON.parse(savedLists) : null;
     state.modifiers = savedMods ? JSON.parse(savedMods) : null;
@@ -1126,33 +1394,39 @@ function init() {
     state.genCount = savedCount ? parseInt(savedCount) : 0;
     state.outfit = savedOutfit ? JSON.parse(savedOutfit) : {};
     state.customLayers = savedCustom ? JSON.parse(savedCustom) : [];
+    state.propConfigs = savedProp ? JSON.parse(savedProp) : JSON.parse(JSON.stringify(DEFAULT_PROP_CONFIGS));
+    state.activePropId = savedActiveProp || 'realism';
+    state.showMannequin = savedShowMannequin !== 'false';
 
     if (!state.lists || !isValidListStructure(state.lists)) state.lists = JSON.parse(JSON.stringify(DEFAULT_LISTS));
     if (!state.modifiers) state.modifiers = JSON.parse(JSON.stringify(DEFAULT_MODIFIERS));
     if (!state.modules || !isValidModuleStructure(state.modules)) state.modules = JSON.parse(JSON.stringify(DEFAULT_MODULES));
-    // Миграция: добавляем position в модули, если их нет
-    migratePositions();
+    migrateAnchors();
     sanitizeData();
     save();
     renderLists();
     renderModules();
     renderRules();
     renderHistory();
+    renderPropList();
     populateRuleSelects();
+    populateAnchorSelects();
     updateCounter();
     renderBuilder();
     initCanvasIfNeeded();
+    updateMannequinBtn();
+    updateFigureSlidersUI();
 }
 
-function migratePositions() {
+function migrateAnchors() {
     for (const gKey in state.modules) {
         const group = state.modules[gKey];
         for (const mKey in group.modules) {
             const mod = group.modules[mKey];
+            if (mod.anchor === undefined) mod.anchor = null;
             if (!mod.position) mod.position = { x: 0, y: 0, scale: 100, rotation: 0 };
             for (const sKey in mod.subcategories) {
-                const sub = mod.subcategories[sKey];
-                sub.items.forEach(i => {
+                mod.subcategories[sKey].items.forEach(i => {
                     if (i && typeof i === 'object' && i.position === undefined) i.position = null;
                 });
             }
@@ -1215,6 +1489,7 @@ function sanitizeData() {
             if (!mod.subcategories) mod.subcategories = {};
             if (mod.enabled === undefined) mod.enabled = true;
             if (mod.expanded === undefined) mod.expanded = false;
+            if (mod.anchor === undefined) mod.anchor = null;
             if (!mod.position) mod.position = { x: 0, y: 0, scale: 100, rotation: 0 };
             for (const sKey in mod.subcategories) {
                 const sub = mod.subcategories[sKey];
@@ -1236,14 +1511,17 @@ function sanitizeData() {
 }
 function save() {
     try {
-        localStorage.setItem('cg_lists_v8', JSON.stringify(state.lists));
-        localStorage.setItem('cg_modifiers_v7', JSON.stringify(state.modifiers));
-        localStorage.setItem('cg_modules_v8', JSON.stringify(state.modules));
-        localStorage.setItem('cg_rules_v7', JSON.stringify(state.rules));
-        localStorage.setItem('cg_history_v7', JSON.stringify(state.history));
-        localStorage.setItem('cg_gen_count_v7', state.genCount.toString());
-        localStorage.setItem('cg_outfit_v2', JSON.stringify(state.outfit));
-        localStorage.setItem('cg_custom_layers', JSON.stringify(state.customLayers));
+        localStorage.setItem('cg_lists_v9', JSON.stringify(state.lists));
+        localStorage.setItem('cg_modifiers_v8', JSON.stringify(state.modifiers));
+        localStorage.setItem('cg_modules_v9', JSON.stringify(state.modules));
+        localStorage.setItem('cg_rules_v8', JSON.stringify(state.rules));
+        localStorage.setItem('cg_history_v8', JSON.stringify(state.history));
+        localStorage.setItem('cg_gen_count_v8', state.genCount.toString());
+        localStorage.setItem('cg_outfit_v3', JSON.stringify(state.outfit));
+        localStorage.setItem('cg_custom_layers_v2', JSON.stringify(state.customLayers));
+        localStorage.setItem('cg_prop_configs', JSON.stringify(state.propConfigs));
+        localStorage.setItem('cg_active_prop', state.activePropId);
+        localStorage.setItem('cg_show_mannequin', state.showMannequin ? 'true' : 'false');
     } catch (e) {
         if (e.name === 'QuotaExceededError') showToast('⚠️ Память переполнена!');
     }
@@ -1265,22 +1543,468 @@ function switchTab(name, btn) {
     if (name === 'rules') { populateRuleSelects(); renderRules(); }
     if (name === 'lists') renderLists();
     if (name === 'mod') renderModules();
+    if (name === 'prop') renderPropList();
     if (name === 'builder') {
         renderBuilder();
+        populateAnchorSelects();
         setTimeout(() => { initCanvasIfNeeded(); redrawCanvas(); }, 50);
     }
 }
 
 // ============================================================
-// МОБИЛЬНАЯ ПАНЕЛЬ
+// ПРОПОРЦИИ
 // ============================================================
-function openPanel() {
-    document.getElementById('builderPanel').classList.add('open');
-    document.getElementById('panelOverlay').classList.add('active');
+function getActivePropConfig() {
+    return state.propConfigs.find(c => c.id === state.activePropId) || state.propConfigs[0];
 }
-function closePanel() {
-    document.getElementById('builderPanel').classList.remove('open');
-    document.getElementById('panelOverlay').classList.remove('active');
+function renderPropList() {
+    const container = document.getElementById('propListContainer');
+    if (!container) return;
+    container.innerHTML = '';
+    state.propConfigs.forEach(cfg => {
+        const item = document.createElement('div');
+        item.className = 'prop-list-item' + (cfg.id === state.activePropId ? ' active' : '');
+        const f = cfg.figure || {};
+        item.innerHTML = `
+            <div class="info">
+                <h4>${cfg.name}</h4>
+                <div class="meta">Плечи ${f.shoulderWidth||50} · Грудь ${f.breastSize||30} · Талия ${f.waistWidth||40} · Бёдра ${f.hipWidth||55}</div>
+            </div>
+            <div class="actions">
+                <button class="icon-btn" onclick="setActiveProp('${cfg.id}')" title="${cfg.id === state.activePropId ? 'Активна' : 'Сделать активной'}">${cfg.id === state.activePropId ? '✓' : '○'}</button>
+                <button class="icon-btn" onclick="editProp('${cfg.id}')" title="Редактировать">✏️</button>
+                <button class="icon-btn" onclick="duplicateProp('${cfg.id}')" title="Дублировать">📋</button>
+                <button class="icon-btn" onclick="deleteProp('${cfg.id}')" title="Удалить">❌</button>
+            </div>
+        `;
+        container.appendChild(item);
+    });
+}
+function setActiveProp(id) {
+    state.activePropId = id;
+    save();
+    renderPropList();
+    updateFigureSlidersUI();
+    if (canvasInitialized) {
+        rebuildCanvasFromOutfit();
+    }
+    showToast('Активная конфигурация изменена');
+}
+function duplicateProp(id) {
+    const cfg = state.propConfigs.find(c => c.id === id);
+    if (!cfg) return;
+    const copy = JSON.parse(JSON.stringify(cfg));
+    copy.id = 'cfg_' + Date.now();
+    copy.name = cfg.name + ' (копия)';
+    state.propConfigs.push(copy);
+    save(); renderPropList();
+    showToast('Скопировано');
+}
+function deleteProp(id) {
+    if (state.propConfigs.length <= 1) { showToast('Хотя бы одна должна остаться'); return; }
+    if (!confirm('Удалить конфигурацию?')) return;
+    state.propConfigs = state.propConfigs.filter(c => c.id !== id);
+    if (state.activePropId === id) state.activePropId = state.propConfigs[0].id;
+    save(); renderPropList();
+}
+function createPropConfig() {
+    const cfg = {
+        id: 'cfg_' + Date.now(),
+        name: 'Новая конфигурация',
+        anchors: JSON.parse(JSON.stringify(DEFAULT_ANCHORS)),
+        figure: { shoulderWidth: 50, breastSize: 30, waistWidth: 40, hipWidth: 55 },
+        mannequin: null
+    };
+    state.propConfigs.push(cfg);
+    save(); renderPropList();
+    editProp(cfg.id);
+}
+
+function editProp(id) {
+    propEditingId = id;
+    const cfg = state.propConfigs.find(c => c.id === id);
+    if (!cfg) return;
+    document.getElementById('propEditor').classList.add('open');
+    document.getElementById('propEditorTitle').textContent = 'Редактор: ' + cfg.name;
+
+    // Заполняем ползунки ширины
+    document.getElementById('pwShoulder').value = cfg.figure.shoulderWidth || 50;
+    document.getElementById('pwShoulderNum').value = cfg.figure.shoulderWidth || 50;
+    document.getElementById('pwBreast').value = cfg.figure.breastSize || 30;
+    document.getElementById('pwBreastNum').value = cfg.figure.breastSize || 30;
+    document.getElementById('pwWaist').value = cfg.figure.waistWidth || 40;
+    document.getElementById('pwWaistNum').value = cfg.figure.waistWidth || 40;
+    document.getElementById('pwHip').value = cfg.figure.hipWidth || 55;
+    document.getElementById('pwHipNum').value = cfg.figure.hipWidth || 55;
+
+    document.getElementById('mannequinStatus').textContent = cfg.mannequin ? 'Загружена картинка' : 'Схема (код)';
+
+    // Рисуем список якорей
+    renderAnchorInputs();
+    drawPropCanvas();
+    setTimeout(() => attachPropCanvasEvents(), 100);
+}
+function closePropEditor() {
+    document.getElementById('propEditor').classList.remove('open');
+    propEditingId = null;
+}
+function renderAnchorInputs() {
+    const container = document.getElementById('propAnchorsList');
+    if (!container) return;
+    const cfg = state.propConfigs.find(c => c.id === propEditingId);
+    if (!cfg) return;
+    container.innerHTML = '';
+    for (const key in cfg.anchors) {
+        const a = cfg.anchors[key];
+        const row = document.createElement('div');
+        row.className = 'prop-row';
+        row.innerHTML = `
+            <label>${ANCHOR_LABELS[key] || key}</label>
+            <input type="number" value="${Math.round(a.y)}" min="0" max="100" step="0.5" onchange="updateAnchorFromInput('${key}', 'y', this.value)">
+            <input type="number" value="${Math.round(a.x)}" min="0" max="100" step="0.5" onchange="updateAnchorFromInput('${key}', 'x', this.value)">
+        `;
+        container.appendChild(row);
+    }
+}
+function updateAnchorFromInput(key, axis, value) {
+    const cfg = state.propConfigs.find(c => c.id === propEditingId);
+    if (!cfg) return;
+    cfg.anchors[key][axis] = parseFloat(value) || 0;
+    save();
+    drawPropCanvas();
+}
+function onPropSliderChange() {
+    const cfg = state.propConfigs.find(c => c.id === propEditingId);
+    if (!cfg) return;
+    cfg.figure.shoulderWidth = parseInt(document.getElementById('pwShoulder').value);
+    cfg.figure.breastSize = parseInt(document.getElementById('pwBreast').value);
+    cfg.figure.waistWidth = parseInt(document.getElementById('pwWaist').value);
+    cfg.figure.hipWidth = parseInt(document.getElementById('pwHip').value);
+    document.getElementById('pwShoulderNum').value = cfg.figure.shoulderWidth;
+    document.getElementById('pwBreastNum').value = cfg.figure.breastSize;
+    document.getElementById('pwWaistNum').value = cfg.figure.waistWidth;
+    document.getElementById('pwHipNum').value = cfg.figure.hipWidth;
+    drawPropCanvas();
+}
+
+// Canvas редактора пропорций
+let propCanvasDrag = null;
+function drawPropCanvas() {
+    const cfg = state.propConfigs.find(c => c.id === propEditingId);
+    if (!cfg) return;
+    const canvas = document.getElementById('propCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    // Манекен (картинка или схема)
+    if (cfg.mannequin) {
+        const img = new Image();
+        img.onload = () => {
+            const scale = Math.min(W / img.width, H / img.height);
+            const w = img.width * scale, h = img.height * scale;
+            ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
+            drawPropAnchors(ctx, W, H, cfg);
+        };
+        img.src = cfg.mannequin;
+    } else {
+        drawMannequinOnCtx(ctx, W, H, cfg.anchors, cfg.figure);
+        drawPropAnchors(ctx, W, H, cfg);
+    }
+}
+function drawPropAnchors(ctx, W, H, cfg) {
+    for (const key in cfg.anchors) {
+        const a = cfg.anchors[key];
+        const x = (a.x / 100) * W;
+        const y = (a.y / 100) * H;
+        ctx.save();
+        ctx.fillStyle = '#17a2b8';
+        ctx.beginPath();
+        ctx.arc(x, y, 18, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 22px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(ANCHOR_LABELS[key] || key, x + 26, y);
+        ctx.restore();
+    }
+}
+function attachPropCanvasEvents() {
+    const canvas = document.getElementById('propCanvas');
+    if (!canvas || canvas._attached) return;
+    canvas._attached = true;
+
+    const getPos = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const p = e.touches ? e.touches[0] : e;
+        return {
+            x: ((p.clientX - rect.left) / rect.width) * canvas.width,
+            y: ((p.clientY - rect.top) / rect.height) * canvas.height
+        };
+    };
+    const onDown = (e) => {
+        e.preventDefault();
+        const cfg = state.propConfigs.find(c => c.id === propEditingId);
+        if (!cfg) return;
+        const pos = getPos(e);
+        const W = canvas.width, H = canvas.height;
+        for (const key in cfg.anchors) {
+            const a = cfg.anchors[key];
+            const x = (a.x / 100) * W;
+            const y = (a.y / 100) * H;
+            if (Math.hypot(pos.x - x, pos.y - y) < 40) {
+                propCanvasDrag = key;
+                return;
+            }
+        }
+    };
+    const onMove = (e) => {
+        if (!propCanvasDrag) return;
+        e.preventDefault();
+        const cfg = state.propConfigs.find(c => c.id === propEditingId);
+        if (!cfg) return;
+        const pos = getPos(e);
+        const W = canvas.width, H = canvas.height;
+        cfg.anchors[propCanvasDrag].x = Math.max(0, Math.min(100, (pos.x / W) * 100));
+        cfg.anchors[propCanvasDrag].y = Math.max(0, Math.min(100, (pos.y / H) * 100));
+        drawPropCanvas();
+        renderAnchorInputs();
+    };
+    const onUp = () => {
+        if (propCanvasDrag) {
+            propCanvasDrag = null;
+            save();
+        }
+    };
+    canvas.addEventListener('mousedown', onDown);
+    canvas.addEventListener('touchstart', onDown, { passive: false });
+    canvas.addEventListener('mousemove', onMove);
+    canvas.addEventListener('touchmove', onMove, { passive: false });
+    canvas.addEventListener('mouseup', onUp);
+    canvas.addEventListener('touchend', onUp);
+}
+function savePropConfig() {
+    if (!propEditingId) return;
+    const cfg = state.propConfigs.find(c => c.id === propEditingId);
+    if (!cfg) return;
+    // Имя
+    const newName = prompt('Название конфигурации:', cfg.name);
+    if (newName) cfg.name = newName;
+    save();
+    renderPropList();
+    showToast('Сохранено');
+}
+function loadMannequinFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            const dataUrl = await compressImage(file);
+            const cfg = state.propConfigs.find(c => c.id === propEditingId);
+            if (cfg) {
+                cfg.mannequin = dataUrl;
+                save();
+                document.getElementById('mannequinStatus').textContent = 'Загружена картинка';
+                drawPropCanvas();
+                showToast('Манекен загружен');
+            }
+        } catch (err) {
+            alert('Ошибка: ' + err.message);
+        }
+        event.target.value = '';
+    };
+    reader.readAsDataURL(file);
+}
+function resetMannequin() {
+    const cfg = state.propConfigs.find(c => c.id === propEditingId);
+    if (!cfg) return;
+    cfg.mannequin = null;
+    save();
+    document.getElementById('mannequinStatus').textContent = 'Схема (код)';
+    drawPropCanvas();
+}
+
+// ============================================================
+// РИСОВАНИЕ МАНЕКЕНА (схема кодом)
+// ============================================================
+function drawMannequinOnCtx(ctx, W, H, anchors, figure) {
+    const cx = W / 2;
+    const getY = (key) => (anchors[key].y / 100) * H;
+    const getX = (key) => (anchors[key].x / 100) * W;
+
+    // Ширина тела в % от W
+    const shoulderW = ((figure.shoulderWidth || 50) / 100) * (W * 0.35);
+    const breastW = ((figure.breastSize || 30) / 100) * (W * 0.28);
+    const waistW = ((figure.waistWidth || 40) / 100) * (W * 0.20);
+    const hipW = ((figure.hipWidth || 55) / 100) * (W * 0.35);
+
+    // Голова
+    const headTopY = getY('headTop');
+    const headCenterY = getY('headCenter');
+    const headBottomY = getY('neck');
+    const headH = headBottomY - headTopY;
+    const headW = headH * 0.85;
+    ctx.strokeStyle = '#3498db';
+    ctx.lineWidth = 3;
+    ctx.fillStyle = 'rgba(52,152,219,0.15)';
+    ctx.beginPath();
+    ctx.ellipse(cx, (headTopY + headBottomY) / 2, headW / 2, headH / 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Глаза
+    const eyeY = getY('eyes');
+    ctx.fillStyle = '#3498db';
+    ctx.beginPath();
+    ctx.arc(cx - headW * 0.15, eyeY, 4, 0, Math.PI * 2);
+    ctx.arc(cx + headW * 0.15, eyeY, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Шея
+    const neckY = getY('neck');
+    ctx.beginPath();
+    ctx.moveTo(cx - 15, neckY);
+    ctx.lineTo(cx + 15, neckY);
+    ctx.stroke();
+
+    // Торс (плечи → талия)
+    const shoulderY = getY('shoulders');
+    const chestY = getY('chest');
+    const waistY = getY('waist');
+    const hipY = getY('hips');
+    const hipBottomY = getY('knees') * 0.7 + hipY * 0.3;
+
+    ctx.beginPath();
+    // Левая сторона
+    ctx.moveTo(cx - shoulderW / 2, shoulderY);
+    ctx.bezierCurveTo(cx - shoulderW / 2, chestY,
+                      cx - breastW / 2 - 10, chestY,
+                      cx - waistW / 2, waistY);
+    ctx.bezierCurveTo(cx - waistW / 2, waistY + 10,
+                      cx - hipW / 2, hipY - 20,
+                      cx - hipW / 2, hipY);
+    // Правая сторона (зеркально)
+    ctx.moveTo(cx + shoulderW / 2, shoulderY);
+    ctx.bezierCurveTo(cx + shoulderW / 2, chestY,
+                      cx + breastW / 2 + 10, chestY,
+                      cx + waistW / 2, waistY);
+    ctx.bezierCurveTo(cx + waistW / 2, waistY + 10,
+                      cx + hipW / 2, hipY - 20,
+                      cx + hipW / 2, hipY);
+    ctx.stroke();
+    // Контур (замкнутый)
+    ctx.beginPath();
+    ctx.moveTo(cx - shoulderW / 2, shoulderY);
+    ctx.lineTo(cx + shoulderW / 2, shoulderY);
+    ctx.stroke();
+
+    // Промежность
+    ctx.beginPath();
+    ctx.moveTo(cx - hipW / 2, hipY);
+    ctx.bezierCurveTo(cx - hipW / 4, hipY + 10, cx - 5, hipY + 20, cx, hipY + 30);
+    ctx.bezierCurveTo(cx + 5, hipY + 20, cx + hipW / 4, hipY + 10, cx + hipW / 2, hipY);
+    ctx.stroke();
+
+    // Ноги
+    const kneeY = getY('knees');
+    const ankleY = getY('ankles');
+    const feetY = getY('feetBottom');
+    // Левая
+    ctx.beginPath();
+    ctx.moveTo(cx - hipW / 4, hipY + 15);
+    ctx.bezierCurveTo(cx - hipW / 4, hipY + 30,
+                      cx - hipW / 6, kneeY - 30,
+                      cx - hipW / 6, kneeY);
+    ctx.bezierCurveTo(cx - hipW / 6, kneeY + 30,
+                      cx - hipW / 8, ankleY - 30,
+                      cx - hipW / 8, ankleY);
+    ctx.lineTo(cx - hipW / 8 - 20, feetY);
+    ctx.stroke();
+    // Правая
+    ctx.beginPath();
+    ctx.moveTo(cx + hipW / 4, hipY + 15);
+    ctx.bezierCurveTo(cx + hipW / 4, hipY + 30,
+                      cx + hipW / 6, kneeY - 30,
+                      cx + hipW / 6, kneeY);
+    ctx.bezierCurveTo(cx + hipW / 6, kneeY + 30,
+                      cx + hipW / 8, ankleY - 30,
+                      cx + hipW / 8, ankleY);
+    ctx.lineTo(cx + hipW / 8 + 20, feetY);
+    ctx.stroke();
+
+    // Руки
+    ctx.beginPath();
+    ctx.moveTo(cx - shoulderW / 2, shoulderY + 10);
+    ctx.bezierCurveTo(cx - shoulderW / 2 - 20, chestY + 20,
+                      cx - shoulderW / 2 - 25, waistY,
+                      cx - shoulderW / 2 - 20, hipY);
+    ctx.bezierCurveTo(cx - shoulderW / 2 - 18, hipY + 20,
+                      cx - shoulderW / 2 - 10, hipY + 40,
+                      cx - shoulderW / 2 - 5, hipY + 50);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx + shoulderW / 2, shoulderY + 10);
+    ctx.bezierCurveTo(cx + shoulderW / 2 + 20, chestY + 20,
+                      cx + shoulderW / 2 + 25, waistY,
+                      cx + shoulderW / 2 + 20, hipY);
+    ctx.bezierCurveTo(cx + shoulderW / 2 + 18, hipY + 20,
+                      cx + shoulderW / 2 + 10, hipY + 40,
+                      cx + shoulderW / 2 + 5, hipY + 50);
+    ctx.stroke();
+}
+
+// ============================================================
+// ФИГУРА В КОНСТРУКТОРЕ
+// ============================================================
+function toggleFigureSliders() {
+    document.getElementById('figureSliders').classList.toggle('open');
+}
+function updateFigure(key, value) {
+    const cfg = getActivePropConfig();
+    if (!cfg) return;
+    cfg.figure[key] = parseInt(value);
+    save();
+    // Обновить цифры
+    if (key === 'shoulderWidth') document.getElementById('fsShoulderVal').textContent = value;
+    if (key === 'breastSize') document.getElementById('fsBreastVal').textContent = value;
+    if (key === 'waistWidth') document.getElementById('fsWaistVal').textContent = value;
+    if (key === 'hipWidth') document.getElementById('fsHipVal').textContent = value;
+    redrawCanvas();
+}
+function updateFigureSlidersUI() {
+    const cfg = getActivePropConfig();
+    if (!cfg || !cfg.figure) return;
+    const f = cfg.figure;
+    const map = [
+        { key: 'shoulderWidth', id: 'fsShoulderVal' },
+        { key: 'breastSize', id: 'fsBreastVal' },
+        { key: 'waistWidth', id: 'fsWaistVal' },
+        { key: 'hipWidth', id: 'fsHipVal' }
+    ];
+    map.forEach(m => {
+        const el = document.getElementById(m.id);
+        if (el) el.textContent = f[m.key] || 0;
+        const slider = el?.parentElement?.parentElement?.querySelector('input[type="range"]');
+        if (slider) slider.value = f[m.key] || 0;
+    });
+}
+function toggleMannequin() {
+    state.showMannequin = !state.showMannequin;
+    save();
+    updateMannequinBtn();
+    redrawCanvas();
+}
+function updateMannequinBtn() {
+    const btn = document.getElementById('mannequinBtn');
+    if (!btn) return;
+    btn.textContent = state.showMannequin ? '👻 Манекен: ВКЛ' : '👻 Манекен';
+    btn.classList.toggle('active', state.showMannequin);
 }
 
 // ============================================================
@@ -1337,16 +2061,16 @@ function renderBuilder() {
         const customGroup = document.createElement('div');
         customGroup.className = 'cat-group open';
         customGroup.style.borderLeftColor = 'var(--accent)';
-        customGroup.innerHTML = `<div class="cat-header"><span>📤 Свои слои (${state.customLayers.length})</span><span>▼</span></div>`;
+        customGroup.innerHTML = `<div class="cat-header"><span>📤 Свои (${state.customLayers.length})</span><span>▼</span></div>`;
         const customBody = document.createElement('div');
         customBody.className = 'cat-body';
         state.customLayers.forEach((l, idx) => {
             const row = document.createElement('div');
             row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid #1a1a2e;';
             row.innerHTML = `
-                <img src="${l.image}" style="width:36px;height:36px;object-fit:contain;background:rgba(0,0,0,0.2);border-radius:4px;">
-                <span style="flex-grow:1;font-size:0.78rem;color:#ccc;">${l.name}</span>
-                <button class="icon-btn" onclick="editCustomLayerPos(${idx})" title="Позиция">📐</button>
+                <img src="${l.image}" style="width:34px;height:34px;object-fit:contain;background:rgba(0,0,0,0.2);border-radius:4px;">
+                <span style="flex-grow:1;font-size:0.76rem;color:#ccc;">${l.name}</span>
+                <button class="icon-btn" onclick="editCustomLayerPos(${idx})">📐</button>
                 <button class="icon-btn" onclick="removeCustomLayer(${idx})">❌</button>
             `;
             customBody.appendChild(row);
@@ -1384,7 +2108,6 @@ function createBuilderSlot(path, name, items, mod) {
     const body = document.createElement('div');
     body.className = 'slot-body';
 
-    // Кнопки
     const btnRow = document.createElement('div');
     btnRow.className = 'tile-remove-row';
     const removeBtn = document.createElement('button');
@@ -1393,17 +2116,15 @@ function createBuilderSlot(path, name, items, mod) {
     removeBtn.onclick = (e) => { e.stopPropagation(); removeFromOutfit(path); };
     btnRow.appendChild(removeBtn);
 
-    // Позиция по умолчанию (если есть mod)
     if (mod) {
         const posBtn = document.createElement('button');
         posBtn.className = 'tile-pos-default-btn';
-        posBtn.textContent = '📐 Позиция слота';
+        posBtn.textContent = '📐 Слот';
         posBtn.onclick = (e) => { e.stopPropagation(); openPosModal('module', path); };
         btnRow.appendChild(posBtn);
     }
     body.appendChild(btnRow);
 
-    // Сетка плиток
     const grid = document.createElement('div');
     grid.className = 'tiles-grid';
 
@@ -1430,12 +2151,10 @@ function createBuilderSlot(path, name, items, mod) {
         txt.textContent = item.text;
         tile.appendChild(txt);
 
-        // Кнопка позиции для конкретного значения
         if (item.image) {
             const posBtn = document.createElement('button');
             posBtn.className = 'tile-pos-btn';
             posBtn.textContent = '📐';
-            posBtn.title = 'Позиция этого значения';
             posBtn.onclick = (e) => { e.stopPropagation(); openPosModal('item', path, item); };
             tile.appendChild(posBtn);
         }
@@ -1447,12 +2166,11 @@ function createBuilderSlot(path, name, items, mod) {
     body.appendChild(grid);
     slot.appendChild(body);
     slot.querySelector('.slot-header').onclick = () => slot.classList.toggle('open');
-
     return slot;
 }
 
 // ============================================================
-// ВЫБОР И ОБНОВЛЕНИЕ ХОЛСТА
+// ВЫБОР
 // ============================================================
 async function selectForOutfit(path, item) {
     if (state.outfit[path] && state.outfit[path].text === item.text) {
@@ -1464,14 +2182,12 @@ async function selectForOutfit(path, item) {
     renderBuilder();
     await rebuildCanvasFromOutfit();
 }
-
 async function removeFromOutfit(path) {
     delete state.outfit[path];
     save();
     renderBuilder();
     await rebuildCanvasFromOutfit();
 }
-
 async function randomizeAll() {
     if (state.lists.races.enabled) {
         const active = state.lists.races.items.filter(i => i.enabled);
@@ -1496,16 +2212,11 @@ async function randomizeAll() {
             if (all.length) state.outfit[path] = all[Math.floor(Math.random() * all.length)];
         }
     }
-    if (state.modifiers && state.modifiers.enabled) {
-        const active = state.modifiers.items.filter(i => i.enabled);
-        if (active.length) state.outfit['modifiers'] = active[Math.floor(Math.random() * active.length)];
-    }
     save();
     renderBuilder();
     await rebuildCanvasFromOutfit();
-    showToast('🎲 Рандомизация');
+    showToast('🎲');
 }
-
 function clearCanvas() {
     if (!confirm('Очистить холст?')) return;
     state.outfit = {};
@@ -1515,10 +2226,6 @@ function clearCanvas() {
     rebuildCanvasFromOutfit();
     pushHistory();
 }
-
-// ============================================================
-// СВОИ СЛОИ
-// ============================================================
 function addCustomLayer() {
     document.getElementById('customLayerInput').click();
 }
@@ -1537,15 +2244,12 @@ document.getElementById('customLayerInput').addEventListener('change', async (e)
         renderBuilder();
         await rebuildCanvasFromOutfit();
         showToast('Свой слой добавлен');
-    } catch (err) {
-        alert('Ошибка: ' + err.message);
-    }
+    } catch (err) { alert('Ошибка: ' + err.message); }
     e.target.value = '';
 });
 function removeCustomLayer(idx) {
     state.customLayers.splice(idx, 1);
-    save();
-    renderBuilder();
+    save(); renderBuilder();
     rebuildCanvasFromOutfit();
 }
 function editCustomLayerPos(idx) {
@@ -1562,9 +2266,7 @@ let canvasState = {
     history: [],
     historyIndex: -1,
     positionMode: false,
-    selectedLayerIdx: -1,
-    dragging: false,
-    dragStart: null
+    selectedLayerIdx: -1
 };
 let mainCanvas = null;
 let ctx = null;
@@ -1573,29 +2275,24 @@ let canvasInitialized = false;
 const LAYER_ORDER = {
     'list.races': 1, 'list.styles': 2,
     'race.trait1': 3, 'race.trait2': 4, 'race.trait3': 5,
-    'race.trait4': 6, 'race.trait5': 7, 'race.trait6': 8, 'race.trait7': 9,
     'appearance.bangs': 10, 'appearance.sidelocks': 11,
-    'appearance.backHair': 12, 'appearance.addHair': 13,
-    'appearance.eyeShape': 14, 'appearance.skinColor': 15,
-    'clothes.bottomwear': 20, 'clothes.legwear': 21,
-    'clothes.topwear1': 22, 'clothes.handwear': 23,
-    'clothes.neckwear': 24, 'clothes.headwear': 25,
-    'clothes.acc1': 30, 'clothes.acc2': 31, 'clothes.acc3': 32,
-    'clothes.acc4': 33, 'clothes.acc5': 34,
-    'modifiers': 40,
-    'custom': 50
+    'appearance.backHair': 12, 'appearance.eyeShape': 14,
+    'clothes.bottomwear': 20, 'clothes.footwear': 22,
+    'clothes.topwear1': 22, 'clothes.neckwear': 24, 'clothes.headwear': 25,
+    'modifiers': 40, 'custom': 50
 };
 
-function getEffectivePosition(path, item) {
-    // Приоритет: item.position > mod.position > default {x:0, y:0, scale:100, rot:0}
+function getEffectivePosition(path, item, mod) {
     if (item && item.position) return item.position;
-    if (path === 'modifiers') return { x: 0, y: 0, scale: 100, rotation: 0 };
-    if (path.startsWith('list.')) return { x: 0, y: 0, scale: 100, rotation: 0 };
-    const [g, m] = path.split('.');
-    if (state.modules[g] && state.modules[g].modules[m] && state.modules[g].modules[m].position) {
-        return state.modules[g].modules[m].position;
-    }
+    if (mod && mod.position) return mod.position;
     return { x: 0, y: 0, scale: 100, rotation: 0 };
+}
+function getAnchorOffset(path, mod) {
+    // Если у mod есть anchor — берём координаты якоря активной конфигурации
+    if (!mod || !mod.anchor) return null;
+    const cfg = getActivePropConfig();
+    if (!cfg || !cfg.anchors[mod.anchor]) return null;
+    return cfg.anchors[mod.anchor];
 }
 
 function loadImage(src) {
@@ -1615,37 +2312,34 @@ async function rebuildCanvasFromOutfit() {
         if (!item || !item.image) continue;
         try {
             const img = await loadImage(item.image);
-            const pos = getEffectivePosition(path, item);
+            let mod = null;
+            if (!path.startsWith('list.') && path !== 'modifiers') {
+                const [g, m] = path.split('.');
+                if (state.modules[g] && state.modules[g].modules[m]) mod = state.modules[g].modules[m];
+            }
+            const anchor = mod && mod.anchor ? mod.anchor : null;
             newLayers.push({
-                path: path,
-                name: getPathName(path),
-                item: item.text,
+                path, name: getPathName(path), item: item.text,
                 image: img,
-                position: { ...pos },
-                visible: true,
-                opacity: 1,
-                flipH: false,
-                flipV: false,
+                position: { ...getEffectivePosition(path, item, mod) },
+                anchor: anchor,
+                visible: true, opacity: 1,
+                flipH: false, flipV: false,
                 eraseStrokes: []
             });
         } catch (e) {}
     }
-    // Свои слои
     for (const cl of state.customLayers) {
         try {
             const img = await loadImage(cl.image);
             newLayers.push({
-                path: 'custom',
-                name: '📤 ' + cl.name,
-                item: cl.name,
+                path: 'custom', name: '📤 ' + cl.name, item: cl.name,
                 image: img,
                 position: { ...cl.position },
-                visible: true,
-                opacity: 1,
-                flipH: false,
-                flipV: false,
-                eraseStrokes: [],
-                customId: cl.id
+                anchor: null,
+                visible: true, opacity: 1,
+                flipH: false, flipV: false,
+                eraseStrokes: [], customId: cl.id
             });
         } catch (e) {}
     }
@@ -1658,6 +2352,15 @@ async function rebuildCanvasFromOutfit() {
 function redrawCanvas() {
     if (!ctx) return;
     ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+    // Манекен-подложка
+    if (state.showMannequin) {
+        const cfg = getActivePropConfig();
+        if (cfg) {
+            drawMannequinOnCtx(ctx, CANVAS_SIZE, CANVAS_SIZE, cfg.anchors, cfg.figure);
+        }
+    }
+
     canvasState.layers.forEach((layer, idx) => {
         if (!layer.visible) return;
         drawLayer(layer, idx === canvasState.selectedLayerIdx);
@@ -1667,33 +2370,42 @@ function redrawCanvas() {
 function drawLayer(layer, isSelected) {
     const img = layer.image;
     if (!img) return;
+
+    // Позиция: учитываем якорь
+    let baseX = 50, baseY = 50;
+    if (layer.anchor) {
+        const cfg = getActivePropConfig();
+        if (cfg && cfg.anchors[layer.anchor]) {
+            baseX = cfg.anchors[layer.anchor].x;
+            baseY = cfg.anchors[layer.anchor].y;
+        }
+    }
+
     const pos = layer.position || { x: 0, y: 0, scale: 100, rotation: 0 };
     const baseScale = Math.min(CANVAS_SIZE / img.width, CANVAS_SIZE / img.height);
     const scale = baseScale * (pos.scale / 100);
     const w = img.width * scale;
     const h = img.height * scale;
 
-    // Центр холста + смещение в %
     const offsetX = (pos.x / 100) * CANVAS_SIZE;
     const offsetY = (pos.y / 100) * CANVAS_SIZE;
-    const cx = CANVAS_SIZE / 2 + offsetX;
-    const cy = CANVAS_SIZE / 2 + offsetY;
+    const cx = (baseX / 100) * CANVAS_SIZE + offsetX;
+    const cy = (baseY / 100) * CANVAS_SIZE + offsetY;
 
     ctx.save();
     ctx.globalAlpha = layer.opacity;
     ctx.translate(cx, cy);
     if (pos.rotation) ctx.rotate(pos.rotation * Math.PI / 180);
-    let drawW = w, drawH = h;
-    if (layer.flipH) drawW = -w;
-    if (layer.flipV) drawH = -h;
-    ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
+    let dw = w, dh = h;
+    if (layer.flipH) dw = -w;
+    if (layer.flipV) dh = -h;
+    ctx.drawImage(img, -dw / 2, -dh / 2, dw, dh);
 
-    // Рамка выделения
     if (isSelected && canvasState.positionMode) {
         ctx.strokeStyle = '#f39c12';
         ctx.lineWidth = 8;
         ctx.setLineDash([30, 20]);
-        ctx.strokeRect(-Math.abs(drawW) / 2, -Math.abs(drawH) / 2, Math.abs(drawW), Math.abs(drawH));
+        ctx.strokeRect(-Math.abs(dw) / 2, -Math.abs(dh) / 2, Math.abs(dw), Math.abs(dh));
         ctx.setLineDash([]);
     }
 
@@ -1736,7 +2448,7 @@ function getItemsByPath(path) {
 }
 
 // ============================================================
-// РЕЖИМ ПОЗИЦИИ (перетаскивание)
+// РЕЖИМ ПОЗИЦИИ
 // ============================================================
 function togglePositionMode() {
     canvasState.positionMode = !canvasState.positionMode;
@@ -1746,9 +2458,7 @@ function togglePositionMode() {
     frame.classList.toggle('position-mode', canvasState.positionMode);
     canvasState.selectedLayerIdx = -1;
     redrawCanvas();
-    if (canvasState.positionMode) {
-        showToast('📐 Тяни слой. Кликни — выбрать.');
-    }
+    if (canvasState.positionMode) showToast('📐 Тяни слой');
 }
 
 function attachCanvasEvents() {
@@ -1758,27 +2468,33 @@ function attachCanvasEvents() {
 
     const getMousePos = (e) => {
         const rect = mainCanvas.getBoundingClientRect();
-        const x = (e.clientX ?? e.touches?.[0]?.clientX) - rect.left;
-        const y = (e.clientY ?? e.touches?.[0]?.clientY) - rect.top;
+        const p = e.touches ? e.touches[0] : e;
         return {
-            x: (x / rect.width) * CANVAS_SIZE,
-            y: (y / rect.height) * CANVAS_SIZE
+            x: ((p.clientX - rect.left) / rect.width) * CANVAS_SIZE,
+            y: ((p.clientY - rect.top) / rect.height) * CANVAS_SIZE
         };
     };
 
     const findLayerAt = (pos) => {
-        // Ищем сверху вниз
         for (let i = canvasState.layers.length - 1; i >= 0; i--) {
             const layer = canvasState.layers[i];
             if (!layer.visible) continue;
+            let baseX = 50, baseY = 50;
+            if (layer.anchor) {
+                const cfg = getActivePropConfig();
+                if (cfg && cfg.anchors[layer.anchor]) {
+                    baseX = cfg.anchors[layer.anchor].x;
+                    baseY = cfg.anchors[layer.anchor].y;
+                }
+            }
             const p = layer.position || { x: 0, y: 0, scale: 100, rotation: 0 };
             const img = layer.image;
             const baseScale = Math.min(CANVAS_SIZE / img.width, CANVAS_SIZE / img.height);
             const scale = baseScale * (p.scale / 100);
             const w = img.width * scale;
             const h = img.height * scale;
-            const cx = CANVAS_SIZE / 2 + (p.x / 100) * CANVAS_SIZE;
-            const cy = CANVAS_SIZE / 2 + (p.y / 100) * CANVAS_SIZE;
+            const cx = (baseX / 100) * CANVAS_SIZE + (p.x / 100) * CANVAS_SIZE;
+            const cy = (baseY / 100) * CANVAS_SIZE + (p.y / 100) * CANVAS_SIZE;
             if (pos.x >= cx - w / 2 && pos.x <= cx + w / 2 &&
                 pos.y >= cy - h / 2 && pos.y <= cy + h / 2) {
                 return i;
@@ -1787,15 +2503,10 @@ function attachCanvasEvents() {
         return -1;
     };
 
-    mainCanvas.addEventListener('mousedown', onDown);
-    mainCanvas.addEventListener('touchstart', onDown, { passive: false });
-
-    function onDown(e) {
+    const onDown = (e) => {
         e.preventDefault();
         const pos = getMousePos(e);
-
         if (canvasState.positionMode) {
-            // Режим позиции: выбираем слой
             const idx = findLayerAt(pos);
             if (idx >= 0) {
                 canvasState.selectedLayerIdx = idx;
@@ -1814,17 +2525,13 @@ function attachCanvasEvents() {
             eraseAt(pos, idx);
             dragging = 'erase';
         }
-    }
+    };
 
-    mainCanvas.addEventListener('mousemove', onMove);
-    mainCanvas.addEventListener('touchmove', onMove, { passive: false });
-
-    function onMove(e) {
+    const onMove = (e) => {
         if (!dragging) return;
         e.preventDefault();
         const pos = getMousePos(e);
-
-        if (dragging === true && canvasState.positionMode && canvasState.selectedLayerIdx >= 0) {
+        if (dragging === true && canvasState.selectedLayerIdx >= 0) {
             const dx = pos.x - dragStartPos.x;
             const dy = pos.y - dragStartPos.y;
             const layer = canvasState.layers[canvasState.selectedLayerIdx];
@@ -1837,32 +2544,31 @@ function attachCanvasEvents() {
         } else if (dragging === 'erase') {
             eraseAt(pos, canvasState.selectedLayerIdx);
         }
-    }
+    };
 
-    mainCanvas.addEventListener('mouseup', onUp);
-    mainCanvas.addEventListener('touchend', onUp);
-    mainCanvas.addEventListener('touchcancel', onUp);
-
-    function onUp() {
-        if (dragging === true) {
-            // Сохраняем позицию в outfit для этого слоя
-            saveCurrentLayerPosition();
-        }
+    const onUp = () => {
+        if (dragging === true) saveCurrentLayerPosition();
         if (dragging) {
             dragging = false;
             dragStartPos = null;
             dragStartLayerPos = null;
             pushHistory();
         }
-    }
+    };
+
+    mainCanvas.addEventListener('mousedown', onDown);
+    mainCanvas.addEventListener('touchstart', onDown, { passive: false });
+    mainCanvas.addEventListener('mousemove', onMove);
+    mainCanvas.addEventListener('touchmove', onMove, { passive: false });
+    mainCanvas.addEventListener('mouseup', onUp);
+    mainCanvas.addEventListener('touchend', onUp);
+    mainCanvas.addEventListener('touchcancel', onUp);
 }
 
 function eraseAt(pos, layerIdx) {
     if (layerIdx < 0 || !canvasState.layers[layerIdx]) return;
     const size = parseInt(document.getElementById('eraserSize').value);
-    canvasState.layers[layerIdx].eraseStrokes.push({
-        x: pos.x, y: pos.y, r: size / 2
-    });
+    canvasState.layers[layerIdx].eraseStrokes.push({ x: pos.x, y: pos.y, r: size / 2 });
     redrawCanvas();
 }
 
@@ -1873,7 +2579,6 @@ async function saveCurrentLayerPosition() {
         const cl = state.customLayers.find(c => c.id === layer.customId);
         if (cl) cl.position = { ...layer.position };
     } else {
-        // Сохраняем в item (для конкретного значения)
         const item = state.outfit[layer.path];
         if (item) item.position = { ...layer.position };
     }
@@ -1888,22 +2593,25 @@ function openPosModal(type, path, item, customIdx) {
     let position = { x: 0, y: 0, scale: 100, rotation: 0 };
     let imgSrc = '';
     let title = '';
+    let anchor = '';
 
     if (type === 'module') {
         const [g, m] = path.split('.');
-        position = state.modules[g].modules[m].position || { x: 0, y: 0, scale: 100, rotation: 0 };
-        title = `📐 Позиция слота: ${state.modules[g].modules[m].name}`;
+        const mod = state.modules[g].modules[m];
+        position = mod.position || { x: 0, y: 0, scale: 100, rotation: 0 };
+        anchor = mod.anchor || '';
+        title = `📐 ${mod.name}`;
         const items = getItemsByPath(path);
         const firstImg = items.find(i => i.image);
         if (firstImg) imgSrc = firstImg.image;
     } else if (type === 'item') {
-        position = item.position || getEffectivePosition(path, item);
-        title = `📐 Позиция: ${item.text}`;
+        position = item.position || getEffectivePosition(path, item, null);
+        title = `📐 ${item.text}`;
         imgSrc = item.image;
     } else if (type === 'custom') {
         const cl = state.customLayers[customIdx];
         position = cl.position;
-        title = `📐 Свой слой: ${cl.name}`;
+        title = `📐 ${cl.name}`;
         imgSrc = cl.image;
     }
 
@@ -1917,55 +2625,16 @@ function openPosModal(type, path, item, customIdx) {
     document.getElementById('posRot').value = Math.round(position.rotation || 0);
     document.getElementById('posRotRange').value = Math.round(position.rotation || 0);
 
+    const sel = document.getElementById('posAnchor');
+    sel.value = anchor;
+
     const img = document.getElementById('posPreviewImg');
     img.src = imgSrc || '';
     img.style.display = imgSrc ? 'block' : 'none';
 
-    // Перетаскивание в превью
-    const preview = document.getElementById('posPreview');
-    preview.classList.add('draggable');
-
-    let previewDragging = false;
-    let startX = 0, startY = 0, startPosX = 0, startPosY = 0;
-
-    const onPreviewDown = (e) => {
-        e.preventDefault();
-        previewDragging = true;
-        const rect = preview.getBoundingClientRect();
-        const p = e.touches ? e.touches[0] : e;
-        startX = p.clientX;
-        startY = p.clientY;
-        startPosX = parseFloat(document.getElementById('posX').value);
-        startPosY = parseFloat(document.getElementById('posY').value);
-    };
-    const onPreviewMove = (e) => {
-        if (!previewDragging) return;
-        e.preventDefault();
-        const p = e.touches ? e.touches[0] : e;
-        const rect = preview.getBoundingClientRect();
-        const dx = (p.clientX - startX) / rect.width * 100;
-        const dy = (p.clientY - startY) / rect.height * 100;
-        const newX = startPosX + dx;
-        const newY = startPosY + dy;
-        document.getElementById('posX').value = Math.round(newX);
-        document.getElementById('posXRange').value = Math.round(newX);
-        document.getElementById('posY').value = Math.round(newY);
-        document.getElementById('posYRange').value = Math.round(newY);
-        updatePosPreview();
-    };
-    const onPreviewUp = () => { previewDragging = false; };
-
-    preview.onmousedown = onPreviewDown;
-    preview.ontouchstart = onPreviewDown;
-    document.addEventListener('mousemove', onPreviewMove);
-    document.addEventListener('touchmove', onPreviewMove, { passive: false });
-    document.addEventListener('mouseup', onPreviewUp);
-    document.addEventListener('touchend', onPreviewUp);
-
     updatePosPreview();
     document.getElementById('posModal').classList.add('active');
 }
-
 function updatePosPreview() {
     const img = document.getElementById('posPreviewImg');
     const x = parseFloat(document.getElementById('posX').value) || 0;
@@ -1974,7 +2643,6 @@ function updatePosPreview() {
     const r = parseFloat(document.getElementById('posRot').value) || 0;
     img.style.transform = `translate(${x}%, ${y}%) scale(${s / 100}) rotate(${r}deg)`;
 }
-
 function resetPosition() {
     document.getElementById('posX').value = 0;
     document.getElementById('posXRange').value = 0;
@@ -1986,12 +2654,10 @@ function resetPosition() {
     document.getElementById('posRotRange').value = 0;
     updatePosPreview();
 }
-
 function closePosModal() {
     document.getElementById('posModal').classList.remove('active');
     posContext = null;
 }
-
 async function savePosition() {
     if (!posContext) return;
     const position = {
@@ -2000,10 +2666,12 @@ async function savePosition() {
         scale: parseFloat(document.getElementById('posScale').value) || 100,
         rotation: parseFloat(document.getElementById('posRot').value) || 0
     };
+    const anchorVal = document.getElementById('posAnchor').value || null;
 
     if (posContext.type === 'module') {
         const [g, m] = posContext.path.split('.');
         state.modules[g].modules[m].position = position;
+        state.modules[g].modules[m].anchor = anchorVal;
     } else if (posContext.type === 'item') {
         posContext.item.position = position;
     } else if (posContext.type === 'custom') {
@@ -2012,11 +2680,11 @@ async function savePosition() {
     save();
     closePosModal();
     await rebuildCanvasFromOutfit();
-    showToast('Позиция сохранена');
+    showToast('Сохранено');
 }
 
 // ============================================================
-// ЛАСТИК
+// ЛАСТИК / ИСТОРИЯ / ЭКСПОРТ
 // ============================================================
 function toggleEraser() {
     canvasState.eraser = !canvasState.eraser;
@@ -2026,15 +2694,11 @@ function toggleEraser() {
     document.getElementById('eraserSizeLabel').style.display = canvasState.eraser ? 'inline-flex' : 'none';
     if (canvasState.eraser && canvasState.positionMode) togglePositionMode();
 }
-
-// ============================================================
-// ИСТОРИЯ (undo/redo)
-// ============================================================
 function pushHistory() {
     canvasState.history = canvasState.history.slice(0, canvasState.historyIndex + 1);
     const snapshot = canvasState.layers.map(l => ({
         path: l.path, item: l.item, image: l.image.src,
-        position: { ...l.position },
+        position: { ...l.position }, anchor: l.anchor,
         visible: l.visible, opacity: l.opacity,
         flipH: l.flipH, flipV: l.flipV,
         eraseStrokes: JSON.parse(JSON.stringify(l.eraseStrokes)),
@@ -2042,10 +2706,7 @@ function pushHistory() {
     }));
     canvasState.history.push(snapshot);
     canvasState.historyIndex = canvasState.history.length - 1;
-    if (canvasState.history.length > 30) {
-        canvasState.history.shift();
-        canvasState.historyIndex--;
-    }
+    if (canvasState.history.length > 30) { canvasState.history.shift(); canvasState.historyIndex--; }
     updateUndoRedoButtons();
 }
 function updateUndoRedoButtons() {
@@ -2071,7 +2732,7 @@ async function restoreHistorySnapshot(snapshot) {
             const img = await loadImage(s.image);
             newLayers.push({
                 path: s.path, name: getPathName(s.path), item: s.item,
-                image: img, position: { ...s.position },
+                image: img, position: { ...s.position }, anchor: s.anchor,
                 visible: s.visible, opacity: s.opacity,
                 flipH: s.flipH, flipV: s.flipV,
                 eraseStrokes: JSON.parse(JSON.stringify(s.eraseStrokes)),
@@ -2083,25 +2744,19 @@ async function restoreHistorySnapshot(snapshot) {
     redrawCanvas();
     updateUndoRedoButtons();
 }
-
-// ============================================================
-// ЭКСПОРТ
-// ============================================================
 function exportPNG() {
     if (canvasState.layers.length === 0) { showToast('Холст пуст!'); return; }
     redrawCanvas();
     mainCanvas.toBlob((blob) => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = `character_${Date.now()}_4096x4096.png`;
+        a.href = url; a.download = `character_${Date.now()}_4096x4096.png`;
         document.body.appendChild(a); a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         showToast('PNG скачан');
     }, 'image/png');
 }
-
 function exportPSD() {
     if (canvasState.layers.length === 0) { showToast('Холст пуст!'); return; }
     if (typeof agPsd === 'undefined') { showToast('PSD недоступен'); return; }
@@ -2111,7 +2766,7 @@ function exportPSD() {
             layerCanvas.width = CANVAS_SIZE;
             layerCanvas.height = CANVAS_SIZE;
             const lctx = layerCanvas.getContext('2d');
-            drawLayerOnCtx(lctx, layer, false);
+            drawLayerOnCtx(lctx, layer);
             return {
                 name: `${layer.name} - ${layer.item}`.substring(0, 60),
                 canvas: layerCanvas,
@@ -2129,23 +2784,26 @@ function exportPSD() {
             URL.revokeObjectURL(url);
             showToast('PSD скачан');
         });
-    } catch (e) {
-        console.error(e);
-        showToast('Ошибка PSD: ' + e.message);
-    }
+    } catch (e) { showToast('Ошибка PSD: ' + e.message); }
 }
-
-function drawLayerOnCtx(targetCtx, layer, withSelection) {
+function drawLayerOnCtx(targetCtx, layer) {
     const img = layer.image;
     if (!img) return;
+    let baseX = 50, baseY = 50;
+    if (layer.anchor) {
+        const cfg = getActivePropConfig();
+        if (cfg && cfg.anchors[layer.anchor]) {
+            baseX = cfg.anchors[layer.anchor].x;
+            baseY = cfg.anchors[layer.anchor].y;
+        }
+    }
     const pos = layer.position || { x: 0, y: 0, scale: 100, rotation: 0 };
     const baseScale = Math.min(CANVAS_SIZE / img.width, CANVAS_SIZE / img.height);
     const scale = baseScale * (pos.scale / 100);
     const w = img.width * scale;
     const h = img.height * scale;
-    const cx = CANVAS_SIZE / 2 + (pos.x / 100) * CANVAS_SIZE;
-    const cy = CANVAS_SIZE / 2 + (pos.y / 100) * CANVAS_SIZE;
-
+    const cx = (baseX / 100) * CANVAS_SIZE + (pos.x / 100) * CANVAS_SIZE;
+    const cy = (baseY / 100) * CANVAS_SIZE + (pos.y / 100) * CANVAS_SIZE;
     targetCtx.save();
     targetCtx.globalAlpha = layer.opacity;
     targetCtx.translate(cx, cy);
@@ -2165,9 +2823,13 @@ function drawLayerOnCtx(targetCtx, layer, withSelection) {
     }
     targetCtx.restore();
 }
-
 function saveOutfit() {
-    const data = JSON.stringify({ version: 2, outfit: state.outfit, customLayers: state.customLayers }, null, 2);
+    const data = JSON.stringify({
+        version: 3,
+        outfit: state.outfit,
+        customLayers: state.customLayers,
+        activeProp: state.activePropId
+    }, null, 2);
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -2175,9 +2837,8 @@ function saveOutfit() {
     document.body.appendChild(a); a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast('Образ сохранён');
+    showToast('Сохранено');
 }
-
 function loadOutfitFromFile(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -2188,18 +2849,17 @@ function loadOutfitFromFile(event) {
             if (!data.outfit) throw new Error('Неверный формат');
             state.outfit = data.outfit;
             if (data.customLayers) state.customLayers = data.customLayers;
+            if (data.activeProp) state.activePropId = data.activeProp;
             save();
             renderBuilder();
+            updateFigureSlidersUI();
             rebuildCanvasFromOutfit();
-            showToast('Образ загружен');
-        } catch (err) {
-            alert('Ошибка: ' + err.message);
-        }
+            showToast('Загружено');
+        } catch (err) { alert('Ошибка: ' + err.message); }
         event.target.value = '';
     };
     reader.readAsText(file);
 }
-
 function initCanvasIfNeeded() {
     if (canvasInitialized) return;
     canvasInitialized = true;
@@ -2213,7 +2873,7 @@ function initCanvasIfNeeded() {
 }
 
 // ============================================================
-// ИЗОБРАЖЕНИЯ (привязка)
+// ИЗОБРАЖЕНИЯ
 // ============================================================
 function pickImage(context) {
     imageContext = context;
@@ -2229,7 +2889,6 @@ document.getElementById('imageFileInput').addEventListener('change', async (e) =
     e.target.value = '';
     imageContext = null;
 });
-
 function compressImage(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -2261,7 +2920,6 @@ function compressImage(file) {
         reader.readAsDataURL(file);
     });
 }
-
 function applyImageToContext(dataUrl) {
     const ctx = imageContext; if (!ctx) return;
     let items;
@@ -2274,7 +2932,7 @@ function applyImageToContext(dataUrl) {
         if (ctx.type === 'list') renderListItems(ctx.key);
         else if (ctx.type === 'modifier') renderModifierItems();
         else if (ctx.type === 'subcat') renderSubcatItems(ctx.gKey, ctx.mKey, ctx.sKey);
-        showToast('Изображение привязано');
+        showToast('Привязано');
     }
 }
 function removeImage(context) {
@@ -2289,7 +2947,7 @@ function removeImage(context) {
         if (ctx.type === 'list') renderListItems(ctx.key);
         else if (ctx.type === 'modifier') renderModifierItems();
         else if (ctx.type === 'subcat') renderSubcatItems(ctx.gKey, ctx.mKey, ctx.sKey);
-        showToast('Изображение удалено');
+        showToast('Удалено');
     }
 }
 function openImageViewer(src) {
@@ -2300,7 +2958,7 @@ function closeImageViewer() {
     document.getElementById('imageViewerModal').classList.remove('active');
 }
 function clearAllImages() {
-    if (!confirm('Удалить ВСЕ привязанные изображения?')) return;
+    if (!confirm('Удалить ВСЕ картинки?')) return;
     for (const key in state.lists) state.lists[key].items.forEach(i => { i.image = null; });
     if (state.modifiers) state.modifiers.items.forEach(i => { i.image = null; });
     for (const gKey in state.modules) {
@@ -2315,7 +2973,7 @@ function clearAllImages() {
 }
 
 // ============================================================
-// СПИСКИ (админ)
+// СПИСКИ
 // ============================================================
 function renderLists() {
     const container = document.getElementById('listsContainer');
@@ -2389,7 +3047,6 @@ function renderListItems(key) {
         const txt = document.createElement('span');
         txt.className = 'item-text'; txt.textContent = item.text;
         txt.onclick = () => startEditListItem(key, idx, txt);
-        // Кнопка позиции
         const posBtn = document.createElement('button');
         posBtn.className = 'item-pos-btn' + (item.position ? ' has-pos' : '');
         posBtn.textContent = '📐';
@@ -2414,7 +3071,8 @@ function addListItem(key, inputEl) {
     const v = inputEl.value.trim(); if (!v) return;
     const list = state.lists[key];
     if (list.items.some(i => i.text.toLowerCase() === v.toLowerCase())) { showToast('Уже есть!'); return; }
-    list.items.push({ text: v, enabled: true, image: null, position: null }); inputEl.value = '';
+    list.items.push({ text: v, enabled: true, image: null, position: null });
+    inputEl.value = '';
     save(); renderListItems(key);
 }
 function sortLists() {
@@ -2445,9 +3103,7 @@ function renderModules() {
         container.appendChild(title);
         const body = document.createElement('div');
         body.className = `group-body ${group.expanded ? '' : 'collapsed'}`;
-        for (const mKey in group.modules) {
-            body.appendChild(createModule(gKey, mKey, group.modules[mKey]));
-        }
+        for (const mKey in group.modules) body.appendChild(createModule(gKey, mKey, group.modules[mKey]));
         container.appendChild(body);
     }
     if (state.modifiers) {
@@ -2550,8 +3206,7 @@ function addModifierItem(inputEl) {
     const v = inputEl.value.trim(); if (!v) return;
     if (state.modifiers.items.some(i => i.text.toLowerCase() === v.toLowerCase())) { showToast('Уже есть!'); return; }
     state.modifiers.items.push({ text: v, enabled: true, image: null, position: null });
-    inputEl.value = '';
-    save(); renderModifierItems();
+    inputEl.value = ''; save(); renderModifierItems();
 }
 function openEditModifiers() {
     editContext = { type: 'modifier' };
@@ -2567,14 +3222,22 @@ function createModule(gKey, mKey, mod) {
         totalItems += mod.subcategories[sKey].items.length;
         totalActive += mod.subcategories[sKey].items.filter(i => i.enabled).length;
     }
+    const anchorLabel = mod.anchor ? (ANCHOR_LABELS[mod.anchor] || mod.anchor) : '—';
     div.innerHTML = `
         <div class="module-header">
-            <div><h4>${mod.name}</h4><span class="module-counter">${totalActive}/${totalItems}</span></div>
+            <div>
+                <h4>${mod.name}</h4>
+                <span class="module-counter">${totalActive}/${totalItems} · 🎯 ${anchorLabel}</span>
+            </div>
             <div class="module-controls">
                 <label style="font-size:0.7rem; cursor:pointer;">
                     <input type="checkbox" ${mod.enabled ? 'checked' : ''} onchange="toggleModule('${gKey}','${mKey}')" style="accent-color: var(--accent);">
                 </label>
-                <button class="item-pos-btn" onclick="event.stopPropagation(); openPosModal('module', '${gKey}.${mKey}')" title="Позиция">📐</button>
+                <select class="item-anchor-select" onchange="setModuleAnchor('${gKey}','${mKey}', this.value)">
+                    <option value="">— якорь —</option>
+                    ${Object.keys(ANCHOR_LABELS).map(k => `<option value="${k}" ${mod.anchor === k ? 'selected' : ''}>${ANCHOR_LABELS[k]}</option>`).join('')}
+                </select>
+                <button class="item-pos-btn" onclick="event.stopPropagation(); openPosModal('module', '${gKey}.${mKey}')">📐</button>
                 <button class="module-toggle">▼</button>
             </div>
         </div>
@@ -2583,12 +3246,17 @@ function createModule(gKey, mKey, mod) {
     body.className = 'module-body';
     for (const sKey in mod.subcategories) body.appendChild(createSubcat(gKey, mKey, sKey, mod.subcategories[sKey]));
     div.querySelector('.module-header').onclick = (e) => {
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'LABEL') return;
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT' || e.target.tagName === 'OPTION' || e.target.tagName === 'LABEL') return;
         mod.expanded = !mod.expanded; save(); renderModules();
     };
     div.querySelector('.module-toggle').onclick = (e) => { e.stopPropagation(); mod.expanded = !mod.expanded; save(); renderModules(); };
     div.appendChild(body);
     return div;
+}
+function setModuleAnchor(gKey, mKey, anchor) {
+    state.modules[gKey].modules[mKey].anchor = anchor || null;
+    save();
+    showToast(anchor ? '🎯 Якорь: ' + (ANCHOR_LABELS[anchor] || anchor) : '🎯 Якорь убран');
 }
 function createSubcat(gKey, mKey, sKey, sub) {
     const div = document.createElement('div');
@@ -2682,8 +3350,7 @@ function addSubcatItem(gKey, mKey, sKey, inputEl) {
     const sub = state.modules[gKey].modules[mKey].subcategories[sKey];
     if (sub.items.some(i => i.text.toLowerCase() === v.toLowerCase())) { showToast('Уже есть!'); return; }
     sub.items.push({ text: v, enabled: true, image: null, position: null });
-    inputEl.value = '';
-    save(); renderSubcatItems(gKey, mKey, sKey);
+    inputEl.value = ''; save(); renderSubcatItems(gKey, mKey, sKey);
 }
 function sortModules() {
     for (const g in state.modules) {
@@ -2721,6 +3388,19 @@ function getAllPaths() {
         }
     }
     return paths;
+}
+function populateAnchorSelects() {
+    // заполняем список якорей в модалке позиции
+    const sel = document.getElementById('posAnchor');
+    if (!sel) return;
+    const currentVal = sel.value;
+    sel.innerHTML = '<option value="">— не использовать —</option>';
+    for (const key in ANCHOR_LABELS) {
+        const opt = document.createElement('option');
+        opt.value = key; opt.textContent = ANCHOR_LABELS[key];
+        sel.appendChild(opt);
+    }
+    if (currentVal) sel.value = currentVal;
 }
 function populateRuleSelects() {
     const paths = getAllPaths();
@@ -2918,20 +3598,17 @@ function importRules(event) {
 }
 
 // ============================================================
-// ГЕНЕРАЦИЯ (упрощена)
+// ГЕНЕРАЦИЯ
 // ============================================================
 function randItem(items) {
     const active = items.filter(i => i.enabled && i.text && i.text !== "Отсутствует" && i.text !== "None");
     if (active.length === 0) return null;
     return active[Math.floor(Math.random() * active.length)];
 }
-
 function generate() {
     const result = {};
     const resultItems = {};
     const paths = [];
-    const extraTexts = [];
-
     if (state.lists.races.enabled) {
         const item = randItem(state.lists.races.items);
         if (item) { result['list.races'] = item.text; resultItems['list.races'] = [item]; paths.push('list.races'); }
@@ -2960,18 +3637,14 @@ function generate() {
             }
         }
     }
-
     if (paths.length === 0) { showToast("Все отключено!"); return; }
-
     state.current = result;
     state.currentPaths = paths;
     state.currentItems = resultItems;
-    state.extraText = extraTexts.join(', ');
     state.genCount++;
-    save();
-    updateCounter();
-    renderResult(result, paths, extraTexts, resultItems);
-    addHistory(result, paths, extraTexts, resultItems);
+    save(); updateCounter();
+    renderResult(result, paths, [], resultItems);
+    addHistory(result, paths, [], resultItems);
 }
 function renderResult(result, paths, extraTexts, resultItems) {
     const box = document.getElementById('resultBox');
@@ -3004,12 +3677,6 @@ function renderResult(result, paths, extraTexts, resultItems) {
         line.appendChild(valueBlock);
         box.appendChild(line);
     });
-    if (extraTexts && extraTexts.length > 0) {
-        const line = document.createElement('div');
-        line.className = 'result-line';
-        line.innerHTML = `<span class="result-cat">🔗 Доп</span><span class="result-val">${extraTexts.join(', ')}</span>`;
-        box.appendChild(line);
-    }
 }
 function addHistory(result, paths, extraTexts, resultItems) {
     const itemsForHistory = {};
@@ -3050,7 +3717,7 @@ const PRESETS = {
     all: null,
     portrait: ['list.races', 'list.styles', 'appearance.bangs', 'appearance.sidelocks', 'appearance.backHair', 'appearance.eyeShape', 'race.trait1'],
     full: null,
-    race: ['list.races', 'race.trait1', 'race.trait2', 'race.trait3']
+    race: ['list.races', 'race.trait1', 'race.trait2']
 };
 function applyPreset(name) {
     const preset = PRESETS[name];
@@ -3070,7 +3737,6 @@ function applyPreset(name) {
     save(); renderLists(); renderModules();
     showToast(`Пресет`);
 }
-
 function renderHistory() {
     const list = document.getElementById('historyList');
     const q = document.getElementById('search').value.toLowerCase();
@@ -3173,12 +3839,23 @@ function resetAll() {
     save(); renderLists(); renderModules(); renderBuilder();
     showToast('Сброшено');
 }
-
 function showToast(msg) {
     const t = document.getElementById('toast');
     t.textContent = msg;
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ============================================================
+// МОБИЛЬНАЯ ПАНЕЛЬ
+// ============================================================
+function openPanel() {
+    document.getElementById('builderPanel').classList.add('open');
+    document.getElementById('panelOverlay').classList.add('active');
+}
+function closePanel() {
+    document.getElementById('builderPanel').classList.remove('open');
+    document.getElementById('panelOverlay').classList.remove('active');
 }
 
 window.onload = init;
