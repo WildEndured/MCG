@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Генератор Персонажей + Холст v2</title>
+<title>Конструктор Персонажа</title>
 <script src="https://cdn.jsdelivr.net/npm/ag-psd@25.2.1/dist/bundle.js"></script>
 <style>
 :root {
@@ -25,11 +25,11 @@
 body {
     font-family: 'Segoe UI', Tahoma, sans-serif;
     background: var(--bg); color: var(--text);
-    margin: 0; padding: 20px;
+    margin: 0; padding: 10px;
     display: flex; justify-content: center; min-height: 100vh;
 }
 .app {
-    width: 100%; max-width: 1100px;
+    width: 100%; max-width: 1400px;
     background: var(--container);
     border-radius: 15px; overflow: hidden;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -40,205 +40,367 @@ body {
     flex: 1; padding: 12px 6px; background: none; border: none;
     color: #888; font-size: 0.85rem; cursor: pointer; font-weight: bold;
     border-bottom: 3px solid transparent; transition: 0.3s;
-    min-width: 80px;
+    min-width: 70px;
 }
 .tab-btn.active {
     color: var(--text); border-bottom-color: var(--accent);
     background: var(--container);
 }
-.tab-content { padding: 20px; display: none; }
+.tab-content { padding: 15px; display: none; }
 .tab-content.active { display: block; }
 
-/* Генератор */
-.result-box {
-    background: var(--secondary); padding: 20px;
-    border-radius: 10px; margin-bottom: 20px;
-    max-height: 600px; overflow-y: auto;
-}
-.result-line {
-    display: flex; justify-content: space-between;
-    padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.1);
-    font-size: 0.9rem; gap: 15px; align-items: center;
-}
-.result-line:last-child { border-bottom: none; }
-.result-cat { color: #888; font-weight: bold; font-size: 0.82rem; }
-.result-val { color: #fff; font-weight: bold; text-align: right; flex-grow: 1; }
-.result-line.main .result-val { color: var(--accent); font-size: 1.05rem; }
-.result-line.slot .result-cat { color: var(--clothes); }
-.result-line.extra .result-val { color: var(--rules); font-style: italic; }
-.result-value-block {
-    display: flex; align-items: center; gap: 10px;
-    justify-content: flex-end; flex-grow: 1; flex-wrap: wrap;
-}
-.result-thumb {
-    width: 40px; height: 40px; border-radius: 6px;
-    object-fit: cover; cursor: pointer;
-    border: 1px solid #333; transition: 0.2s; flex-shrink: 0;
-}
-.result-thumb:hover { border-color: var(--accent); transform: scale(1.1); }
-.result-thumbs { display: flex; gap: 5px; flex-wrap: wrap; }
-
+/* Кнопки */
 .btn-main {
     background: var(--accent); color: white; border: none;
-    padding: 15px 30px; font-size: 1rem; border-radius: 50px;
-    cursor: pointer; font-weight: bold; text-transform: uppercase;
-    width: 100%; margin-bottom: 10px; transition: 0.2s;
+    padding: 12px 24px; font-size: 0.9rem; border-radius: 8px;
+    cursor: pointer; font-weight: bold; transition: 0.2s;
 }
 .btn-main:hover { background: #ff2e63; transform: scale(1.02); }
 .btn-secondary {
     background: var(--secondary); color: white;
-    border: 1px solid #555; padding: 9px 18px;
-    border-radius: 5px; cursor: pointer; font-size: 0.85rem;
+    border: 1px solid #555; padding: 9px 16px;
+    border-radius: 6px; cursor: pointer; font-size: 0.85rem;
     transition: 0.2s;
 }
 .btn-secondary:hover { background: #1a4a7a; }
+.btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }
 .btn-table {
     background: var(--table); color: white; border: none;
-    padding: 9px 18px; border-radius: 5px; cursor: pointer;
+    padding: 9px 16px; border-radius: 6px; cursor: pointer;
     font-size: 0.85rem; transition: 0.2s; font-weight: bold;
 }
 .btn-table:hover { background: #1a9b95; }
-.btn-secondary:disabled, .btn-table:disabled {
-    opacity: 0.4; cursor: not-allowed;
+
+/* ============ КОНСТРУКТОР ============ */
+.builder-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 15px;
+    align-items: start;
+}
+@media (max-width: 900px) {
+    .builder-layout { grid-template-columns: 1fr; }
 }
 
+.builder-canvas-area {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: sticky;
+    top: 10px;
+}
+
+.builder-toolbar {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    align-items: center;
+}
+
+.canvas-frame {
+    background: repeating-conic-gradient(#2a2a3e 0% 25%, #1a1a2e 0% 50%) 50% / 20px 20px;
+    border: 1px solid #333;
+    border-radius: 10px;
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    max-width: 700px;
+    margin: 0 auto;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+#mainCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: crosshair;
+    image-rendering: auto;
+}
+
+/* ============ ПАНЕЛЬ КАТЕГОРИЙ ============ */
+.builder-panel {
+    background: #0d1b2a;
+    border-radius: 10px;
+    padding: 10px;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+}
+.builder-panel h3 {
+    margin: 0 0 10px 0; font-size: 1rem;
+}
+
+.cat-group {
+    background: #1a1a2e;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    border-left: 3px solid var(--accent);
+}
+.cat-group.group-appearance { border-left-color: var(--appearance); }
+.cat-group.group-clothes { border-left-color: var(--clothes); }
+.cat-group.group-race { border-left-color: var(--race); }
+.cat-group.group-mods { border-left-color: var(--mods); }
+.cat-group.group-lists { border-left-color: var(--lists); }
+
+.cat-header {
+    display: flex; justify-content: space-between;
+    align-items: center; padding: 8px 12px;
+    cursor: pointer; user-select: none;
+    font-size: 0.85rem; font-weight: bold;
+    background: rgba(255,255,255,0.02);
+}
+.cat-header:hover { background: rgba(255,255,255,0.05); }
+.cat-header .counter { font-size: 0.7rem; color: #888; font-weight: normal; }
+
+.cat-body {
+    padding: 8px 10px;
+    border-top: 1px solid #0d1b2a;
+    display: none;
+}
+.cat-group.open .cat-body { display: block; }
+
+/* Слот (модуль) */
+.slot {
+    background: #0d1b2a;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    overflow: hidden;
+}
+.slot-header {
+    display: flex; justify-content: space-between;
+    align-items: center; padding: 6px 10px;
+    cursor: pointer; user-select: none;
+    font-size: 0.78rem;
+}
+.slot-header:hover { background: rgba(255,255,255,0.03); }
+.slot-name { font-weight: bold; color: #ccc; }
+.slot-current {
+    font-size: 0.68rem; color: var(--table);
+    max-width: 130px; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap;
+}
+.slot-body {
+    padding: 6px 8px 8px;
+    border-top: 1px solid #1a1a2e;
+    display: none;
+}
+.slot.open .slot-body { display: block; }
+.slot.open .slot-header .slot-current { display: none; }
+
+/* Сетка плиток */
+.tiles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 5px;
+}
+
+.tile {
+    background: rgba(255,255,255,0.03);
+    border: 2px solid transparent;
+    border-radius: 6px;
+    padding: 4px;
+    cursor: pointer;
+    transition: 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    min-height: 70px;
+    overflow: hidden;
+}
+.tile:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: #555;
+}
+.tile.active {
+    border-color: var(--table);
+    background: rgba(32,178,170,0.1);
+}
+.tile.no-image {
+    opacity: 0.7;
+}
+.tile-thumb {
+    width: 100%;
+    height: 50px;
+    object-fit: contain;
+    background: rgba(0,0,0,0.15);
+    border-radius: 3px;
+}
+.tile-no-thumb {
+    width: 100%;
+    height: 50px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.15);
+    border-radius: 3px;
+    font-size: 1.5rem; color: #444;
+}
+.tile-text {
+    font-size: 0.62rem;
+    text-align: center;
+    line-height: 1.1;
+    color: #bbb;
+    word-break: break-word;
+    max-height: 22px;
+    overflow: hidden;
+    width: 100%;
+}
+.tile.active .tile-text { color: #fff; font-weight: bold; }
+
+/* Кнопка убрать */
+.tile-remove-row {
+    margin-bottom: 6px;
+    display: flex; gap: 6px;
+}
+.tile-remove-btn {
+    background: rgba(233,69,96,0.15);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 5px;
+    padding: 4px 8px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.tile-remove-btn:hover {
+    background: var(--accent); color: white;
+}
+
+/* ============ ОСТАЛЬНЫЕ ВКЛАДКИ (сокращённо) ============ */
+.result-box {
+    background: var(--secondary); padding: 15px;
+    border-radius: 10px; margin-bottom: 15px;
+    max-height: 500px; overflow-y: auto;
+}
+.result-line {
+    display: flex; justify-content: space-between;
+    padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.1);
+    font-size: 0.85rem; gap: 10px; align-items: center;
+}
+.result-line:last-child { border-bottom: none; }
+.result-cat { color: #888; font-weight: bold; font-size: 0.78rem; }
+.result-val { color: #fff; font-weight: bold; text-align: right; flex-grow: 1; }
+.result-value-block {
+    display: flex; align-items: center; gap: 8px;
+    justify-content: flex-end; flex-grow: 1; flex-wrap: wrap;
+}
+.result-thumb {
+    width: 36px; height: 36px; border-radius: 5px;
+    object-fit: contain; cursor: pointer;
+    border: 1px solid #333;
+    background: rgba(0,0,0,0.2);
+}
+.result-thumbs { display: flex; gap: 4px; flex-wrap: wrap; }
+
 .presets-bar {
-    display: flex; gap: 8px; margin-bottom: 15px;
+    display: flex; gap: 6px; margin-bottom: 12px;
     flex-wrap: wrap; align-items: center;
 }
-.presets-bar span { font-size: 0.85rem; color: #888; }
+.presets-bar span { font-size: 0.8rem; color: #888; }
 .preset-btn {
-    padding: 6px 12px; font-size: 0.8rem;
-    border-radius: 20px; cursor: pointer;
+    padding: 5px 10px; font-size: 0.75rem;
+    border-radius: 15px; cursor: pointer;
     background: var(--secondary); color: white;
-    border: 1px solid #555; transition: 0.2s;
+    border: 1px solid #555;
 }
 .preset-btn:hover { background: var(--accent); border-color: var(--accent); }
 .counter-badge {
-    font-size: 0.75rem; color: #888; margin-left: auto;
-    padding: 4px 10px; background: rgba(0,0,0,0.3); border-radius: 10px;
+    font-size: 0.72rem; color: #888; margin-left: auto;
+    padding: 3px 8px; background: rgba(0,0,0,0.3); border-radius: 10px;
 }
 
-/* История */
-.history-controls { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+.history-controls { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
 .search-input {
-    flex-grow: 1; padding: 10px; border-radius: 5px;
+    flex-grow: 1; padding: 8px; border-radius: 5px;
     border: 1px solid #333; background: #0d1b2a; color: white;
+    font-size: 0.85rem;
 }
-.history-list {
-    display: flex; flex-direction: column; gap: 10px;
-    max-height: 550px; overflow-y: auto;
-}
+.history-list { display: flex; flex-direction: column; gap: 8px; max-height: 500px; overflow-y: auto; }
 .history-item {
-    background: #0d1b2a; padding: 12px 15px;
+    background: #0d1b2a; padding: 10px 12px;
     border-radius: 8px; border-left: 4px solid var(--secondary);
 }
 .history-item.fav { border-left-color: gold; }
-.history-item.table-type { border-left-color: var(--table); }
 .history-header {
     display: flex; justify-content: space-between;
-    align-items: center; margin-bottom: 6px;
+    align-items: center; margin-bottom: 5px;
 }
-.history-date { font-size: 0.72rem; color: #888; }
-.history-details { font-size: 0.83rem; color: #ccc; line-height: 1.5; }
-.history-badge {
-    font-size: 0.65rem; padding: 2px 6px; border-radius: 8px;
-    background: var(--table); color: white; font-weight: bold;
-    margin-right: 6px;
-}
-.history-actions { display: flex; gap: 4px; }
+.history-date { font-size: 0.7rem; color: #888; }
+.history-details { font-size: 0.8rem; color: #ccc; line-height: 1.4; }
+.history-actions { display: flex; gap: 3px; }
 .icon-btn {
     background: none; border: none; cursor: pointer;
-    font-size: 1.05rem; padding: 3px; opacity: 0.6;
+    font-size: 1rem; padding: 3px; opacity: 0.6;
     color: white; transition: 0.2s;
 }
 .icon-btn:hover { opacity: 1; transform: scale(1.1); }
 .icon-btn.fav-active { opacity: 1; color: gold; }
 
-/* Списки */
-.toolbar {
-    display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;
-    align-items: center;
-}
 .list-block {
     background: #0d1b2a; border-radius: 10px;
-    margin-bottom: 15px; overflow: hidden;
+    margin-bottom: 12px; overflow: hidden;
     border-left: 3px solid var(--lists);
 }
 .list-block.disabled { opacity: 0.5; }
 .list-header {
     display: flex; justify-content: space-between;
-    align-items: center; padding: 12px 15px;
+    align-items: center; padding: 10px 12px;
     background: var(--header); cursor: pointer; user-select: none;
 }
-.list-header h3 { margin: 0; font-size: 1rem; }
-.list-counter { font-size: 0.72rem; color: #888; }
-.list-controls { display: flex; gap: 8px; align-items: center; }
-.list-body { padding: 12px 15px; display: none; }
+.list-header h3 { margin: 0; font-size: 0.95rem; }
+.list-counter { font-size: 0.7rem; color: #888; }
+.list-controls { display: flex; gap: 6px; align-items: center; }
+.list-body { padding: 10px 12px; display: none; }
 .list-block.open .list-body { display: block; }
 
-.add-row { display: flex; gap: 5px; margin-bottom: 10px; }
+.add-row { display: flex; gap: 4px; margin-bottom: 8px; }
 .add-row input {
-    flex-grow: 1; padding: 6px 10px; border-radius: 5px;
+    flex-grow: 1; padding: 5px 8px; border-radius: 5px;
     border: 1px solid #333; background: #1a1a2e;
-    color: white; font-size: 0.85rem;
+    color: white; font-size: 0.8rem;
 }
 .add-row button {
-    padding: 6px 12px; background: var(--accent);
+    padding: 5px 10px; background: var(--accent);
     color: white; border: none; border-radius: 5px;
-    cursor: pointer; font-size: 0.85rem;
+    cursor: pointer; font-size: 0.8rem;
 }
 .add-row button.import-btn { background: var(--clothes); }
 
-.item-list { max-height: 350px; overflow-y: auto; }
+.item-list { max-height: 300px; overflow-y: auto; }
 .item {
-    display: flex; align-items: center; gap: 8px;
+    display: flex; align-items: center; gap: 6px;
     padding: 4px 0; border-bottom: 1px solid #1a1a2e;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
 }
 .item.disabled { opacity: 0.4; text-decoration: line-through; }
-.item-text {
-    flex-grow: 1; cursor: pointer; padding: 3px;
-    border-radius: 3px; word-break: break-word;
-}
+.item-text { flex-grow: 1; cursor: pointer; padding: 3px; border-radius: 3px; word-break: break-word; }
 .item-text:hover { background: rgba(255,255,255,0.1); }
 .item input[type="text"] {
     flex-grow: 1; padding: 3px 8px; border-radius: 4px;
     border: 1px solid var(--accent); background: #1a1a2e;
-    color: white; font-size: 0.85rem;
+    color: white; font-size: 0.82rem;
 }
 .item input[type="checkbox"] {
-    cursor: pointer; width: 15px; height: 15px;
+    cursor: pointer; width: 14px; height: 14px;
     accent-color: var(--accent); flex-shrink: 0;
 }
-
 .item-thumb {
-    width: 32px; height: 32px; border-radius: 4px;
-    object-fit: cover; cursor: pointer;
-    border: 1px solid #333; transition: 0.2s; flex-shrink: 0;
+    width: 30px; height: 30px; border-radius: 4px;
+    object-fit: contain; cursor: pointer;
+    border: 1px solid #333; flex-shrink: 0;
+    background: rgba(0,0,0,0.2);
 }
-.item-thumb:hover { border-color: var(--accent); }
 .item-thumb-placeholder {
-    width: 32px; height: 32px; border-radius: 4px;
+    width: 30px; height: 30px; border-radius: 4px;
     background: rgba(255,255,255,0.05);
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer; font-size: 0.8rem; color: #555;
-    border: 1px dashed #333; transition: 0.2s; flex-shrink: 0;
+    cursor: pointer; font-size: 0.75rem; color: #555;
+    border: 1px dashed #333; flex-shrink: 0;
 }
 .item-thumb-placeholder:hover { color: var(--accent); border-color: var(--accent); }
 
-/* Кнопка "на холст" */
-.to-canvas-btn {
-    background: none; border: none; cursor: pointer;
-    font-size: 1rem; padding: 2px 4px; opacity: 0.5;
-    color: var(--table); transition: 0.2s; flex-shrink: 0;
-}
-.to-canvas-btn:hover { opacity: 1; transform: scale(1.2); }
-
-/* Модули */
 .group-title {
-    font-size: 1rem; font-weight: bold;
-    padding: 11px 15px; margin-top: 15px;
+    font-size: 0.95rem; font-weight: bold;
+    padding: 10px 12px; margin-top: 12px;
     border-radius: 8px; color: white;
     cursor: pointer; user-select: none;
     display: flex; justify-content: space-between; align-items: center;
@@ -247,295 +409,158 @@ body {
 .group-clothes { background: linear-gradient(90deg, var(--clothes), transparent); }
 .group-race { background: linear-gradient(90deg, var(--race), transparent); }
 .group-mods { background: linear-gradient(90deg, var(--mods), transparent); }
-.group-body { padding-left: 8px; }
+.group-body { padding-left: 6px; }
 .group-body.collapsed { display: none; }
 
 .module {
     background: #0d1b2a; border-radius: 8px;
-    margin-top: 8px; overflow: hidden;
+    margin-top: 6px; overflow: hidden;
     border-left: 3px solid var(--accent);
 }
 .module.disabled { opacity: 0.5; }
 .module-header {
     display: flex; justify-content: space-between;
-    align-items: center; padding: 10px 15px;
+    align-items: center; padding: 8px 12px;
     background: var(--header); cursor: pointer; user-select: none;
 }
-.module-header h4 { margin: 0; font-size: 0.9rem; }
-.module-counter { font-size: 0.7rem; color: #888; }
-.module-controls { display: flex; gap: 8px; align-items: center; }
-.module-body { padding: 10px 15px 15px; display: none; }
+.module-header h4 { margin: 0; font-size: 0.85rem; }
+.module-counter { font-size: 0.68rem; color: #888; }
+.module-controls { display: flex; gap: 6px; align-items: center; }
+.module-body { padding: 8px 12px 12px; display: none; }
 .module.open .module-body { display: block; }
 .module-toggle {
     background: none; border: none; color: white;
-    font-size: 1rem; cursor: pointer; padding: 3px; transition: 0.2s;
+    font-size: 0.9rem; cursor: pointer; padding: 3px; transition: 0.2s;
 }
 .module.open .module-toggle { transform: rotate(180deg); }
 
-.simple-module {
-    background: #0d1b2a; border-radius: 8px;
-    margin-top: 8px; overflow: hidden;
-    border-left: 3px solid var(--mods);
-}
-.simple-module.disabled { opacity: 0.5; }
-.simple-header {
-    display: flex; justify-content: space-between;
-    align-items: center; padding: 10px 15px;
-    background: var(--header); cursor: pointer; user-select: none;
-}
-.simple-header h4 { margin: 0; font-size: 0.9rem; }
-.simple-body { padding: 10px 15px 15px; display: none; }
-.simple-module.open .simple-body { display: block; }
-
 .subcat {
     background: #1a1a2e; border-radius: 6px;
-    margin-top: 6px; overflow: hidden;
+    margin-top: 5px; overflow: hidden;
     border-left: 2px solid var(--secondary);
 }
 .subcat.disabled { opacity: 0.4; }
 .subcat-header {
     display: flex; justify-content: space-between;
-    align-items: center; padding: 8px 12px;
-    cursor: pointer; user-select: none; font-size: 0.85rem;
+    align-items: center; padding: 7px 10px;
+    cursor: pointer; user-select: none; font-size: 0.8rem;
 }
 .subcat-header:hover { background: rgba(255,255,255,0.03); }
 .subcat-name { font-weight: bold; }
-.subcat-counter { font-size: 0.7rem; color: #888; margin-left: 8px; }
-.subcat-controls { display: flex; gap: 5px; align-items: center; }
+.subcat-counter { font-size: 0.68rem; color: #888; margin-left: 6px; }
+.subcat-controls { display: flex; gap: 4px; align-items: center; }
 .subcat-body {
-    padding: 8px 12px 12px;
+    padding: 6px 10px 10px;
     border-top: 1px solid #0d1b2a;
     display: none;
 }
 .subcat.open .subcat-body { display: block; }
 .subcat-toggle {
     background: none; border: none; color: white;
-    font-size: 0.8rem; cursor: pointer; padding: 3px; transition: 0.2s;
+    font-size: 0.75rem; cursor: pointer; padding: 3px; transition: 0.2s;
 }
 .subcat.open .subcat-toggle { transform: rotate(180deg); }
 
-/* ТАБЛИЦА */
-.table-section {
-    margin-bottom: 25px; border-radius: 8px;
-    overflow: hidden; border: 1px solid #0d1b2a;
+.simple-module {
+    background: #0d1b2a; border-radius: 8px;
+    margin-top: 6px; overflow: hidden;
+    border-left: 3px solid var(--mods);
 }
-.table-section-header {
-    padding: 10px 15px; font-weight: bold;
-    font-size: 0.9rem; color: white;
+.simple-module.disabled { opacity: 0.5; }
+.simple-header {
+    display: flex; justify-content: space-between;
+    align-items: center; padding: 8px 12px;
+    background: var(--header); cursor: pointer; user-select: none;
 }
-.table-section-appearance { background: linear-gradient(90deg, var(--appearance), transparent); }
-.table-section-clothes { background: linear-gradient(90deg, var(--clothes), transparent); }
-.table-section-race { background: linear-gradient(90deg, var(--race), transparent); }
-.table-section-lists { background: linear-gradient(90deg, var(--lists), transparent); }
+.simple-header h4 { margin: 0; font-size: 0.85rem; }
+.simple-body { padding: 8px 12px 12px; display: none; }
+.simple-module.open .simple-body { display: block; }
 
-.table-grid {
-    width: 100%; border-collapse: collapse; background: #0d1b2a;
-}
-.table-grid th {
-    background: var(--header); padding: 8px 12px;
-    text-align: left; font-size: 0.78rem; color: #888;
-    text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold;
-}
-.table-grid td {
-    padding: 6px 12px; border-top: 1px solid #1a1a2e;
-    font-size: 0.85rem; vertical-align: middle;
-}
-.table-grid td.slot-name {
-    color: #ccc; font-weight: bold; width: 30%; white-space: nowrap;
-}
-.table-grid td.mod-cell { width: 20%; }
-.table-grid td.value-cell { width: 50%; }
-
-.table-cell-input {
-    width: 100%; padding: 6px 10px; border-radius: 5px;
-    border: 1px solid #333; background: #1a1a2e;
-    color: white; font-size: 0.85rem; font-family: inherit;
-}
-.table-cell-input:focus { outline: none; border-color: var(--table); }
-.table-cell-input.filled {
-    border-color: var(--table); background: rgba(32,178,170,0.08);
-}
-.table-cell-row { display: flex; align-items: center; gap: 8px; }
-.table-cell-row input { flex-grow: 1; }
-.table-cell-thumb {
-    width: 32px; height: 32px; border-radius: 4px;
-    object-fit: cover; cursor: pointer;
-    border: 1px solid var(--table); flex-shrink: 0;
-}
-.table-cell-thumb:hover { transform: scale(1.1); }
-
-.table-toolbar {
-    display: flex; gap: 8px; margin-bottom: 15px;
-    flex-wrap: wrap; align-items: center;
-}
-
-/* ПРАВИЛА */
+/* Правила */
 .rule-card {
     background: #0d1b2a; border-radius: 8px;
-    margin-bottom: 10px; overflow: hidden;
+    margin-bottom: 8px; overflow: hidden;
     border-left: 3px solid var(--rules);
 }
 .rule-card.disabled { opacity: 0.5; }
 .rule-header {
     display: flex; justify-content: space-between;
-    align-items: center; padding: 10px 15px; background: var(--header);
+    align-items: center; padding: 8px 12px;
+    background: var(--header);
 }
 .rule-header .rule-type {
-    font-size: 0.7rem; padding: 2px 8px; border-radius: 10px;
+    font-size: 0.68rem; padding: 2px 8px; border-radius: 10px;
     background: var(--rules); color: white; font-weight: bold;
     text-transform: uppercase;
 }
 .rule-type-replace { background: var(--clothes); }
 .rule-type-exclude { background: var(--accent); }
 .rule-type-add { background: var(--race); color: #1a1a2e; }
-
-.rule-body { padding: 12px 15px; font-size: 0.85rem; line-height: 1.6; }
-.rule-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
-.rule-row label { font-size: 0.8rem; color: #888; min-width: 100px; }
+.rule-body { padding: 10px 12px; font-size: 0.82rem; line-height: 1.5; }
+.rule-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; flex-wrap: wrap; }
+.rule-row label { font-size: 0.78rem; color: #888; min-width: 90px; }
 .rule-row select, .rule-row input[type="text"] {
-    flex-grow: 1; padding: 6px 10px; border-radius: 5px;
+    flex-grow: 1; padding: 5px 8px; border-radius: 5px;
     border: 1px solid #333; background: #1a1a2e;
-    color: white; font-size: 0.85rem; min-width: 130px;
+    color: white; font-size: 0.82rem; min-width: 110px;
 }
-.rule-row .arrow { color: var(--rules); font-weight: bold; font-size: 1.1rem; }
-
+.rule-row .arrow { color: var(--rules); font-weight: bold; }
 .condition-block {
-    background: #1a1a2e; padding: 10px; border-radius: 6px;
-    margin-bottom: 8px; border-left: 2px solid var(--rules);
+    background: #1a1a2e; padding: 8px; border-radius: 6px;
+    margin-bottom: 6px; border-left: 2px solid var(--rules);
 }
 .condition-header {
     display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 8px; font-size: 0.8rem; color: var(--rules); font-weight: bold;
+    margin-bottom: 6px; font-size: 0.78rem; color: var(--rules); font-weight: bold;
 }
 .condition-header button {
     background: none; border: none; color: var(--accent);
     cursor: pointer; font-size: 1rem;
 }
 .add-rule-form {
-    background: #0d1b2a; padding: 15px;
+    background: #0d1b2a; padding: 12px;
     border-radius: 8px; border: 1px dashed var(--rules);
-    margin-bottom: 15px;
+    margin-bottom: 12px;
 }
 .empty-state {
-    text-align: center; color: #666; padding: 30px; font-size: 0.9rem;
+    text-align: center; color: #666; padding: 25px; font-size: 0.85rem;
 }
 .chain-badge {
-    font-size: 0.65rem; padding: 2px 6px; border-radius: 8px;
-    background: var(--race); color: #1a1a2e; font-weight: bold; margin-left: 6px;
+    font-size: 0.62rem; padding: 2px 6px; border-radius: 8px;
+    background: var(--race); color: #1a1a2e; font-weight: bold;
+    margin-left: 6px;
 }
 
-/* ХОЛСТ */
-.canvas-toolbar {
-    display: flex; gap: 8px; margin-bottom: 15px;
-    flex-wrap: wrap; align-items: center;
+/* Таблица */
+.table-section { margin-bottom: 20px; border-radius: 8px; overflow: hidden; border: 1px solid #0d1b2a; }
+.table-section-header { padding: 8px 12px; font-weight: bold; font-size: 0.85rem; }
+.table-section-appearance { background: linear-gradient(90deg, var(--appearance), transparent); }
+.table-section-clothes { background: linear-gradient(90deg, var(--clothes), transparent); }
+.table-section-race { background: linear-gradient(90deg, var(--race), transparent); }
+.table-section-lists { background: linear-gradient(90deg, var(--lists), transparent); }
+.table-grid { width: 100%; border-collapse: collapse; background: #0d1b2a; }
+.table-grid th {
+    background: var(--header); padding: 6px 10px; text-align: left;
+    font-size: 0.72rem; color: #888; text-transform: uppercase;
 }
-.canvas-layout {
-    display: flex; gap: 15px;
-    align-items: flex-start; flex-wrap: wrap;
+.table-grid td { padding: 5px 10px; border-top: 1px solid #1a1a2e; font-size: 0.82rem; }
+.table-grid td.slot-name { color: #ccc; font-weight: bold; width: 30%; }
+.table-cell-input {
+    width: 100%; padding: 5px 8px; border-radius: 5px;
+    border: 1px solid #333; background: #1a1a2e;
+    color: white; font-size: 0.82rem;
 }
-.canvas-area {
-    flex: 1; min-width: 300px;
-    display: flex; flex-direction: column; gap: 8px;
-}
-.canvas-zoom-bar {
-    display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
-}
-.zoom-btn {
-    background: var(--secondary); color: white;
-    border: 1px solid #555; padding: 4px 10px;
-    border-radius: 4px; cursor: pointer; font-size: 0.75rem;
-}
-.zoom-btn.active { background: var(--accent); border-color: var(--accent); }
-.zoom-btn:hover { background: #1a4a7a; }
-
-.canvas-scroll {
-    background: repeating-conic-gradient(#2a2a3e 0% 25%, #1a1a2e 0% 50%) 50% / 24px 24px;
-    border: 1px solid #333;
-    border-radius: 8px;
-    overflow: auto;
-    max-height: 600px;
-    padding: 10px;
-    display: block;
-}
-#mainCanvas {
-    background: transparent;
-    border: 1px solid #555;
-    cursor: crosshair;
-    display: block;
-    /* размеры canvas задаются через JS */
+.table-cell-input:focus { outline: none; border-color: var(--table); }
+.table-cell-row { display: flex; align-items: center; gap: 6px; }
+.table-cell-thumb {
+    width: 28px; height: 28px; border-radius: 4px;
+    object-fit: contain; cursor: pointer;
+    border: 1px solid var(--table); background: rgba(0,0,0,0.2);
 }
 
-.layers-panel {
-    width: 300px;
-    background: #0d1b2a;
-    border-radius: 8px;
-    padding: 12px;
-    max-height: 700px;
-    overflow-y: auto;
-}
-.layers-panel h4 { margin-top: 0; }
-.layers-list {
-    display: flex; flex-direction: column; gap: 6px;
-    margin-bottom: 12px;
-}
-.layer-item {
-    background: #1a1a2e;
-    border-radius: 6px;
-    padding: 8px;
-    font-size: 0.8rem;
-    border-left: 3px solid var(--accent);
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-.layer-item.hidden-layer { opacity: 0.4; border-left-color: #555; }
-.layer-header {
-    display: flex; justify-content: space-between;
-    align-items: center; gap: 6px;
-}
-.layer-name {
-    flex-grow: 1; font-weight: bold; font-size: 0.78rem;
-    color: #ccc; white-space: nowrap; overflow: hidden;
-    text-overflow: ellipsis;
-}
-.layer-controls { display: flex; gap: 3px; }
-.layer-controls button {
-    background: none; border: none; cursor: pointer;
-    font-size: 0.9rem; padding: 2px; opacity: 0.7; color: white;
-}
-.layer-controls button:hover { opacity: 1; }
-.layer-thumb {
-    width: 100%; height: 40px;
-    object-fit: contain;
-    background: rgba(0,0,0,0.2);
-    border-radius: 4px;
-}
-.layer-opacity { width: 100%; accent-color: var(--table); }
+.table-toolbar { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
 
-/* Панель добавления слоя */
-.add-layer-section {
-    background: #1a1a2e;
-    border-radius: 6px;
-    padding: 10px;
-    margin-bottom: 12px;
-    border-left: 3px solid var(--table);
-}
-.add-layer-section h5 { margin: 0 0 8px 0; font-size: 0.85rem; color: var(--table); }
-.add-layer-controls {
-    display: flex; flex-direction: column; gap: 6px;
-}
-.add-layer-controls select {
-    padding: 5px 8px; border-radius: 4px;
-    border: 1px solid #333; background: #0d1b2a;
-    color: white; font-size: 0.8rem;
-}
-.add-layer-controls button {
-    padding: 6px 10px; background: var(--table); color: white;
-    border: none; border-radius: 4px; cursor: pointer;
-    font-size: 0.8rem; font-weight: bold;
-}
-
-/* Модальное окно */
+/* Модалки */
 .modal-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
     background: rgba(0,0,0,0.85); z-index: 1000;
@@ -544,25 +569,22 @@ body {
 }
 .modal-overlay.active { display: flex; }
 .modal {
-    background: var(--container); padding: 25px;
-    border-radius: 12px; max-width: 550px; width: 100%;
+    background: var(--container); padding: 20px;
+    border-radius: 12px; max-width: 500px; width: 100%;
     max-height: 85vh; overflow-y: auto;
 }
 .modal h3 { margin-top: 0; }
 .modal textarea {
-    width: 100%; height: 200px; padding: 10px;
+    width: 100%; height: 180px; padding: 8px;
     background: #0d1b2a; color: white;
     border: 1px solid #333; border-radius: 8px;
-    font-family: inherit; font-size: 0.9rem; resize: vertical;
+    font-family: inherit; font-size: 0.85rem; resize: vertical;
 }
-.modal-actions {
-    display: flex; gap: 10px; margin-top: 15px; justify-content: flex-end;
-}
+.modal-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
 .image-viewer-modal {
     max-width: 90vw; max-height: 90vh;
     background: transparent; padding: 0;
-    display: flex; flex-direction: column; align-items: center;
-    gap: 15px;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
 }
 .image-viewer-modal img {
     max-width: 100%; max-height: 75vh;
@@ -576,6 +598,7 @@ body {
     transform: translateX(-50%); background: #333;
     color: white; padding: 10px 20px; border-radius: 20px;
     opacity: 0; transition: 0.3s; pointer-events: none; z-index: 2000;
+    font-size: 0.85rem;
 }
 .toast.show { opacity: 1; }
 </style>
@@ -584,17 +607,49 @@ body {
 
 <div class="app">
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('gen', this)">🎲 Генератор</button>
-        <button class="tab-btn" onclick="switchTab('table', this)">📊 Таблица</button>
-        <button class="tab-btn" onclick="switchTab('canvas', this)">🎨 Холст</button>
+        <button class="tab-btn active" onclick="switchTab('builder', this)">🎨 Конструктор</button>
+        <button class="tab-btn" onclick="switchTab('gen', this)">🎲 Генератор</button>
         <button class="tab-btn" onclick="switchTab('hist', this)">📜 История</button>
         <button class="tab-btn" onclick="switchTab('lists', this)">📋 Списки</button>
         <button class="tab-btn" onclick="switchTab('mod', this)">⚙️ Модули</button>
         <button class="tab-btn" onclick="switchTab('rules', this)">🔗 Правила</button>
     </div>
 
-    <!-- ГЕНЕРАТОР -->
-    <div id="tab-gen" class="tab-content active">
+    <!-- ================== КОНСТРУКТОР ================== -->
+    <div id="tab-builder" class="tab-content active">
+        <div class="builder-layout">
+            <!-- ХОЛСТ -->
+            <div class="builder-canvas-area">
+                <div class="builder-toolbar">
+                    <button class="btn-main" onclick="randomizeAll()">🎲 Случайно</button>
+                    <button class="btn-secondary" onclick="clearCanvas()">🗑 Сброс</button>
+                    <button class="btn-secondary" onclick="saveOutfit()">💾 Сохранить образ</button>
+                    <button class="btn-secondary" onclick="document.getElementById('outfitFileInput').click()">📂 Загрузить</button>
+                    <input type="file" id="outfitFileInput" accept=".json" style="display:none;" onchange="loadOutfitFromFile(event)">
+                    <button class="btn-secondary" onclick="exportPNG()">🖼️ PNG</button>
+                    <button class="btn-secondary" onclick="exportPSD()">📄 PSD</button>
+                    <button class="btn-secondary" onclick="undoCanvas()" id="undoBtn" disabled>↶</button>
+                    <button class="btn-secondary" onclick="redoCanvas()" id="redoBtn" disabled>↷</button>
+                    <button class="btn-secondary" onclick="toggleEraser()" id="eraserBtn">🧽</button>
+                    <span id="eraserSizeLabel" style="display:none; align-items:center; gap:6px; font-size:0.78rem;">
+                        <input type="range" id="eraserSize" min="10" max="400" value="80" style="width:90px;">
+                    </span>
+                </div>
+                <div class="canvas-frame">
+                    <canvas id="mainCanvas" width="4096" height="4096"></canvas>
+                </div>
+            </div>
+
+            <!-- ПАНЕЛЬ КАТЕГОРИЙ -->
+            <div class="builder-panel">
+                <h3>📚 Категории</h3>
+                <div id="builderCategories"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================== ГЕНЕРАТОР ================== -->
+    <div id="tab-gen" class="tab-content">
         <div class="presets-bar">
             <span>Пресеты:</span>
             <button class="preset-btn" onclick="applyPreset('portrait')">👤 Портрет</button>
@@ -606,70 +661,12 @@ body {
         <div class="result-box" id="resultBox">
             <p style="text-align:center; color:#888;">Нажмите «Сгенерировать»</p>
         </div>
-        <button class="btn-main" onclick="generate()">Сгенерировать!</button>
-        <button class="btn-secondary" style="width:100%; margin-bottom:8px;" onclick="copyResult()">📋 Скопировать промпт</button>
+        <button class="btn-main" style="width:100%; margin-bottom:8px;" onclick="generate()">Сгенерировать!</button>
+        <button class="btn-secondary" style="width:100%; margin-bottom:6px;" onclick="copyResult()">📋 Скопировать промпт</button>
         <button class="btn-secondary" style="width:100%;" onclick="copyShort()">📋 Скопировать кратко</button>
     </div>
 
-    <!-- ТАБЛИЦА -->
-    <div id="tab-table" class="tab-content">
-        <div class="table-toolbar">
-            <button class="btn-table" onclick="generateAndFill()">🎲 Сгенерировать и заполнить</button>
-            <button class="btn-secondary" onclick="fillFromLastGeneration()">📥 Заполнить из последней генерации</button>
-            <button class="btn-secondary" onclick="saveTableToHistory()">💾 Сохранить в историю</button>
-            <button class="btn-secondary" onclick="copyTablePrompt()">📋 Скопировать</button>
-            <button class="btn-secondary" onclick="clearTable()">🗑 Очистить</button>
-        </div>
-        <div id="tableContainer"></div>
-    </div>
-
-    <!-- ХОЛСТ -->
-    <div id="tab-canvas" class="tab-content">
-        <div class="canvas-toolbar">
-            <button class="btn-table" onclick="loadFromLastGeneration()">📥 Из генерации</button>
-            <button class="btn-secondary" onclick="loadFromTable()">📊 Из таблицы</button>
-            <button class="btn-secondary" onclick="clearCanvas()">🗑 Очистить холст</button>
-            <button class="btn-secondary" onclick="undoCanvas()" id="undoBtn" disabled>↶ Undo</button>
-            <button class="btn-secondary" onclick="redoCanvas()" id="redoBtn" disabled>↷ Redo</button>
-            <button class="btn-secondary" onclick="toggleEraser()" id="eraserBtn">🧽 Ластик: ВЫКЛ</button>
-            <button class="btn-secondary" onclick="flipCanvasHorizontal()">↔️ Отразить холст</button>
-            <button class="btn-secondary" onclick="flipCanvasVertical()">↕️ Отразить холст</button>
-            <button class="btn-secondary" onclick="exportPNG()">🖼️ Скачать PNG</button>
-            <button class="btn-secondary" onclick="exportPSD()">📄 Скачать PSD</button>
-        </div>
-
-        <div class="canvas-layout">
-            <div class="canvas-area">
-                <div class="canvas-zoom-bar">
-                    <span style="font-size:0.8rem; color:#888;">Масштаб:</span>
-                    <button class="zoom-btn" onclick="setZoom(0.25, this)">25%</button>
-                    <button class="zoom-btn" onclick="setZoom(0.5, this)">50%</button>
-                    <button class="zoom-btn active" onclick="setZoom(1, this)">100%</button>
-                    <button class="zoom-btn" onclick="setZoom(2, this)">200%</button>
-                    <span id="eraserSizeLabel" style="font-size:0.8rem; color:#888; margin-left:auto; display:none;">
-                        Размер ластика: <input type="range" id="eraserSize" min="10" max="400" value="80" style="vertical-align:middle; width:120px;">
-                    </span>
-                </div>
-                <div class="canvas-scroll" id="canvasScroll">
-                    <canvas id="mainCanvas" width="4096" height="4096"></canvas>
-                </div>
-            </div>
-            <div class="layers-panel">
-                <div class="add-layer-section">
-                    <h5>➕ Добавить слой вручную</h5>
-                    <div class="add-layer-controls">
-                        <select id="addLayerPath"></select>
-                        <select id="addLayerValue"></select>
-                        <button onclick="addLayerManually()">Добавить на холст</button>
-                    </div>
-                </div>
-                <h4>📚 Слои</h4>
-                <div id="layersList" class="layers-list"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ИСТОРИЯ -->
+    <!-- ================== ИСТОРИЯ ================== -->
     <div id="tab-hist" class="tab-content">
         <div class="history-controls">
             <input type="text" id="search" class="search-input" placeholder="Поиск..." oninput="renderHistory()">
@@ -678,9 +675,9 @@ body {
         <div class="history-list" id="historyList"></div>
     </div>
 
-    <!-- СПИСКИ -->
+    <!-- ================== СПИСКИ ================== -->
     <div id="tab-lists" class="tab-content">
-        <div class="toolbar">
+        <div class="toolbar" style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
             <button class="btn-secondary" onclick="sortLists()">🔤 Сортировать</button>
             <button class="btn-secondary" onclick="resetAll()">↺ Сброс</button>
             <button class="btn-secondary" onclick="clearAllImages()">🖼️ Очистить все картинки</button>
@@ -688,17 +685,17 @@ body {
         <div id="listsContainer"></div>
     </div>
 
-    <!-- МОДУЛИ -->
+    <!-- ================== МОДУЛИ ================== -->
     <div id="tab-mod" class="tab-content">
-        <div class="toolbar">
-            <input type="text" id="moduleSearch" class="search-input" placeholder="🔍 Поиск по модулям..." oninput="renderModules()" style="flex-grow:1;">
+        <div class="toolbar" style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+            <input type="text" id="moduleSearch" class="search-input" placeholder="🔍 Поиск..." oninput="renderModules()" style="flex-grow:1; min-width:150px;">
             <button class="btn-secondary" onclick="sortModules()">🔤 Сортировать</button>
             <button class="btn-secondary" onclick="resetAll()">↺ Сброс</button>
         </div>
         <div id="modulesContainer"></div>
     </div>
 
-    <!-- ПРАВИЛА -->
+    <!-- ================== ПРАВИЛА ================== -->
     <div id="tab-rules" class="tab-content">
         <div class="add-rule-form">
             <h4 style="margin-top:0;">➕ Новое правило</h4>
@@ -713,7 +710,7 @@ body {
             <div class="condition-block">
                 <div class="condition-header">
                     <span>Условия (И)</span>
-                    <button onclick="addCondition()" title="Добавить условие">➕</button>
+                    <button onclick="addCondition()" title="Добавить">➕</button>
                 </div>
                 <div id="conditionsContainer"></div>
             </div>
@@ -726,7 +723,7 @@ body {
             <div class="rule-row" id="actionExcludeRow" style="display:none;">
                 <label>Убрать из:</label>
                 <select id="newRuleExclModule"></select>
-                <input type="text" id="newRuleExclValue" placeholder="Значения через запятую">
+                <input type="text" id="newRuleExclValue" placeholder="через запятую">
             </div>
             <div class="rule-row" id="actionAddRow" style="display:none;">
                 <label>Текст:</label>
@@ -734,13 +731,13 @@ body {
             </div>
             <div class="rule-row">
                 <label>Цепочка:</label>
-                <label style="display:flex; align-items:center; gap:5px; font-size:0.8rem; cursor:pointer;">
-                    <input type="checkbox" id="newRuleChain"> Может активировать другие правила
+                <label style="display:flex; align-items:center; gap:5px; font-size:0.78rem; cursor:pointer;">
+                    <input type="checkbox" id="newRuleChain"> Может активировать другие
                 </label>
             </div>
-            <button class="btn-main" style="width:auto; margin:10px 0 0 0; padding:10px 20px; font-size:0.85rem;" onclick="addRule()">Добавить правило</button>
+            <button class="btn-main" style="margin-top:10px;" onclick="addRule()">Добавить правило</button>
         </div>
-        <div class="toolbar">
+        <div class="toolbar" style="display:flex; gap:8px; margin-bottom:12px;">
             <button class="btn-secondary" onclick="exportRules()">💾 Экспорт правил</button>
             <button class="btn-secondary" onclick="document.getElementById('ruleFileInput').click()">📂 Импорт правил</button>
             <input type="file" id="ruleFileInput" accept=".json" style="display:none;" onchange="importRules(event)">
@@ -753,11 +750,11 @@ body {
 <div class="modal-overlay" id="editModal">
     <div class="modal">
         <h3 id="editTitle">Редактирование</h3>
-        <p style="color:#888; font-size:0.85rem;">Один элемент на строку (или через запятую).</p>
+        <p style="color:#888; font-size:0.8rem;">Один элемент на строку (или через запятую).</p>
         <textarea id="editTextarea"></textarea>
         <div class="modal-actions">
             <button class="btn-secondary" onclick="closeEdit()">Отмена</button>
-            <button class="btn-main" style="width:auto; margin:0;" onclick="saveEdit()">Сохранить</button>
+            <button class="btn-main" onclick="saveEdit()">Сохранить</button>
         </div>
     </div>
 </div>
@@ -765,11 +762,11 @@ body {
 <div class="modal-overlay" id="bulkImportModal">
     <div class="modal">
         <h3 id="bulkImportTitle">Массовый импорт</h3>
-        <p style="color:#888; font-size:0.85rem;">Вставьте значения: одно на строку или через запятую.</p>
+        <p style="color:#888; font-size:0.8rem;">Один элемент на строку (или через запятую).</p>
         <textarea id="bulkImportTextarea"></textarea>
         <div class="modal-actions">
             <button class="btn-secondary" onclick="closeBulkImport()">Отмена</button>
-            <button class="btn-main" style="width:auto; margin:0;" onclick="confirmBulkImport()">Добавить</button>
+            <button class="btn-main" onclick="confirmBulkImport()">Добавить</button>
         </div>
     </div>
 </div>
@@ -786,7 +783,7 @@ body {
 
 <script>
 // ============================================================
-// ДЕФОЛТНЫЕ ДАННЫЕ (без изменений)
+// ДЕФОЛТНЫЕ ДАННЫЕ
 // ============================================================
 const DEFAULT_LISTS = {
     races: {
@@ -806,7 +803,7 @@ const DEFAULT_MODIFIERS = {
 
 const DEFAULT_MODULES = {
     appearance: {
-        name: "🎨 Модуль базовой внешности", groupClass: "group-appearance", expanded: true,
+        name: "🎨 Внешность", groupClass: "group-appearance", expanded: true,
         modules: {
             bangs: {
                 name: "Bangs (чёлка)", enabled: true, expanded: false,
@@ -817,11 +814,10 @@ const DEFAULT_MODULES = {
                 }
             },
             sidelocks: {
-                name: "Sidelocks (боковые пряди)", enabled: true, expanded: false,
+                name: "Sidelocks", enabled: true, expanded: false,
                 subcategories: {
                     shape: { name: "Форма", enabled: true, expanded: false, items: ["Single sidelock", "Long single sidelock", "Single braided sidelock", "Ring sidelocks", "Braided sidelock", "Drill sidelocks", "Flipped sidelocks", "Blunt sidelocks", "Wavy sidelocks", "Curly sidelocks", "Blunt tesses"] },
-                    length: { name: "Длина", enabled: true, expanded: false, items: ["Medium sidelock", "Long sidelocks", "Very long sidelocks", "Absurdly long sidelocks"] },
-                    position: { name: "Положение", enabled: true, expanded: false, items: ["Low tied sidelock", "Sidelocks tied back"] }
+                    length: { name: "Длина", enabled: true, expanded: false, items: ["Medium sidelock", "Long sidelocks", "Very long sidelocks", "Absurdly long sidelocks"] }
                 }
             },
             backHair: { name: "Back hair", enabled: true, expanded: false, subcategories: { shape: { name: "Форма", enabled: true, expanded: false, items: ["Хвост", "Косички", "Распущенные", "Пучок"] } } },
@@ -831,12 +827,12 @@ const DEFAULT_MODULES = {
         }
     },
     clothes: {
-        name: "👗 Модуль одежды", groupClass: "group-clothes", expanded: true,
+        name: "👗 Одежда", groupClass: "group-clothes", expanded: true,
         modules: {
             headwear:   { name: "Headwear",     enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Шляпа", "Капюшон", "Ободок", "Шапка"] } } },
             neckwear:   { name: "Neckwear",     enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Чокер", "Шарф", "Ожерелье"] } } },
             handwear:   { name: "Handwear",     enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Перчатки", "Митенки", "Кольца"] } } },
-            topwear1:   { name: "Topwear 1",    enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Футболка", "Худи", "Кроп-топ", "Куртка", "Свитер"] } } },
+            topwear1:   { name: "Topwear",      enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Футболка", "Худи", "Кроп-топ", "Куртка", "Свитер"] } } },
             bottomwear: { name: "Bottomwear",   enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Юбка", "Джинсы", "Шорты", "Карго"] } } },
             legwear:    { name: "Legwear",      enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Чулки", "Носки", "Колготки"] } } },
             footwear:   { name: "Footwear",     enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Кроссовки", "Ботинки", "Каблуки", "Сандалии"] } } },
@@ -848,15 +844,15 @@ const DEFAULT_MODULES = {
         }
     },
     race: {
-        name: "🧬 Модуль расы", groupClass: "group-race", expanded: true,
+        name: "🧬 Раса", groupClass: "group-race", expanded: true,
         modules: {
-            trait1:  { name: "Расовая черта 1", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Animal ears", "Horns", "Tail", "Wings", "Halos"] } } },
-            trait2:  { name: "Расовая черта 2", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Fangs", "Claws", "Glowing eyes", "Scales"] } } },
-            trait3:  { name: "Расовая черта 3", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Magic aura", "Tattoos", "Freckles", "Scars"] } } },
-            trait4:  { name: "Расовая черта 4", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Отсутствует"] } } },
-            trait5:  { name: "Расовая черта 5", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Отсутствует"] } } },
-            trait6:  { name: "Расовая черта 6", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Отсутствует"] } } },
-            trait7:  { name: "Расовая черта 7", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Отсутствует"] } } }
+            trait1:  { name: "Черта 1", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Animal ears", "Horns", "Tail", "Wings", "Halos"] } } },
+            trait2:  { name: "Черта 2", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Fangs", "Claws", "Glowing eyes", "Scales"] } } },
+            trait3:  { name: "Черта 3", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Magic aura", "Tattoos", "Freckles", "Scars"] } } },
+            trait4:  { name: "Черта 4", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Отсутствует"] } } },
+            trait5:  { name: "Черта 5", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Отсутствует"] } } },
+            trait6:  { name: "Черта 6", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Отсутствует"] } } },
+            trait7:  { name: "Черта 7", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Отсутствует"] } } }
         }
     }
 };
@@ -864,7 +860,10 @@ const DEFAULT_MODULES = {
 let state = {
     lists: null, modifiers: null, modules: null, rules: [], history: [],
     current: {}, currentPaths: [], currentItems: {}, extraText: '',
-    genCount: 0, table: {}
+    genCount: 0,
+    table: {},
+    // НОВОЕ: выбор в конструкторе: { path: item }
+    outfit: {}
 };
 
 let editContext = null;
@@ -875,13 +874,14 @@ let imageContext = null;
 // INIT
 // ============================================================
 function init() {
-    const savedLists = localStorage.getItem('cg_lists_v6');
-    const savedMods = localStorage.getItem('cg_modifiers_v5');
-    const savedModules = localStorage.getItem('cg_modules_v6');
-    const savedRules = localStorage.getItem('cg_rules_v5');
-    const savedHist = localStorage.getItem('cg_history_v5');
-    const savedCount = localStorage.getItem('cg_gen_count_v5');
-    const savedTable = localStorage.getItem('cg_table_v3');
+    const savedLists = localStorage.getItem('cg_lists_v7');
+    const savedMods = localStorage.getItem('cg_modifiers_v6');
+    const savedModules = localStorage.getItem('cg_modules_v7');
+    const savedRules = localStorage.getItem('cg_rules_v6');
+    const savedHist = localStorage.getItem('cg_history_v6');
+    const savedCount = localStorage.getItem('cg_gen_count_v6');
+    const savedTable = localStorage.getItem('cg_table_v4');
+    const savedOutfit = localStorage.getItem('cg_outfit');
 
     state.lists = savedLists ? JSON.parse(savedLists) : null;
     state.modifiers = savedMods ? JSON.parse(savedMods) : null;
@@ -890,6 +890,7 @@ function init() {
     state.history = savedHist ? JSON.parse(savedHist) : [];
     state.genCount = savedCount ? parseInt(savedCount) : 0;
     state.table = savedTable ? JSON.parse(savedTable) : {};
+    state.outfit = savedOutfit ? JSON.parse(savedOutfit) : {};
 
     if (!state.lists || !isValidListStructure(state.lists)) state.lists = JSON.parse(JSON.stringify(DEFAULT_LISTS));
     if (!state.modifiers) state.modifiers = JSON.parse(JSON.stringify(DEFAULT_MODIFIERS));
@@ -902,8 +903,10 @@ function init() {
     renderHistory();
     renderTable();
     populateRuleSelects();
-    populateAddLayerSelect();
     updateCounter();
+    // Инициализируем конструктор сразу
+    renderBuilder();
+    initCanvasIfNeeded();
 }
 
 function isValidListStructure(lists) {
@@ -981,13 +984,14 @@ function sanitizeData() {
 }
 function save() {
     try {
-        localStorage.setItem('cg_lists_v6', JSON.stringify(state.lists));
-        localStorage.setItem('cg_modifiers_v5', JSON.stringify(state.modifiers));
-        localStorage.setItem('cg_modules_v6', JSON.stringify(state.modules));
-        localStorage.setItem('cg_rules_v5', JSON.stringify(state.rules));
-        localStorage.setItem('cg_history_v5', JSON.stringify(state.history));
-        localStorage.setItem('cg_gen_count_v5', state.genCount.toString());
-        localStorage.setItem('cg_table_v3', JSON.stringify(state.table));
+        localStorage.setItem('cg_lists_v7', JSON.stringify(state.lists));
+        localStorage.setItem('cg_modifiers_v6', JSON.stringify(state.modifiers));
+        localStorage.setItem('cg_modules_v7', JSON.stringify(state.modules));
+        localStorage.setItem('cg_rules_v6', JSON.stringify(state.rules));
+        localStorage.setItem('cg_history_v6', JSON.stringify(state.history));
+        localStorage.setItem('cg_gen_count_v6', state.genCount.toString());
+        localStorage.setItem('cg_table_v4', JSON.stringify(state.table));
+        localStorage.setItem('cg_outfit', JSON.stringify(state.outfit));
     } catch (e) {
         if (e.name === 'QuotaExceededError') showToast('⚠️ Память переполнена!');
     }
@@ -1000,7 +1004,6 @@ function updateCounter() {
 // ============================================================
 // НАВИГАЦИЯ
 // ============================================================
-let canvasInitialized = false;
 function switchTab(name, btn) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -1008,156 +1011,599 @@ function switchTab(name, btn) {
     btn.classList.add('active');
     if (name === 'hist') renderHistory();
     if (name === 'rules') { populateRuleSelects(); renderRules(); }
-    if (name === 'table') renderTable();
-    if (name === 'canvas') { initCanvasIfNeeded(); populateAddLayerSelect(); }
+    if (name === 'lists') renderLists();
+    if (name === 'mod') renderModules();
+    if (name === 'builder') {
+        renderBuilder();
+        setTimeout(() => { initCanvasIfNeeded(); redrawCanvas(); }, 50);
+    }
 }
 
 // ============================================================
-// ИЗОБРАЖЕНИЯ — ИСПРАВЛЕНО: сохраняем формат и размер
+// КОНСТРУКТОР — панель категорий
 // ============================================================
-function pickImage(context) {
-    imageContext = context;
-    document.getElementById('imageFileInput').click();
-}
-document.getElementById('imageFileInput').addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file || !imageContext) return;
-    try {
-        const dataUrl = await compressImage(file);
-        applyImageToContext(dataUrl);
-    } catch (err) { alert('Ошибка загрузки: ' + err.message); }
-    e.target.value = '';
-    imageContext = null;
-});
+function renderBuilder() {
+    const container = document.getElementById('builderCategories');
+    if (!container) return;
+    container.innerHTML = '';
 
-// ИСПРАВЛЕНО: сохраняем PNG с прозрачностью, оригинальный размер до 2048
-function compressImage(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            const img = new Image();
-            img.onload = () => {
-                const MAX = 2048;
-                let { width, height } = img;
+    // Списки (Расы, Стили) как отдельные группы
+    const listsGroup = document.createElement('div');
+    listsGroup.className = 'cat-group group-lists';
+    listsGroup.innerHTML = `
+        <div class="cat-header">
+            <span>📋 Списки</span>
+            <span class="counter">▼</span>
+        </div>
+    `;
+    const listsBody = document.createElement('div');
+    listsBody.className = 'cat-body';
+    // Расы
+    listsBody.appendChild(createBuilderSlot('list.races', state.lists.races.name, state.lists.races.items));
+    // Стили
+    listsBody.appendChild(createBuilderSlot('list.styles', state.lists.styles.name, state.lists.styles.items));
+    listsGroup.appendChild(listsBody);
+    listsGroup.querySelector('.cat-header').onclick = () => listsGroup.classList.toggle('open');
+    listsGroup.classList.add('open');
+    container.appendChild(listsGroup);
 
-                // Если картинка маленькая — сохраняем как есть (оригинал!)
-                if (width <= MAX && height <= MAX) {
-                    resolve(ev.target.result);
-                    return;
-                }
-
-                // Иначе уменьшаем пропорционально до MAX
-                if (width > height) {
-                    height = height * MAX / width;
-                    width = MAX;
-                } else {
-                    width = width * MAX / height;
-                    height = MAX;
-                }
-
-                const canvas = document.createElement('canvas');
-                canvas.width = Math.round(width);
-                canvas.height = Math.round(height);
-                const ctx = canvas.getContext('2d');
-
-                // НЕ заливаем белым — сохраняем прозрачность
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-                // Определяем формат по mime-type
-                const isPng = file.type === 'image/png';
-                const isWebp = file.type === 'image/webp';
-
-                let dataUrl;
-                if (isPng) {
-                    dataUrl = canvas.toDataURL('image/png'); // без сжатия, с альфа
-                } else if (isWebp) {
-                    dataUrl = canvas.toDataURL('image/webp', 0.9);
-                } else {
-                    dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-                }
-                resolve(dataUrl);
-            };
-            img.onerror = () => reject(new Error('Не удалось загрузить изображение'));
-            img.src = ev.target.result;
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-}
-
-function applyImageToContext(dataUrl) {
-    const ctx = imageContext; if (!ctx) return;
-    let items;
-    if (ctx.type === 'list') items = state.lists[ctx.key].items;
-    else if (ctx.type === 'modifier') items = state.modifiers.items;
-    else if (ctx.type === 'subcat') items = state.modules[ctx.gKey].modules[ctx.mKey].subcategories[ctx.sKey].items;
-    if (items && items[ctx.index]) {
-        items[ctx.index].image = dataUrl;
-        save();
-        if (ctx.type === 'list') renderListItems(ctx.key);
-        else if (ctx.type === 'modifier') renderModifierItems();
-        else if (ctx.type === 'subcat') renderSubcatItems(ctx.gKey, ctx.mKey, ctx.sKey);
-        showToast('Изображение привязано');
-    }
-}
-function removeImage(context) {
-    const ctx = context;
-    let items;
-    if (ctx.type === 'list') items = state.lists[ctx.key].items;
-    else if (ctx.type === 'modifier') items = state.modifiers.items;
-    else if (ctx.type === 'subcat') items = state.modules[ctx.gKey].modules[ctx.mKey].subcategories[ctx.sKey].items;
-    if (items && items[ctx.index]) {
-        items[ctx.index].image = null;
-        save();
-        if (ctx.type === 'list') renderListItems(ctx.key);
-        else if (ctx.type === 'modifier') renderModifierItems();
-        else if (ctx.type === 'subcat') renderSubcatItems(ctx.gKey, ctx.mKey, ctx.sKey);
-        showToast('Изображение удалено');
-    }
-}
-function openImageViewer(src) {
-    document.getElementById('imageViewerImg').src = src;
-    document.getElementById('imageViewerModal').classList.add('active');
-}
-function closeImageViewer() {
-    document.getElementById('imageViewerModal').classList.remove('active');
-}
-function clearAllImages() {
-    if (!confirm('Удалить ВСЕ привязанные изображения?')) return;
-    for (const key in state.lists) state.lists[key].items.forEach(i => { i.image = null; });
-    if (state.modifiers) state.modifiers.items.forEach(i => { i.image = null; });
+    // Модули: группируем по группам
     for (const gKey in state.modules) {
-        for (const mKey in state.modules[gKey].modules) {
-            for (const sKey in state.modules[gKey].modules[mKey].subcategories) {
-                state.modules[gKey].modules[mKey].subcategories[sKey].items.forEach(i => { i.image = null; });
-            }
+        const group = state.modules[gKey];
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'cat-group ' + (group.groupClass || '');
+        groupDiv.innerHTML = `
+            <div class="cat-header">
+                <span>${group.name}</span>
+                <span class="counter">▼</span>
+            </div>
+        `;
+        const groupBody = document.createElement('div');
+        groupBody.className = 'cat-body';
+        for (const mKey in group.modules) {
+            const mod = group.modules[mKey];
+            groupBody.appendChild(createBuilderSlot(`${gKey}.${mKey}`, mod.name, collectAllItemsForModule(gKey, mKey)));
         }
+        groupDiv.appendChild(groupBody);
+        groupDiv.querySelector('.cat-header').onclick = () => groupDiv.classList.toggle('open');
+        groupDiv.classList.add('open');
+        container.appendChild(groupDiv);
     }
-    save(); renderLists(); renderModules();
-    showToast('Все изображения удалены');
+
+    // Модификаторы
+    const modsGroup = document.createElement('div');
+    modsGroup.className = 'cat-group group-mods';
+    modsGroup.innerHTML = `
+        <div class="cat-header">
+            <span>✨ ${state.modifiers.name}</span>
+            <span class="counter">▼</span>
+        </div>
+    `;
+    const modsBody = document.createElement('div');
+    modsBody.className = 'cat-body';
+    modsBody.appendChild(createBuilderSlot('modifiers', state.modifiers.name, state.modifiers.items));
+    modsGroup.appendChild(modsBody);
+    modsGroup.querySelector('.cat-header').onclick = () => modsGroup.classList.toggle('open');
+    modsGroup.classList.add('open');
+    container.appendChild(modsGroup);
+}
+
+function collectAllItemsForModule(gKey, mKey) {
+    const all = [];
+    if (!state.modules[gKey] || !state.modules[gKey].modules[mKey]) return all;
+    const mod = state.modules[gKey].modules[mKey];
+    for (const sKey in mod.subcategories) {
+        all.push(...mod.subcategories[sKey].items.filter(i => i.enabled));
+    }
+    return all;
+}
+
+function createBuilderSlot(path, name, items) {
+    const slot = document.createElement('div');
+    slot.className = 'slot';
+
+    const currentItem = state.outfit[path];
+    const currentText = currentItem ? currentItem.text : '—';
+    const enabledItems = items.filter(i => i.enabled);
+
+    slot.innerHTML = `
+        <div class="slot-header">
+            <span class="slot-name">${name}</span>
+            <span class="slot-current">${currentText}</span>
+        </div>
+    `;
+    const body = document.createElement('div');
+    body.className = 'slot-body';
+
+    // Кнопка убрать
+    const removeRow = document.createElement('div');
+    removeRow.className = 'tile-remove-row';
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'tile-remove-btn';
+    removeBtn.textContent = '🚫 Убрать слой';
+    removeBtn.onclick = (e) => { e.stopPropagation(); removeFromOutfit(path); };
+    removeRow.appendChild(removeBtn);
+    body.appendChild(removeRow);
+
+    // Сетка плиток
+    const grid = document.createElement('div');
+    grid.className = 'tiles-grid';
+
+    enabledItems.forEach(item => {
+        const tile = document.createElement('div');
+        const isActive = state.outfit[path] && state.outfit[path].text === item.text;
+        tile.className = 'tile' + (isActive ? ' active' : '') + (item.image ? '' : ' no-image');
+        tile.title = item.text;
+
+        if (item.image) {
+            const img = document.createElement('img');
+            img.className = 'tile-thumb';
+            img.src = item.image;
+            img.alt = item.text;
+            tile.appendChild(img);
+        } else {
+            const ph = document.createElement('div');
+            ph.className = 'tile-no-thumb';
+            ph.textContent = '🖼️';
+            tile.appendChild(ph);
+        }
+        const txt = document.createElement('div');
+        txt.className = 'tile-text';
+        txt.textContent = item.text;
+        tile.appendChild(txt);
+
+        tile.onclick = () => selectForOutfit(path, item);
+        grid.appendChild(tile);
+    });
+
+    body.appendChild(grid);
+    slot.appendChild(body);
+
+    // Заголовок — раскрытие
+    slot.querySelector('.slot-header').onclick = () => slot.classList.toggle('open');
+
+    return slot;
 }
 
 // ============================================================
-// СПИСОК ВСЕХ ПУТЕЙ
+// КОНСТРУКТОР — выбор слоя
 // ============================================================
-function getAllPaths() {
-    const paths = [];
-    paths.push({ path: 'list.races', name: '🧬 Расы', items: state.lists.races.items });
-    paths.push({ path: 'list.styles', name: '👗 Стили', items: state.lists.styles.items });
+async function selectForOutfit(path, item) {
+    // Обновляем outfit
+    if (state.outfit[path] && state.outfit[path].text === item.text) {
+        // Тот же — убираем
+        delete state.outfit[path];
+    } else {
+        state.outfit[path] = item;
+    }
+    save();
+    // Обновляем UI плиток
+    renderBuilder();
+    // Обновляем холст
+    await rebuildCanvasFromOutfit();
+}
+
+async function removeFromOutfit(path) {
+    delete state.outfit[path];
+    save();
+    renderBuilder();
+    await rebuildCanvasFromOutfit();
+}
+
+async function randomizeAll() {
+    // Проходим по всем слотам и выбираем случайное
+    // Списки
+    if (state.lists.races.enabled) {
+        const active = state.lists.races.items.filter(i => i.enabled);
+        if (active.length) state.outfit['list.races'] = active[Math.floor(Math.random() * active.length)];
+    }
+    if (state.lists.styles.enabled) {
+        const active = state.lists.styles.items.filter(i => i.enabled);
+        if (active.length) state.outfit['list.styles'] = active[Math.floor(Math.random() * active.length)];
+    }
+    // Модули
     for (const gKey in state.modules) {
         const group = state.modules[gKey];
         for (const mKey in group.modules) {
             const mod = group.modules[mKey];
-            const allItems = [];
-            for (const sKey in mod.subcategories) allItems.push(...mod.subcategories[sKey].items);
-            paths.push({ path: `${gKey}.${mKey}`, name: mod.name, items: allItems });
+            if (!mod.enabled) continue;
+            const path = `${gKey}.${mKey}`;
+            // Собираем активные items из всех подкатегорий
+            const all = [];
+            for (const sKey in mod.subcategories) {
+                const sub = mod.subcategories[sKey];
+                if (!sub.enabled) continue;
+                all.push(...sub.items.filter(i => i.enabled && i.text !== 'Отсутствует' && i.text !== 'None'));
+            }
+            if (all.length) {
+                state.outfit[path] = all[Math.floor(Math.random() * all.length)];
+            }
         }
     }
-    return paths;
+    // Модификатор
+    if (state.modifiers && state.modifiers.enabled) {
+        const active = state.modifiers.items.filter(i => i.enabled);
+        if (active.length) state.outfit['modifiers'] = active[Math.floor(Math.random() * active.length)];
+    }
+    save();
+    renderBuilder();
+    await rebuildCanvasFromOutfit();
+    showToast('🎲 Рандомизация');
+}
+
+function clearCanvas() {
+    if (!confirm('Очистить холст?')) return;
+    state.outfit = {};
+    save();
+    renderBuilder();
+    rebuildCanvasFromOutfit();
+    pushHistory();
 }
 
 // ============================================================
-// ГЕНЕРАЦИЯ
+// ХОЛСТ — построение из outfit
+// ============================================================
+const CANVAS_SIZE = 4096;
+
+let canvasState = {
+    layers: [],
+    zoom: 1,
+    eraser: false,
+    history: [],
+    historyIndex: -1
+};
+
+let mainCanvas = null;
+let ctx = null;
+let canvasInitialized = false;
+
+const LAYER_ORDER = {
+    'list.races': 1, 'list.styles': 2,
+    'race.trait1': 3, 'race.trait2': 4, 'race.trait3': 5,
+    'race.trait4': 6, 'race.trait5': 7, 'race.trait6': 8, 'race.trait7': 9,
+    'appearance.bangs': 10, 'appearance.sidelocks': 11,
+    'appearance.backHair': 12, 'appearance.addHair': 13,
+    'appearance.eyeShape': 14, 'appearance.skinColor': 15,
+    'clothes.bottomwear': 20, 'clothes.legwear': 21,
+    'clothes.topwear1': 22, 'clothes.handwear': 23,
+    'clothes.neckwear': 24, 'clothes.headwear': 25,
+    'clothes.acc1': 30, 'clothes.acc2': 31, 'clothes.acc3': 32,
+    'clothes.acc4': 33, 'clothes.acc5': 34,
+    'modifiers': 40
+};
+
+function loadImage(src) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+    });
+}
+
+async function rebuildCanvasFromOutfit() {
+    if (!canvasInitialized) initCanvasIfNeeded();
+
+    // Собираем массив слоёв из state.outfit (только те, у которых есть картинка)
+    const newLayers = [];
+    for (const path in state.outfit) {
+        const item = state.outfit[path];
+        if (!item || !item.image) continue;
+        try {
+            const img = await loadImage(item.image);
+            newLayers.push({
+                path: path,
+                name: getPathName(path),
+                item: item.text,
+                image: img,
+                visible: true,
+                opacity: 1,
+                flipH: false,
+                flipV: false,
+                eraseStrokes: []
+            });
+        } catch (e) {
+            console.warn('Не удалось загрузить', path);
+        }
+    }
+    // Сортируем по LAYER_ORDER
+    newLayers.sort((a, b) => (LAYER_ORDER[a.path] || 100) - (LAYER_ORDER[b.path] || 100));
+    canvasState.layers = newLayers;
+    renderLayers();
+    redrawCanvas();
+    pushHistory();
+}
+
+function redrawCanvas() {
+    if (!ctx) return;
+    ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    canvasState.layers.forEach(layer => {
+        if (!layer.visible) return;
+        drawLayer(layer);
+    });
+}
+
+function drawLayer(layer) {
+    const img = layer.image;
+    if (!img) return;
+    const scale = Math.min(CANVAS_SIZE / img.width, CANVAS_SIZE / img.height);
+    const w = img.width * scale;
+    const h = img.height * scale;
+    const x = (CANVAS_SIZE - w) / 2;
+    const y = (CANVAS_SIZE - h) / 2;
+    ctx.save();
+    ctx.globalAlpha = layer.opacity;
+    let drawX = x, drawY = y;
+    let drawW = w, drawH = h;
+    if (layer.flipH) { drawX = x + w; drawW = -w; }
+    if (layer.flipV) { drawY = y + h; drawH = -h; }
+    ctx.drawImage(img, drawX, drawY, drawW, drawH);
+    if (layer.eraseStrokes.length > 0) {
+        ctx.globalCompositeOperation = 'destination-out';
+        layer.eraseStrokes.forEach(stroke => {
+            ctx.beginPath();
+            ctx.arc(stroke.x, stroke.y, stroke.r, 0, Math.PI * 2);
+            ctx.fill();
+        });
+        ctx.globalCompositeOperation = 'source-over';
+    }
+    ctx.restore();
+}
+
+function renderLayers() {
+    // В конструкторе панель слоёв не показываем — только холст.
+    // Функция оставлена для совместимости, ничего не рисует.
+}
+
+function getPathName(path) {
+    if (path === 'modifiers') return state.modifiers.name;
+    if (path.startsWith('list.')) {
+        const k = path.split('.')[1];
+        return state.lists[k] ? state.lists[k].name : path;
+    }
+    const [g, m] = path.split('.');
+    if (!state.modules[g] || !state.modules[g].modules[m]) return path;
+    return state.modules[g].modules[m].name;
+}
+function getItemsByPath(path) {
+    if (path === 'modifiers') return state.modifiers.items;
+    if (path.startsWith('list.')) {
+        const k = path.split('.')[1];
+        return state.lists[k] ? state.lists[k].items : [];
+    }
+    const [g, m] = path.split('.');
+    if (!state.modules[g] || !state.modules[g].modules[m]) return [];
+    const all = [];
+    for (const sKey in state.modules[g].modules[m].subcategories) {
+        all.push(...state.modules[g].modules[m].subcategories[sKey].items);
+    }
+    return all;
+}
+
+// ============================================================
+// ЛАСТИК
+// ============================================================
+let isDrawingEraser = false;
+let currentEraseLayerIdx = -1;
+
+function toggleEraser() {
+    canvasState.eraser = !canvasState.eraser;
+    const btn = document.getElementById('eraserBtn');
+    btn.textContent = canvasState.eraser ? '🧽 ВКЛ' : '🧽';
+    btn.classList.toggle('btn-table', canvasState.eraser);
+    document.getElementById('eraserSizeLabel').style.display = canvasState.eraser ? 'inline-flex' : 'none';
+    if (mainCanvas) mainCanvas.style.cursor = canvasState.eraser ? 'cell' : 'crosshair';
+}
+
+function attachCanvasEvents() {
+    mainCanvas.addEventListener('mousedown', (e) => {
+        if (!canvasState.eraser) return;
+        if (canvasState.layers.length === 0) return;
+        isDrawingEraser = true;
+        currentEraseLayerIdx = canvasState.layers.length - 1;
+        eraseAt(e, currentEraseLayerIdx);
+    });
+    mainCanvas.addEventListener('mousemove', (e) => {
+        if (!isDrawingEraser) return;
+        eraseAt(e, currentEraseLayerIdx);
+    });
+    mainCanvas.addEventListener('mouseup', () => {
+        if (isDrawingEraser) { isDrawingEraser = false; pushHistory(); }
+    });
+    mainCanvas.addEventListener('mouseleave', () => {
+        if (isDrawingEraser) { isDrawingEraser = false; pushHistory(); }
+    });
+}
+
+function eraseAt(e, layerIdx) {
+    const rect = mainCanvas.getBoundingClientRect();
+    const canvasX = (e.clientX - rect.left) / rect.width * CANVAS_SIZE;
+    const canvasY = (e.clientY - rect.top) / rect.height * CANVAS_SIZE;
+    const size = parseInt(document.getElementById('eraserSize').value);
+    canvasState.layers[layerIdx].eraseStrokes.push({
+        x: canvasX, y: canvasY, r: size / 2
+    });
+    redrawCanvas();
+}
+
+// ============================================================
+// ИСТОРИЯ (undo/redo)
+// ============================================================
+function pushHistory() {
+    canvasState.history = canvasState.history.slice(0, canvasState.historyIndex + 1);
+    const snapshot = canvasState.layers.map(l => ({
+        path: l.path, item: l.item, image: l.image.src,
+        visible: l.visible, opacity: l.opacity,
+        flipH: l.flipH, flipV: l.flipV,
+        eraseStrokes: JSON.parse(JSON.stringify(l.eraseStrokes))
+    }));
+    canvasState.history.push(snapshot);
+    canvasState.historyIndex = canvasState.history.length - 1;
+    if (canvasState.history.length > 30) {
+        canvasState.history.shift();
+        canvasState.historyIndex--;
+    }
+    updateUndoRedoButtons();
+}
+
+function updateUndoRedoButtons() {
+    const u = document.getElementById('undoBtn');
+    const r = document.getElementById('redoBtn');
+    if (u) u.disabled = canvasState.historyIndex <= 0;
+    if (r) r.disabled = canvasState.historyIndex >= canvasState.history.length - 1;
+}
+
+async function undoCanvas() {
+    if (canvasState.historyIndex <= 0) return;
+    canvasState.historyIndex--;
+    await restoreHistorySnapshot(canvasState.history[canvasState.historyIndex]);
+    showToast('Отменено');
+}
+async function redoCanvas() {
+    if (canvasState.historyIndex >= canvasState.history.length - 1) return;
+    canvasState.historyIndex++;
+    await restoreHistorySnapshot(canvasState.history[canvasState.historyIndex]);
+    showToast('Повторено');
+}
+async function restoreHistorySnapshot(snapshot) {
+    const newLayers = [];
+    for (const s of snapshot) {
+        try {
+            const img = await loadImage(s.image);
+            newLayers.push({
+                path: s.path, name: getPathName(s.path), item: s.item,
+                image: img,
+                visible: s.visible, opacity: s.opacity,
+                flipH: s.flipH, flipV: s.flipV,
+                eraseStrokes: JSON.parse(JSON.stringify(s.eraseStrokes))
+            });
+        } catch (e) {}
+    }
+    canvasState.layers = newLayers;
+    redrawCanvas();
+    updateUndoRedoButtons();
+}
+
+// ============================================================
+// ЭКСПОРТ
+// ============================================================
+function exportPNG() {
+    if (canvasState.layers.length === 0) { showToast('Холст пуст!'); return; }
+    redrawCanvas();
+    mainCanvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `character_${Date.now()}_4096x4096.png`;
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('PNG скачан');
+    }, 'image/png');
+}
+
+function exportPSD() {
+    if (canvasState.layers.length === 0) { showToast('Холст пуст!'); return; }
+    if (typeof agPsd === 'undefined') { showToast('Библиотека PSD не загружена'); return; }
+    try {
+        const psdLayers = canvasState.layers.filter(l => l.visible).map(layer => {
+            const layerCanvas = document.createElement('canvas');
+            layerCanvas.width = CANVAS_SIZE;
+            layerCanvas.height = CANVAS_SIZE;
+            const lctx = layerCanvas.getContext('2d');
+            const img = layer.image;
+            const scale = Math.min(CANVAS_SIZE / img.width, CANVAS_SIZE / img.height);
+            const w = img.width * scale;
+            const h = img.height * scale;
+            const x = (CANVAS_SIZE - w) / 2;
+            const y = (CANVAS_SIZE - h) / 2;
+            let drawX = x, drawY = y;
+            let drawW = w, drawH = h;
+            if (layer.flipH) { drawX = x + w; drawW = -w; }
+            if (layer.flipV) { drawY = y + h; drawH = -h; }
+            lctx.globalAlpha = layer.opacity;
+            lctx.drawImage(img, drawX, drawY, drawW, drawH);
+            if (layer.eraseStrokes.length > 0) {
+                lctx.globalCompositeOperation = 'destination-out';
+                layer.eraseStrokes.forEach(stroke => {
+                    lctx.beginPath();
+                    lctx.arc(stroke.x, stroke.y, stroke.r, 0, Math.PI * 2);
+                    lctx.fill();
+                });
+                lctx.globalCompositeOperation = 'source-over';
+            }
+            return {
+                name: `${layer.name} - ${layer.item}`.substring(0, 60),
+                canvas: layerCanvas,
+                opacity: layer.opacity
+            };
+        });
+        const psd = { width: CANVAS_SIZE, height: CANVAS_SIZE, children: psdLayers };
+        agPsd.writePsd(psd, (buffer) => {
+            const blob = new Blob([buffer], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `character_${Date.now()}.psd`;
+            document.body.appendChild(a); a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('PSD скачан');
+        });
+    } catch (e) {
+        console.error(e);
+        showToast('Ошибка PSD: ' + e.message);
+    }
+}
+
+function saveOutfit() {
+    const data = JSON.stringify({ version: 1, outfit: state.outfit }, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `outfit_${Date.now()}.json`;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Образ сохранён');
+}
+
+function loadOutfitFromFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (!data.outfit) throw new Error('Неверный формат');
+            state.outfit = data.outfit;
+            save();
+            renderBuilder();
+            rebuildCanvasFromOutfit();
+            showToast('Образ загружен');
+        } catch (err) {
+            alert('Ошибка: ' + err.message);
+        }
+        event.target.value = '';
+    };
+    reader.readAsText(file);
+}
+
+function initCanvasIfNeeded() {
+    if (canvasInitialized) return;
+    canvasInitialized = true;
+    mainCanvas = document.getElementById('mainCanvas');
+    ctx = mainCanvas.getContext('2d');
+    mainCanvas.width = CANVAS_SIZE;
+    mainCanvas.height = CANVAS_SIZE;
+    attachCanvasEvents();
+    redrawCanvas();
+    renderLayers();
+    updateUndoRedoButtons();
+}
+
+// ============================================================
+// ГЕНЕРАЦИЯ (оставлена)
 // ============================================================
 function randItem(items) {
     const active = items.filter(i => i.enabled && i.text && i.text !== "Отсутствует" && i.text !== "None");
@@ -1232,24 +1678,6 @@ function generate() {
             }
         }
     });
-    let chainChanged = true, chainIter = 0;
-    while (chainChanged && chainIter < 3) {
-        chainChanged = false; chainIter++;
-        activeRules.filter(r => r.type === 'replace' && r.chain).forEach(rule => {
-            if (checkConditions(rule, result)) {
-                const actPath = rule.action.path;
-                const actVal = rule.action.value;
-                if (actPath && result[actPath] !== actVal) {
-                    result[actPath] = actVal;
-                    if (!paths.includes(actPath)) paths.push(actPath);
-                    const items = getItemsByPath(actPath);
-                    const found = items.find(i => i.text === actVal);
-                    resultItems[actPath] = found ? [found] : [];
-                    chainChanged = true;
-                }
-            }
-        });
-    }
     activeRules.filter(r => r.type === 'exclude').forEach(rule => {
         if (checkConditions(rule, result)) {
             const exclPath = rule.action.path;
@@ -1312,22 +1740,6 @@ function matchesCondition(result, condPath, condVal, negate) {
     if (negate) return isEmpty || !match;
     return match;
 }
-function getPathName(path) {
-    if (path.startsWith('list.')) return state.lists[path.split('.')[1]].name;
-    const [g, m] = path.split('.');
-    if (!state.modules[g] || !state.modules[g].modules[m]) return path;
-    return state.modules[g].modules[m].name;
-}
-function getItemsByPath(path) {
-    if (path.startsWith('list.')) return state.lists[path.split('.')[1]].items;
-    const [g, m] = path.split('.');
-    if (!state.modules[g] || !state.modules[g].modules[m]) return [];
-    const all = [];
-    for (const sKey in state.modules[g].modules[m].subcategories) {
-        all.push(...state.modules[g].modules[m].subcategories[sKey].items);
-    }
-    return all;
-}
 
 function renderResult(result, paths, extraTexts, resultItems) {
     const box = document.getElementById('resultBox');
@@ -1354,7 +1766,6 @@ function renderResult(result, paths, extraTexts, resultItems) {
                 const img = document.createElement('img');
                 img.className = 'result-thumb';
                 img.src = item.image;
-                img.title = item.text;
                 img.onclick = () => openImageViewer(item.image);
                 thumbs.appendChild(img);
             });
@@ -1366,7 +1777,7 @@ function renderResult(result, paths, extraTexts, resultItems) {
     if (extraTexts && extraTexts.length > 0) {
         const line = document.createElement('div');
         line.className = 'result-line extra';
-        line.innerHTML = `<span class="result-cat">🔗 Дополнительно</span><span class="result-val">${extraTexts.join(', ')}</span>`;
+        line.innerHTML = `<span class="result-cat">🔗 Доп</span><span class="result-val">${extraTexts.join(', ')}</span>`;
         box.appendChild(line);
     }
 }
@@ -1376,19 +1787,15 @@ function addHistory(result, paths, extraTexts, resultItems) {
         itemsForHistory[path] = resultItems[path].map(i => ({ text: i.text, image: i.image || null }));
     }
     state.history.unshift({
-        id: Date.now(),
-        type: 'generated',
+        id: Date.now(), type: 'generated',
         result: JSON.parse(JSON.stringify(result)),
-        paths: [...paths],
-        extraTexts: extraTexts || [],
+        paths: [...paths], extraTexts: extraTexts || [],
         items: itemsForHistory,
-        date: new Date().toLocaleString('ru-RU'),
-        favorite: false
+        date: new Date().toLocaleString('ru-RU'), favorite: false
     });
     if (state.history.length > 200) state.history.pop();
     save();
 }
-
 function formatPrompt(result, paths, extraTexts) {
     let out = paths.map(p => `${getPathName(p)}: ${result[p]}`).join('\n');
     if (extraTexts && extraTexts.length > 0) out += `\nДополнительно: ${extraTexts.join(', ')}`;
@@ -1456,11 +1863,10 @@ function renderHistory() {
     }
     filtered.forEach(it => {
         const div = document.createElement('div');
-        div.className = `history-item ${it.favorite ? 'fav' : ''} ${it.type === 'table' ? 'table-type' : ''}`;
-        const badge = it.type === 'table' ? '<span class="history-badge">📊 Таблица</span>' : '';
+        div.className = `history-item ${it.favorite ? 'fav' : ''}`;
         div.innerHTML = `
             <div class="history-header">
-                <span class="history-date">${badge}${it.date}</span>
+                <span class="history-date">${it.date}</span>
                 <div class="history-actions">
                     <button class="icon-btn ${it.favorite ? 'fav-active' : ''}" onclick="toggleFav(${it.id})">${it.favorite ? '★' : '☆'}</button>
                     <button class="icon-btn" onclick="copyHist(${it.id})">📋</button>
@@ -1489,10 +1895,113 @@ function copyHist(id) {
 }
 
 // ============================================================
-// СПИСКИ — добавлена кнопка «на холст»
+// ИЗОБРАЖЕНИЯ
+// ============================================================
+function pickImage(context) {
+    imageContext = context;
+    document.getElementById('imageFileInput').click();
+}
+document.getElementById('imageFileInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file || !imageContext) return;
+    try {
+        const dataUrl = await compressImage(file);
+        applyImageToContext(dataUrl);
+    } catch (err) { alert('Ошибка загрузки: ' + err.message); }
+    e.target.value = '';
+    imageContext = null;
+});
+
+function compressImage(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const img = new Image();
+            img.onload = () => {
+                const MAX = 2048;
+                let { width, height } = img;
+                if (width <= MAX && height <= MAX) { resolve(ev.target.result); return; }
+                if (width > height) { height = height * MAX / width; width = MAX; }
+                else { width = width * MAX / height; height = MAX; }
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.round(width);
+                canvas.height = Math.round(height);
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                const isPng = file.type === 'image/png';
+                const isWebp = file.type === 'image/webp';
+                let dataUrl;
+                if (isPng) dataUrl = canvas.toDataURL('image/png');
+                else if (isWebp) dataUrl = canvas.toDataURL('image/webp', 0.9);
+                else dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+                resolve(dataUrl);
+            };
+            img.onerror = () => reject(new Error('Не удалось загрузить изображение'));
+            img.src = ev.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+function applyImageToContext(dataUrl) {
+    const ctx = imageContext; if (!ctx) return;
+    let items;
+    if (ctx.type === 'list') items = state.lists[ctx.key].items;
+    else if (ctx.type === 'modifier') items = state.modifiers.items;
+    else if (ctx.type === 'subcat') items = state.modules[ctx.gKey].modules[ctx.mKey].subcategories[ctx.sKey].items;
+    if (items && items[ctx.index]) {
+        items[ctx.index].image = dataUrl;
+        save();
+        if (ctx.type === 'list') renderListItems(ctx.key);
+        else if (ctx.type === 'modifier') renderModifierItems();
+        else if (ctx.type === 'subcat') renderSubcatItems(ctx.gKey, ctx.mKey, ctx.sKey);
+        showToast('Изображение привязано');
+    }
+}
+function removeImage(context) {
+    const ctx = context;
+    let items;
+    if (ctx.type === 'list') items = state.lists[ctx.key].items;
+    else if (ctx.type === 'modifier') items = state.modifiers.items;
+    else if (ctx.type === 'subcat') items = state.modules[ctx.gKey].modules[ctx.mKey].subcategories[ctx.sKey].items;
+    if (items && items[ctx.index]) {
+        items[ctx.index].image = null;
+        save();
+        if (ctx.type === 'list') renderListItems(ctx.key);
+        else if (ctx.type === 'modifier') renderModifierItems();
+        else if (ctx.type === 'subcat') renderSubcatItems(ctx.gKey, ctx.mKey, ctx.sKey);
+        showToast('Изображение удалено');
+    }
+}
+function openImageViewer(src) {
+    document.getElementById('imageViewerImg').src = src;
+    document.getElementById('imageViewerModal').classList.add('active');
+}
+function closeImageViewer() {
+    document.getElementById('imageViewerModal').classList.remove('active');
+}
+function clearAllImages() {
+    if (!confirm('Удалить ВСЕ привязанные изображения?')) return;
+    for (const key in state.lists) state.lists[key].items.forEach(i => { i.image = null; });
+    if (state.modifiers) state.modifiers.items.forEach(i => { i.image = null; });
+    for (const gKey in state.modules) {
+        for (const mKey in state.modules[gKey].modules) {
+            for (const sKey in state.modules[gKey].modules[mKey].subcategories) {
+                state.modules[gKey].modules[mKey].subcategories[sKey].items.forEach(i => { i.image = null; });
+            }
+        }
+    }
+    save(); renderLists(); renderModules();
+    showToast('Все изображения удалены');
+}
+
+// ============================================================
+// СПИСКИ (админ-редактор)
 // ============================================================
 function renderLists() {
     const container = document.getElementById('listsContainer');
+    if (!container) return;
     container.innerHTML = '';
     for (const key in state.lists) container.appendChild(createListBlock(key, state.lists[key]));
 }
@@ -1508,11 +2017,11 @@ function createListBlock(key, list) {
                 <span class="list-counter">Активно: ${active} / ${list.items.length}${withImages ? ` · 🖼️ ${withImages}` : ''}</span>
             </div>
             <div class="list-controls">
-                <label style="font-size:0.75rem; cursor:pointer;">
+                <label style="font-size:0.72rem; cursor:pointer;">
                     <input type="checkbox" ${list.enabled ? 'checked' : ''} onchange="toggleList('${key}')" style="accent-color: var(--accent);"> Вкл
                 </label>
                 <button class="icon-btn" onclick="event.stopPropagation(); openEditList('${key}')">✏️</button>
-                <span style="font-size:0.9rem;">${list.expanded ? '▼' : '▶'}</span>
+                <span>${list.expanded ? '▼' : '▶'}</span>
             </div>
         </div>
     `;
@@ -1562,16 +2071,10 @@ function renderListItems(key) {
         const txt = document.createElement('span');
         txt.className = 'item-text'; txt.textContent = item.text;
         txt.onclick = () => startEditListItem(key, idx, txt);
-        // НОВОЕ: кнопка "на холст"
-        const toCanvasBtn = document.createElement('button');
-        toCanvasBtn.className = 'to-canvas-btn';
-        toCanvasBtn.textContent = '🎨';
-        toCanvasBtn.title = 'Отправить на холст';
-        toCanvasBtn.onclick = (e) => { e.stopPropagation(); sendToCanvas('list.' + key, item); };
         const del = document.createElement('button');
         del.className = 'icon-btn'; del.textContent = '❌';
         del.onclick = () => { list.items.splice(idx, 1); save(); renderListItems(key); };
-        row.appendChild(cb); row.appendChild(thumbWrap); row.appendChild(txt); row.appendChild(toCanvasBtn); row.appendChild(del);
+        row.appendChild(cb); row.appendChild(thumbWrap); row.appendChild(txt); row.appendChild(del);
         container.appendChild(row);
     });
     const header = container.closest('.list-block').querySelector('.list-counter');
@@ -1579,7 +2082,7 @@ function renderListItems(key) {
     const withImages = list.items.filter(i => i.image).length;
     header.textContent = `Активно: ${active} / ${list.items.length}${withImages ? ` · 🖼️ ${withImages}` : ''}`;
 }
-function toggleList(key) { state.lists[key].enabled = !state.lists[key].enabled; save(); renderLists(); }
+function toggleList(key) { state.lists[key].enabled = !state.lists[key].enabled; save(); renderLists(); renderBuilder(); }
 function startEditListItem(key, idx, span) {
     const list = state.lists[key]; const old = list.items[idx].text;
     const inp = document.createElement('input'); inp.type = 'text'; inp.value = old;
@@ -1608,31 +2111,16 @@ function openEditList(key) {
 }
 
 // ============================================================
-// МОДУЛИ — добавлена кнопка «на холст»
+// МОДУЛИ (админ-редактор)
 // ============================================================
 function renderModules() {
     const container = document.getElementById('modulesContainer');
+    if (!container) return;
     container.innerHTML = '';
     const q = (document.getElementById('moduleSearch').value || '').toLowerCase();
 
     for (const gKey in state.modules) {
         const group = state.modules[gKey];
-        const visibleModules = {};
-        for (const mKey in group.modules) {
-            const mod = group.modules[mKey];
-            if (!q) { visibleModules[mKey] = mod; continue; }
-            const modMatch = mod.name.toLowerCase().includes(q);
-            let subMatch = false;
-            for (const sKey in mod.subcategories) {
-                if (mod.subcategories[sKey].name.toLowerCase().includes(q)) { subMatch = true; break; }
-                for (const item of mod.subcategories[sKey].items) {
-                    if (item.text.toLowerCase().includes(q)) { subMatch = true; break; }
-                }
-                if (subMatch) break;
-            }
-            if (modMatch || subMatch) visibleModules[mKey] = mod;
-        }
-        if (Object.keys(visibleModules).length === 0 && q) continue;
         const title = document.createElement('div');
         title.className = `group-title ${group.groupClass}`;
         title.innerHTML = `<span>${group.name}</span><span>${group.expanded ? '▼' : '▶'}</span>`;
@@ -1640,13 +2128,16 @@ function renderModules() {
         container.appendChild(title);
         const body = document.createElement('div');
         body.className = `group-body ${group.expanded ? '' : 'collapsed'}`;
-        for (const mKey in visibleModules) body.appendChild(createModule(gKey, mKey, visibleModules[mKey]));
+        for (const mKey in group.modules) {
+            body.appendChild(createModule(gKey, mKey, group.modules[mKey]));
+        }
         container.appendChild(body);
     }
-    if (state.modifiers && (!q || state.modifiers.name.toLowerCase().includes(q) || state.modifiers.items.some(i => i.text.toLowerCase().includes(q)))) {
+    // Модификаторы
+    if (state.modifiers) {
         const title = document.createElement('div');
         title.className = 'group-title group-mods';
-        title.innerHTML = `<span>✨ Модификаторы одежды</span><span>${state.modifiers.expanded ? '▼' : '▶'}</span>`;
+        title.innerHTML = `<span>✨ ${state.modifiers.name}</span><span>${state.modifiers.expanded ? '▼' : '▶'}</span>`;
         title.onclick = () => { state.modifiers.expanded = !state.modifiers.expanded; save(); renderModules(); };
         container.appendChild(title);
         const body = document.createElement('div');
@@ -1664,7 +2155,7 @@ function createSimpleModule() {
         <div class="simple-header">
             <div><h4>${mod.name}</h4><span class="module-counter">Активно: ${active} / ${mod.items.length}</span></div>
             <div class="module-controls">
-                <label style="font-size:0.75rem; cursor:pointer;">
+                <label style="font-size:0.72rem; cursor:pointer;">
                     <input type="checkbox" ${mod.enabled ? 'checked' : ''} onchange="toggleModifiers()" style="accent-color: var(--mods);"> Вкл
                 </label>
                 <button class="icon-btn" onclick="event.stopPropagation(); openEditModifiers()">✏️</button>
@@ -1725,13 +2216,8 @@ function renderModifierItems() {
         row.appendChild(cb); row.appendChild(thumbWrap); row.appendChild(txt); row.appendChild(del);
         container.appendChild(row);
     });
-    const header = container.closest('.simple-module').querySelector('.module-counter');
-    if (header) {
-        const active = mod.items.filter(i => i.enabled).length;
-        header.textContent = `Активно: ${active} / ${mod.items.length}`;
-    }
 }
-function toggleModifiers() { state.modifiers.enabled = !state.modifiers.enabled; save(); renderModules(); }
+function toggleModifiers() { state.modifiers.enabled = !state.modifiers.enabled; save(); renderModules(); renderBuilder(); }
 function startEditModifierItem(idx, span) {
     const mod = state.modifiers; const old = mod.items[idx].text;
     const inp = document.createElement('input'); inp.type = 'text'; inp.value = old;
@@ -1765,9 +2251,9 @@ function createModule(gKey, mKey, mod) {
     }
     div.innerHTML = `
         <div class="module-header">
-            <div><h4>${mod.name}</h4><span class="module-counter">Подкатегорий: ${activeSubs}/${totalSubs} · Значений: ${totalActive}/${totalItems}</span></div>
+            <div><h4>${mod.name}</h4><span class="module-counter">${totalActive}/${totalItems}</span></div>
             <div class="module-controls">
-                <label style="font-size:0.75rem; cursor:pointer;">
+                <label style="font-size:0.72rem; cursor:pointer;">
                     <input type="checkbox" ${mod.enabled ? 'checked' : ''} onchange="toggleModule('${gKey}','${mKey}')" style="accent-color: var(--accent);"> Вкл
                 </label>
                 <button class="module-toggle">▼</button>
@@ -1792,7 +2278,7 @@ function createSubcat(gKey, mKey, sKey, sub) {
     const withImages = sub.items.filter(i => i.image).length;
     div.innerHTML = `
         <div class="subcat-header">
-            <div style="display:flex; align-items:center; gap:8px;">
+            <div style="display:flex; align-items:center; gap:6px;">
                 <input type="checkbox" ${sub.enabled ? 'checked' : ''} style="accent-color: var(--accent); cursor:pointer;" onclick="event.stopPropagation(); toggleSubcat('${gKey}','${mKey}','${sKey}')">
                 <span class="subcat-name">${sub.name}</span>
                 <span class="subcat-counter">(${active}/${sub.items.length}${withImages ? ` · 🖼️${withImages}` : ''})</span>
@@ -1850,25 +2336,15 @@ function renderSubcatItems(gKey, mKey, sKey) {
         const txt = document.createElement('span');
         txt.className = 'item-text'; txt.textContent = item.text;
         txt.onclick = () => startEditSubcatItem(gKey, mKey, sKey, idx, txt);
-        // НОВОЕ: кнопка "на холст"
-        const toCanvasBtn = document.createElement('button');
-        toCanvasBtn.className = 'to-canvas-btn';
-        toCanvasBtn.textContent = '🎨';
-        toCanvasBtn.title = 'Отправить на холст';
-        toCanvasBtn.onclick = (e) => { e.stopPropagation(); sendToCanvas(`${gKey}.${mKey}`, item); };
         const del = document.createElement('button');
         del.className = 'icon-btn'; del.textContent = '❌';
         del.onclick = () => { sub.items.splice(idx, 1); save(); renderSubcatItems(gKey, mKey, sKey); };
-        row.appendChild(cb); row.appendChild(thumbWrap); row.appendChild(txt); row.appendChild(toCanvasBtn); row.appendChild(del);
+        row.appendChild(cb); row.appendChild(thumbWrap); row.appendChild(txt); row.appendChild(del);
         container.appendChild(row);
     });
-    const header = container.closest('.subcat').querySelector('.subcat-counter');
-    const active = sub.items.filter(i => i.enabled).length;
-    const withImages = sub.items.filter(i => i.image).length;
-    header.textContent = `(${active}/${sub.items.length}${withImages ? ` · 🖼️${withImages}` : ''})`;
 }
-function toggleModule(gKey, mKey) { state.modules[gKey].modules[mKey].enabled = !state.modules[gKey].modules[mKey].enabled; save(); renderModules(); }
-function toggleSubcat(gKey, mKey, sKey) { state.modules[gKey].modules[mKey].subcategories[sKey].enabled = !state.modules[gKey].modules[mKey].subcategories[sKey].enabled; save(); renderModules(); }
+function toggleModule(gKey, mKey) { state.modules[gKey].modules[mKey].enabled = !state.modules[gKey].modules[mKey].enabled; save(); renderModules(); renderBuilder(); }
+function toggleSubcat(gKey, mKey, sKey) { state.modules[gKey].modules[mKey].subcategories[sKey].enabled = !state.modules[gKey].modules[mKey].subcategories[sKey].enabled; save(); renderModules(); renderBuilder(); }
 function startEditSubcatItem(gKey, mKey, sKey, idx, span) {
     const sub = state.modules[gKey].modules[mKey].subcategories[sKey];
     const old = sub.items[idx].text;
@@ -1908,6 +2384,21 @@ function openEditSubcat(gKey, mKey, sKey) {
 // ============================================================
 // ПРАВИЛА
 // ============================================================
+function getAllPaths() {
+    const paths = [];
+    paths.push({ path: 'list.races', name: '🧬 Расы', items: state.lists.races.items });
+    paths.push({ path: 'list.styles', name: '👗 Стили', items: state.lists.styles.items });
+    for (const gKey in state.modules) {
+        const group = state.modules[gKey];
+        for (const mKey in group.modules) {
+            const mod = group.modules[mKey];
+            const allItems = [];
+            for (const sKey in mod.subcategories) allItems.push(...mod.subcategories[sKey].items);
+            paths.push({ path: `${gKey}.${mKey}`, name: mod.name, items: allItems });
+        }
+    }
+    return paths;
+}
 function populateRuleSelects() {
     const paths = getAllPaths();
     const selects = ['newRuleActModule', 'newRuleExclModule'];
@@ -1955,11 +2446,10 @@ function createConditionRow(cond) {
     fillValues();
     moduleSelect.onchange = fillValues;
     const negateLabel = document.createElement('label');
-    negateLabel.style.fontSize = '0.75rem';
+    negateLabel.style.fontSize = '0.72rem';
     negateLabel.style.display = 'flex';
     negateLabel.style.alignItems = 'center';
     negateLabel.style.gap = '4px';
-    negateLabel.style.cursor = 'pointer';
     const negateCb = document.createElement('input');
     negateCb.type = 'checkbox';
     negateCb.className = 'cond-negate';
@@ -1972,7 +2462,6 @@ function createConditionRow(cond) {
     removeBtn.style.border = 'none';
     removeBtn.style.color = 'var(--accent)';
     removeBtn.style.cursor = 'pointer';
-    removeBtn.style.fontSize = '1rem';
     removeBtn.onclick = () => div.remove();
     div.appendChild(moduleSelect); div.appendChild(arrow); div.appendChild(valueSelect);
     div.appendChild(negateLabel); div.appendChild(removeBtn);
@@ -2046,7 +2535,7 @@ function renderRules() {
     state.rules.forEach(rule => {
         const div = document.createElement('div');
         div.className = `rule-card ${rule.enabled ? '' : 'disabled'}`;
-        const typeLabel = rule.type === 'replace' ? '🔵 Замена' : rule.type === 'exclude' ? '🔴 Исключение' : '🟡 Добавить';
+        const typeLabel = rule.type === 'replace' ? '🔵 Замена' : rule.type === 'exclude' ? '🔴 Искл' : '🟡 Текст';
         const typeClass = rule.type === 'replace' ? 'rule-type-replace' : rule.type === 'exclude' ? 'rule-type-exclude' : 'rule-type-add';
         let condText = rule.conditions.map(c => {
             const name = getPathName(c.path) || c.path;
@@ -2058,25 +2547,22 @@ function renderRules() {
             actionText = `<b>${actName}</b> = <b style="color:var(--clothes);">${rule.action.value}</b>`;
         } else if (rule.type === 'exclude') {
             const actName = getPathName(rule.action.path) || rule.action.path;
-            actionText = `убрать из <b>${actName}</b>: <b style="color:var(--accent);">${rule.action.values.join(', ')}</b>`;
+            actionText = `убрать из <b>${actName}</b>: ${rule.action.values.join(', ')}`;
         } else {
-            actionText = `добавить текст: <b style="color:var(--race);">${rule.action.text}</b>`;
+            actionText = `+ ${rule.action.text}`;
         }
-        const chainBadge = rule.chain ? '<span class="chain-badge">🔗 ЦЕПОЧКА</span>' : '';
+        const chainBadge = rule.chain ? '<span class="chain-badge">🔗</span>' : '';
         div.innerHTML = `
             <div class="rule-header">
                 <span class="rule-type ${typeClass}">${typeLabel}${chainBadge}</span>
-                <div style="display:flex; gap:8px; align-items:center;">
-                    <label style="font-size:0.75rem; cursor:pointer;">
+                <div style="display:flex; gap:6px; align-items:center;">
+                    <label style="font-size:0.72rem; cursor:pointer;">
                         <input type="checkbox" ${rule.enabled ? 'checked' : ''} onchange="toggleRule(${rule.id})" style="accent-color: var(--rules);"> Вкл
                     </label>
                     <button class="icon-btn" onclick="deleteRule(${rule.id})">❌</button>
                 </div>
             </div>
-            <div class="rule-body">
-                <b>Если</b> ${condText}<br>
-                <b>Тогда</b> ${actionText}
-            </div>
+            <div class="rule-body"><b>Если</b> ${condText}<br><b>Тогда</b> ${actionText}</div>
         `;
         container.appendChild(div);
     });
@@ -2091,7 +2577,7 @@ function exportRules() {
     a.href = url; a.download = `rules_${Date.now()}.json`;
     document.body.appendChild(a); a.click();
     document.body.removeChild(a); URL.revokeObjectURL(url);
-    showToast('Правила экспортированы');
+    showToast('Экспортировано');
 }
 function importRules(event) {
     const file = event.target.files[0];
@@ -2104,7 +2590,7 @@ function importRules(event) {
             if (!confirm(`Загрузить ${data.rules.length} правил?`)) return;
             state.rules = data.rules;
             save(); renderRules();
-            showToast(`Загружено: ${data.rules.length}`);
+            showToast('Загружено');
         } catch (err) { alert('Ошибка: ' + err.message); }
         event.target.value = '';
     };
@@ -2132,7 +2618,7 @@ function saveEdit() {
     if (editContext.type === 'list') state.lists[editContext.key].items = newItems;
     else if (editContext.type === 'modifier') state.modifiers.items = newItems;
     else state.modules[editContext.gKey].modules[editContext.mKey].subcategories[editContext.sKey].items = newItems;
-    save(); renderLists(); renderModules();
+    save(); renderLists(); renderModules(); renderBuilder();
     closeEdit(); showToast(`Сохранено: ${lines.length}`);
 }
 function openBulkImport(type, key, mKey, sKey) {
@@ -2159,23 +2645,17 @@ function confirmBulkImport() {
         if (target.some(i => i.text.toLowerCase() === line.toLowerCase())) skipped++;
         else { target.push({ text: line, enabled: true, image: null }); added++; }
     });
-    save(); renderLists(); renderModules();
+    save(); renderLists(); renderModules(); renderBuilder();
     closeBulkImport();
-    showToast(`Добавлено: ${added}${skipped ? `, пропущено: ${skipped}` : ''}`);
+    showToast(`+${added}${skipped ? `, пропущено ${skipped}` : ''}`);
 }
 function resetAll() {
-    if (!confirm('Сбросить списки и модули? Правила и таблица сохранятся.')) return;
+    if (!confirm('Сбросить списки и модули? Правила, образ и таблица сохранятся.')) return;
     state.lists = JSON.parse(JSON.stringify(DEFAULT_LISTS));
     state.modifiers = JSON.parse(JSON.stringify(DEFAULT_MODIFIERS));
     state.modules = JSON.parse(JSON.stringify(DEFAULT_MODULES));
-    save(); renderLists(); renderModules(); renderTable();
+    save(); renderLists(); renderModules(); renderBuilder();
     showToast('Сброшено');
-}
-function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2000);
 }
 
 // ============================================================
@@ -2183,13 +2663,13 @@ function showToast(msg) {
 // ============================================================
 function getTableRows() {
     const sections = {
-        lists:      { name: "📋 Списки (основное)",     class: "table-section-lists",      rows: [] },
-        appearance: { name: "🎨 Модуль базовой внешности", class: "table-section-appearance", rows: [] },
-        clothes:    { name: "👗 Модуль одежды",           class: "table-section-clothes",    rows: [] },
-        race:       { name: "🧬 Модуль расы",             class: "table-section-race",       rows: [] }
+        lists:      { name: "📋 Списки",     class: "table-section-lists",      rows: [] },
+        appearance: { name: "🎨 Внешность",  class: "table-section-appearance", rows: [] },
+        clothes:    { name: "👗 Одежда",     class: "table-section-clothes",    rows: [] },
+        race:       { name: "🧬 Раса",       class: "table-section-race",       rows: [] }
     };
     sections.lists.rows.push({ path: 'list.races', name: "🧬 Расы", items: state.lists.races.items.filter(i => i.enabled), isClothes: false });
-    sections.lists.rows.push({ path: 'list.styles', name: "👗 Стили одежды", items: state.lists.styles.items.filter(i => i.enabled), isClothes: false });
+    sections.lists.rows.push({ path: 'list.styles', name: "👗 Стили", items: state.lists.styles.items.filter(i => i.enabled), isClothes: false });
     for (const mKey in state.modules.race.modules) {
         const mod = state.modules.race.modules[mKey];
         const path = `race.${mKey}`;
@@ -2219,637 +2699,17 @@ function collectItems(path) {
 }
 function renderTable() {
     const container = document.getElementById('tableContainer');
-    container.innerHTML = '';
-    const sections = getTableRows();
-    for (const secKey in sections) {
-        const sec = sections[secKey];
-        if (sec.rows.length === 0) continue;
-        const sectionDiv = document.createElement('div');
-        sectionDiv.className = 'table-section';
-        const header = document.createElement('div');
-        header.className = `table-section-header ${sec.class}`;
-        header.textContent = sec.name;
-        sectionDiv.appendChild(header);
-        const table = document.createElement('table');
-        table.className = 'table-grid';
-        const thead = document.createElement('thead');
-        thead.innerHTML = `<tr><th>Слот</th>${secKey === 'clothes' ? '<th>Модификатор</th>' : ''}<th>Значение</th></tr>`;
-        table.appendChild(thead);
-        const tbody = document.createElement('tbody');
-        sec.rows.forEach(row => {
-            const tr = document.createElement('tr');
-            const tdName = document.createElement('td');
-            tdName.className = 'slot-name';
-            tdName.textContent = row.name;
-            tr.appendChild(tdName);
-            if (secKey === 'clothes') {
-                const tdMod = document.createElement('td');
-                tdMod.className = 'mod-cell';
-                const modSelect = document.createElement('input');
-                modSelect.type = 'text';
-                modSelect.className = 'table-cell-input';
-                modSelect.placeholder = '—';
-                modSelect.value = (state.table[row.path] && state.table[row.path].modifier) || '';
-                modSelect.oninput = () => {
-                    if (!state.table[row.path]) state.table[row.path] = {};
-                    state.table[row.path].modifier = modSelect.value;
-                    modSelect.classList.toggle('filled', !!modSelect.value);
-                    save();
-                };
-                if (modSelect.value) modSelect.classList.add('filled');
-                tdMod.appendChild(modSelect);
-                tr.appendChild(tdMod);
-            }
-            const tdValue = document.createElement('td');
-            tdValue.className = 'value-cell';
-            const valueWrap = document.createElement('div');
-            valueWrap.className = 'table-cell-row';
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.className = 'table-cell-input';
-            input.placeholder = '—';
-            input.value = (state.table[row.path] && state.table[row.path].value) || '';
-            input.oninput = () => {
-                if (!state.table[row.path]) state.table[row.path] = {};
-                state.table[row.path].value = input.value;
-                input.classList.toggle('filled', !!input.value);
-                save();
-            };
-            if (input.value) input.classList.add('filled');
-            valueWrap.appendChild(input);
-            const currentValue = state.table[row.path] && state.table[row.path].value;
-            if (currentValue) {
-                const found = row.items.find(i => i.text === currentValue);
-                if (found && found.image) {
-                    const img = document.createElement('img');
-                    img.className = 'table-cell-thumb';
-                    img.src = found.image;
-                    img.onclick = () => openImageViewer(found.image);
-                    valueWrap.appendChild(img);
-                }
-            }
-            tdValue.appendChild(valueWrap);
-            tr.appendChild(tdValue);
-            tbody.appendChild(tr);
-        });
-        table.appendChild(tbody);
-        sectionDiv.appendChild(table);
-        container.appendChild(sectionDiv);
-    }
-}
-function generateAndFill() {
-    generate();
-    fillFromLastGeneration();
-    const tabs = document.querySelectorAll('.tab-btn');
-    switchTab('table', tabs[1]);
-}
-function fillFromLastGeneration() {
-    if (!state.currentPaths || state.currentPaths.length === 0) {
-        showToast('Сначала сгенерируйте!');
-        return;
-    }
-    state.table = {};
-    state.currentPaths.forEach(path => {
-        state.table[path] = { value: state.current[path] || '', modifier: '' };
-    });
-    save();
-    renderTable();
-    showToast('Заполнено из последней генерации');
-}
-function saveTableToHistory() {
-    const filled = Object.keys(state.table).filter(k => state.table[k].value);
-    if (filled.length === 0) { showToast('Таблица пуста!'); return; }
-    const result = {};
-    const itemsForHistory = {};
-    const paths = [];
-    filled.forEach(path => {
-        const entry = state.table[path];
-        let value = entry.value;
-        if (entry.modifier) value = `${entry.modifier} ${value}`;
-        result[path] = value;
-        paths.push(path);
-        const items = collectItems(path);
-        const found = items.find(i => i.text === entry.value);
-        itemsForHistory[path] = found ? [found] : [{ text: entry.value, image: null }];
-    });
-    state.history.unshift({
-        id: Date.now(), type: 'table', result: result, paths: paths,
-        items: itemsForHistory, extraTexts: [],
-        date: new Date().toLocaleString('ru-RU'), favorite: false
-    });
-    if (state.history.length > 200) state.history.pop();
-    save(); renderHistory();
-    showToast('Сохранено в историю');
-}
-function copyTablePrompt() {
-    const filled = Object.keys(state.table).filter(k => state.table[k].value);
-    if (filled.length === 0) { showToast('Таблица пуста!'); return; }
-    const text = filled.map(path => {
-        const entry = state.table[path];
-        const name = getPathName(path) || path;
-        const value = entry.modifier ? `${entry.modifier} ${entry.value}` : entry.value;
-        return `${name}: ${value}`;
-    }).join('\n');
-    navigator.clipboard.writeText(text);
-    showToast('Скопировано!');
-}
-function clearTable() {
-    if (!confirm('Очистить таблицу?')) return;
-    state.table = {};
-    save(); renderTable();
-    showToast('Таблица очищена');
-}
-
-// ============================================================
-// ХОЛСТ — ИСПРАВЛЕНО: 4096 реальный размер, масштаб работает правильно
-// ============================================================
-const CANVAS_SIZE = 4096;
-
-let canvasState = {
-    layers: [],
-    zoom: 1,
-    eraser: false,
-    history: [],
-    historyIndex: -1
-};
-
-let mainCanvas = null;
-let ctx = null;
-
-const LAYER_ORDER = {
-    'list.races': 1, 'list.styles': 2,
-    'race.trait1': 3, 'race.trait2': 4, 'race.trait3': 5,
-    'race.trait4': 6, 'race.trait5': 7, 'race.trait6': 8, 'race.trait7': 9,
-    'appearance.bangs': 10, 'appearance.sidelocks': 11,
-    'appearance.backHair': 12, 'appearance.addHair': 13,
-    'appearance.eyeShape': 14, 'appearance.skinColor': 15,
-    'clothes.bottomwear': 20, 'clothes.legwear': 21,
-    'clothes.topwear1': 22, 'clothes.handwear': 23,
-    'clothes.neckwear': 24, 'clothes.headwear': 25,
-    'clothes.acc1': 30, 'clothes.acc2': 31, 'clothes.acc3': 32,
-    'clothes.acc4': 33, 'clothes.acc5': 34
-};
-
-function loadImage(src) {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => resolve(img);
-        img.onerror = reject;
-        img.src = src;
-    });
-}
-
-// НОВОЕ: отправка элемента на холст вручную
-async function sendToCanvas(path, item) {
-    if (!item || !item.image) {
-        showToast('У элемента нет привязанной картинки');
-        return;
-    }
-    if (!canvasInitialized) {
-        canvasInitialized = true;
-        mainCanvas = document.getElementById('mainCanvas');
-        ctx = mainCanvas.getContext('2d');
-        mainCanvas.width = CANVAS_SIZE;
-        mainCanvas.height = CANVAS_SIZE;
-        attachCanvasEvents();
-        setZoom(1, document.querySelector('.zoom-btn.active'));
-    }
-    try {
-        const img = await loadImage(item.image);
-        canvasState.layers.push({
-            path: path,
-            name: getPathName(path),
-            item: item.text,
-            image: img,
-            visible: true,
-            opacity: 1,
-            flipH: false,
-            flipV: false,
-            eraseStrokes: []
-        });
-        // Сортируем по LAYER_ORDER
-        canvasState.layers.sort((a, b) => (LAYER_ORDER[a.path] || 100) - (LAYER_ORDER[b.path] || 100));
-        renderLayers();
-        redrawCanvas();
-        pushHistory();
-        showToast(`"${item.text}" → на холст`);
-    } catch (e) {
-        showToast('Не удалось загрузить картинку');
-    }
-}
-
-// НОВОЕ: добавление слоя из панели справа
-function populateAddLayerSelect() {
-    const pathSel = document.getElementById('addLayerPath');
-    const valSel = document.getElementById('addLayerValue');
-    if (!pathSel || !valSel) return;
-    const paths = getAllPaths();
-    pathSel.innerHTML = '';
-    paths.forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p.path; opt.textContent = p.name;
-        pathSel.appendChild(opt);
-    });
-    const fillValues = () => {
-        valSel.innerHTML = '';
-        const items = getItemsByPath(pathSel.value);
-        items.forEach(i => {
-            const opt = document.createElement('option');
-            opt.value = i.text;
-            opt.textContent = i.text + (i.image ? ' 🖼️' : '');
-            valSel.appendChild(opt);
-        });
-    };
-    fillValues();
-    pathSel.onchange = fillValues;
-}
-
-function addLayerManually() {
-    const pathSel = document.getElementById('addLayerPath');
-    const valSel = document.getElementById('addLayerValue');
-    if (!pathSel || !valSel) return;
-    const path = pathSel.value;
-    const value = valSel.value;
-    if (!path || !value) { showToast('Выберите значение'); return; }
-    const items = getItemsByPath(path);
-    const item = items.find(i => i.text === value);
-    if (!item) { showToast('Не найдено'); return; }
-    sendToCanvas(path, item);
-}
-
-async function buildLayersFromPaths(result, resultItems) {
-    canvasState.layers = [];
-    const paths = Object.keys(result).filter(p => resultItems[p] && resultItems[p].some(i => i.image));
-    paths.sort((a, b) => (LAYER_ORDER[a] || 100) - (LAYER_ORDER[b] || 100));
-
-    for (const path of paths) {
-        const items = resultItems[path].filter(i => i.image);
-        if (items.length === 0) continue;
-        const item = items[0];
-        try {
-            const img = await loadImage(item.image);
-            canvasState.layers.push({
-                path: path,
-                name: getPathName(path),
-                item: item.text,
-                image: img,
-                visible: true,
-                opacity: 1,
-                flipH: false,
-                flipV: false,
-                eraseStrokes: []
-            });
-        } catch (e) {
-            console.warn('Не удалось загрузить изображение для', path);
-        }
-    }
-    renderLayers();
-    redrawCanvas();
-    pushHistory();
-}
-
-function loadFromLastGeneration() {
-    if (!state.currentPaths || state.currentPaths.length === 0) {
-        showToast('Сначала сгенерируйте!');
-        return;
-    }
-    if (!canvasInitialized) {
-        canvasInitialized = true;
-        mainCanvas = document.getElementById('mainCanvas');
-        ctx = mainCanvas.getContext('2d');
-        mainCanvas.width = CANVAS_SIZE;
-        mainCanvas.height = CANVAS_SIZE;
-        attachCanvasEvents();
-        setZoom(1, document.querySelector('.zoom-btn.active'));
-    }
-    buildLayersFromPaths(state.current, state.currentItems).then(() => {
-        showToast('Загружено из генерации');
-    });
-}
-
-function loadFromTable() {
-    const filled = Object.keys(state.table).filter(k => state.table[k].value);
-    if (filled.length === 0) { showToast('Таблица пуста!'); return; }
-    if (!canvasInitialized) {
-        canvasInitialized = true;
-        mainCanvas = document.getElementById('mainCanvas');
-        ctx = mainCanvas.getContext('2d');
-        mainCanvas.width = CANVAS_SIZE;
-        mainCanvas.height = CANVAS_SIZE;
-        attachCanvasEvents();
-        setZoom(1, document.querySelector('.zoom-btn.active'));
-    }
-    const result = {};
-    const resultItems = {};
-    filled.forEach(path => {
-        const entry = state.table[path];
-        let value = entry.value;
-        if (entry.modifier) value = `${entry.modifier} ${value}`;
-        result[path] = value;
-        const items = collectItems(path);
-        const found = items.find(i => i.text === entry.value);
-        resultItems[path] = found ? [found] : [];
-    });
-    buildLayersFromPaths(result, resultItems).then(() => {
-        showToast('Загружено из таблицы');
-    });
-}
-
-function redrawCanvas() {
-    if (!ctx) return;
-    ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-    canvasState.layers.forEach(layer => {
-        if (!layer.visible) return;
-        drawLayer(layer);
-    });
-}
-
-function drawLayer(layer) {
-    const img = layer.image;
-    if (!img) return;
-    const scale = Math.min(CANVAS_SIZE / img.width, CANVAS_SIZE / img.height);
-    const w = img.width * scale;
-    const h = img.height * scale;
-    const x = (CANVAS_SIZE - w) / 2;
-    const y = (CANVAS_SIZE - h) / 2;
-    ctx.save();
-    ctx.globalAlpha = layer.opacity;
-    let drawX = x, drawY = y;
-    let drawW = w, drawH = h;
-    if (layer.flipH) { drawX = x + w; drawW = -w; }
-    if (layer.flipV) { drawY = y + h; drawH = -h; }
-    ctx.drawImage(img, drawX, drawY, drawW, drawH);
-    if (layer.eraseStrokes.length > 0) {
-        ctx.globalCompositeOperation = 'destination-out';
-        layer.eraseStrokes.forEach(stroke => {
-            ctx.beginPath();
-            ctx.arc(stroke.x, stroke.y, stroke.r, 0, Math.PI * 2);
-            ctx.fill();
-        });
-        ctx.globalCompositeOperation = 'source-over';
-    }
-    ctx.restore();
-}
-
-function renderLayers() {
-    const container = document.getElementById('layersList');
     if (!container) return;
     container.innerHTML = '';
-    if (canvasState.layers.length === 0) {
-        container.innerHTML = '<p style="color:#666; font-size:0.85rem; text-align:center;">Холст пуст.<br>Используй «➕ Добавить слой» выше или кнопки 🎨 в модулях.</p>';
-        return;
-    }
-    const reversed = [...canvasState.layers].reverse();
-    reversed.forEach((layer, revIdx) => {
-        const realIdx = canvasState.layers.length - 1 - revIdx;
-        const div = document.createElement('div');
-        div.className = `layer-item ${layer.visible ? '' : 'hidden-layer'}`;
-        div.innerHTML = `
-            <div class="layer-header">
-                <span class="layer-name" title="${layer.name}: ${layer.item}">${layer.name}</span>
-                <div class="layer-controls">
-                    <button onclick="toggleLayerVisibility(${realIdx})" title="Видимость">${layer.visible ? '👁' : '🚫'}</button>
-                    <button onclick="flipLayerH(${realIdx})" title="Отразить по горизонтали">↔️</button>
-                    <button onclick="flipLayerV(${realIdx})" title="Отразить по вертикали">↕️</button>
-                    <button onclick="clearEraseStrokes(${realIdx})" title="Очистить ластик">🧹</button>
-                    <button onclick="removeLayer(${realIdx})" title="Удалить слой">🗑</button>
-                </div>
-            </div>
-            <img class="layer-thumb" src="${layer.image.src}" alt="${layer.name}">
-            <input type="range" class="layer-opacity" min="0" max="100" value="${Math.round(layer.opacity * 100)}" oninput="setLayerOpacity(${realIdx}, this.value)">
-            <div style="font-size:0.7rem; color:#888;">${layer.item}</div>
-        `;
-        container.appendChild(div);
-    });
+    // Таблица не показывается в UI (убрана вкладка), но функция нужна для совместимости
 }
 
-function toggleLayerVisibility(idx) {
-    canvasState.layers[idx].visible = !canvasState.layers[idx].visible;
-    renderLayers(); redrawCanvas();
-}
-function flipLayerH(idx) {
-    canvasState.layers[idx].flipH = !canvasState.layers[idx].flipH;
-    redrawCanvas(); pushHistory();
-}
-function flipLayerV(idx) {
-    canvasState.layers[idx].flipV = !canvasState.layers[idx].flipV;
-    redrawCanvas(); pushHistory();
-}
-function setLayerOpacity(idx, val) {
-    canvasState.layers[idx].opacity = val / 100;
-    redrawCanvas();
-}
-function clearEraseStrokes(idx) {
-    canvasState.layers[idx].eraseStrokes = [];
-    redrawCanvas(); pushHistory();
-}
-function removeLayer(idx) {
-    canvasState.layers.splice(idx, 1);
-    renderLayers(); redrawCanvas(); pushHistory();
-}
-function flipCanvasHorizontal() {
-    canvasState.layers.forEach(l => l.flipH = !l.flipH);
-    redrawCanvas(); pushHistory();
-    showToast('Холст отражён по горизонтали');
-}
-function flipCanvasVertical() {
-    canvasState.layers.forEach(l => l.flipV = !l.flipV);
-    redrawCanvas(); pushHistory();
-    showToast('Холст отражён по вертикали');
-}
-function clearCanvas() {
-    if (canvasState.layers.length === 0) return;
-    if (!confirm('Очистить холст? Все слои будут удалены.')) return;
-    canvasState.layers = [];
-    renderLayers(); redrawCanvas(); pushHistory();
-}
-
-function toggleEraser() {
-    canvasState.eraser = !canvasState.eraser;
-    const btn = document.getElementById('eraserBtn');
-    btn.textContent = `🧽 Ластик: ${canvasState.eraser ? 'ВКЛ' : 'ВЫКЛ'}`;
-    btn.classList.toggle('btn-table', canvasState.eraser);
-    document.getElementById('eraserSizeLabel').style.display = canvasState.eraser ? 'inline' : 'none';
-    if (mainCanvas) mainCanvas.style.cursor = canvasState.eraser ? 'cell' : 'crosshair';
-}
-
-let isDrawingEraser = false;
-let currentEraseLayerIdx = -1;
-
-function attachCanvasEvents() {
-    mainCanvas.addEventListener('mousedown', (e) => {
-        if (!canvasState.eraser) return;
-        if (canvasState.layers.length === 0) return;
-        isDrawingEraser = true;
-        currentEraseLayerIdx = canvasState.layers.length - 1;
-        eraseAt(e, currentEraseLayerIdx);
-    });
-    mainCanvas.addEventListener('mousemove', (e) => {
-        if (!isDrawingEraser) return;
-        eraseAt(e, currentEraseLayerIdx);
-    });
-    mainCanvas.addEventListener('mouseup', () => {
-        if (isDrawingEraser) { isDrawingEraser = false; pushHistory(); }
-    });
-    mainCanvas.addEventListener('mouseleave', () => {
-        if (isDrawingEraser) { isDrawingEraser = false; pushHistory(); }
-    });
-}
-
-function eraseAt(e, layerIdx) {
-    const rect = mainCanvas.getBoundingClientRect();
-    const canvasX = (e.clientX - rect.left) / rect.width * CANVAS_SIZE;
-    const canvasY = (e.clientY - rect.top) / rect.height * CANVAS_SIZE;
-    // Компенсируем zoom: чем меньше масштаб, тем больше реальный радиус
-    const zoomCompensation = 1 / canvasState.zoom;
-    const size = parseInt(document.getElementById('eraserSize').value) * zoomCompensation;
-    canvasState.layers[layerIdx].eraseStrokes.push({
-        x: canvasX, y: canvasY, r: size / 2
-    });
-    redrawCanvas();
-}
-
-// ИСПРАВЛЕНО: масштаб работает правильно, 100% = 4096px CSS
-function setZoom(z, btn) {
-    canvasState.zoom = z;
-    // 25% = 1024, 50% = 2048, 100% = 4096, 200% = 8192
-    const cssSize = CANVAS_SIZE * z;
-    mainCanvas.style.width = cssSize + 'px';
-    mainCanvas.style.height = cssSize + 'px';
-    document.querySelectorAll('.zoom-btn').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-}
-
-function pushHistory() {
-    canvasState.history = canvasState.history.slice(0, canvasState.historyIndex + 1);
-    const snapshot = canvasState.layers.map(l => ({
-        path: l.path, visible: l.visible, opacity: l.opacity,
-        flipH: l.flipH, flipV: l.flipV,
-        eraseStrokes: JSON.parse(JSON.stringify(l.eraseStrokes))
-    }));
-    canvasState.history.push(snapshot);
-    canvasState.historyIndex = canvasState.history.length - 1;
-    if (canvasState.history.length > 30) {
-        canvasState.history.shift();
-        canvasState.historyIndex--;
-    }
-    updateUndoRedoButtons();
-}
-function updateUndoRedoButtons() {
-    const u = document.getElementById('undoBtn');
-    const r = document.getElementById('redoBtn');
-    if (u) u.disabled = canvasState.historyIndex <= 0;
-    if (r) r.disabled = canvasState.historyIndex >= canvasState.history.length - 1;
-}
-function undoCanvas() {
-    if (canvasState.historyIndex <= 0) return;
-    canvasState.historyIndex--;
-    restoreHistorySnapshot(canvasState.history[canvasState.historyIndex]);
-    showToast('Отменено');
-}
-function redoCanvas() {
-    if (canvasState.historyIndex >= canvasState.history.length - 1) return;
-    canvasState.historyIndex++;
-    restoreHistorySnapshot(canvasState.history[canvasState.historyIndex]);
-    showToast('Повторено');
-}
-function restoreHistorySnapshot(snapshot) {
-    snapshot.forEach((s, idx) => {
-        if (canvasState.layers[idx]) {
-            canvasState.layers[idx].visible = s.visible;
-            canvasState.layers[idx].opacity = s.opacity;
-            canvasState.layers[idx].flipH = s.flipH;
-            canvasState.layers[idx].flipV = s.flipV;
-            canvasState.layers[idx].eraseStrokes = JSON.parse(JSON.stringify(s.eraseStrokes));
-        }
-    });
-    renderLayers(); redrawCanvas(); updateUndoRedoButtons();
-}
-
-function exportPNG() {
-    if (canvasState.layers.length === 0) { showToast('Холст пуст!'); return; }
-    redrawCanvas();
-    mainCanvas.toBlob((blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `character_${Date.now()}_4096x4096_300dpi.png`;
-        document.body.appendChild(a); a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        showToast('PNG скачан');
-    }, 'image/png');
-}
-
-function exportPSD() {
-    if (canvasState.layers.length === 0) { showToast('Холст пуст!'); return; }
-    if (typeof agPsd === 'undefined') { showToast('Библиотека PSD не загружена'); return; }
-    try {
-        const psdLayers = canvasState.layers.filter(l => l.visible).map(layer => {
-            const layerCanvas = document.createElement('canvas');
-            layerCanvas.width = CANVAS_SIZE;
-            layerCanvas.height = CANVAS_SIZE;
-            const lctx = layerCanvas.getContext('2d');
-            const img = layer.image;
-            const scale = Math.min(CANVAS_SIZE / img.width, CANVAS_SIZE / img.height);
-            const w = img.width * scale;
-            const h = img.height * scale;
-            const x = (CANVAS_SIZE - w) / 2;
-            const y = (CANVAS_SIZE - h) / 2;
-            let drawX = x, drawY = y;
-            let drawW = w, drawH = h;
-            if (layer.flipH) { drawX = x + w; drawW = -w; }
-            if (layer.flipV) { drawY = y + h; drawH = -h; }
-            lctx.globalAlpha = layer.opacity;
-            lctx.drawImage(img, drawX, drawY, drawW, drawH);
-            if (layer.eraseStrokes.length > 0) {
-                lctx.globalCompositeOperation = 'destination-out';
-                layer.eraseStrokes.forEach(stroke => {
-                    lctx.beginPath();
-                    lctx.arc(stroke.x, stroke.y, stroke.r, 0, Math.PI * 2);
-                    lctx.fill();
-                });
-                lctx.globalCompositeOperation = 'source-over';
-            }
-            return {
-                name: `${layer.name} - ${layer.item}`.substring(0, 60),
-                canvas: layerCanvas,
-                opacity: layer.opacity
-            };
-        });
-        const psd = { width: CANVAS_SIZE, height: CANVAS_SIZE, children: psdLayers };
-        agPsd.writePsd(psd, (buffer) => {
-            const blob = new Blob([buffer], { type: 'application/octet-stream' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = `character_${Date.now()}.psd`;
-            document.body.appendChild(a); a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            showToast('PSD скачан');
-        });
-    } catch (e) {
-        console.error(e);
-        showToast('Ошибка PSD: ' + e.message);
-    }
-}
-
-function initCanvasIfNeeded() {
-    if (canvasInitialized) {
-        redrawCanvas();
-        renderLayers();
-        return;
-    }
-    canvasInitialized = true;
-    mainCanvas = document.getElementById('mainCanvas');
-    ctx = mainCanvas.getContext('2d');
-    mainCanvas.width = CANVAS_SIZE;
-    mainCanvas.height = CANVAS_SIZE;
-    attachCanvasEvents();
-    setZoom(1, document.querySelector('.zoom-btn.active'));
-    redrawCanvas();
-    renderLayers();
-    updateUndoRedoButtons();
+// ============================================================
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
 }
 
 window.onload = init;
