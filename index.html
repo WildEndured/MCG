@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Генератор Персонажей + Таблица</title>
+<title>Генератор Персонажей + Холст</title>
+<script src="https://cdn.jsdelivr.net/npm/ag-psd@25.2.1/dist/bundle.js"></script>
 <style>
 :root {
     --bg: #1a1a2e;
@@ -102,6 +103,9 @@ body {
     transition: 0.2s; font-weight: bold;
 }
 .btn-table:hover { background: #1a9b95; }
+.btn-secondary:disabled, .btn-table:disabled {
+    opacity: 0.4; cursor: not-allowed;
+}
 
 .presets-bar {
     display: flex; gap: 8px; margin-bottom: 15px;
@@ -327,6 +331,7 @@ body {
 .table-section-appearance { background: linear-gradient(90deg, var(--appearance), transparent); }
 .table-section-clothes { background: linear-gradient(90deg, var(--clothes), transparent); }
 .table-section-race { background: linear-gradient(90deg, var(--race), transparent); }
+.table-section-lists { background: linear-gradient(90deg, var(--lists), transparent); }
 
 .table-grid {
     width: 100%;
@@ -355,12 +360,8 @@ body {
     width: 30%;
     white-space: nowrap;
 }
-.table-grid td.mod-cell {
-    width: 20%;
-}
-.table-grid td.value-cell {
-    width: 50%;
-}
+.table-grid td.mod-cell { width: 20%; }
+.table-grid td.value-cell { width: 50%; }
 
 .table-cell-input {
     width: 100%;
@@ -380,7 +381,6 @@ body {
     border-color: var(--table);
     background: rgba(32,178,170,0.08);
 }
-
 .table-cell-row {
     display: flex; align-items: center; gap: 8px;
 }
@@ -457,6 +457,110 @@ body {
     margin-left: 6px;
 }
 
+/* ХОЛСТ */
+.canvas-toolbar {
+    display: flex; gap: 8px; margin-bottom: 15px;
+    flex-wrap: wrap; align-items: center;
+}
+.canvas-layout {
+    display: flex; gap: 15px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+.canvas-area {
+    flex: 1;
+    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.canvas-zoom-bar {
+    display: flex; gap: 6px; align-items: center;
+    flex-wrap: wrap;
+}
+.zoom-btn {
+    background: var(--secondary); color: white;
+    border: 1px solid #555; padding: 4px 10px;
+    border-radius: 4px; cursor: pointer; font-size: 0.75rem;
+}
+.zoom-btn.active { background: var(--accent); border-color: var(--accent); }
+.zoom-btn:hover { background: #1a4a7a; }
+
+.canvas-scroll {
+    background: repeating-conic-gradient(#2a2a3e 0% 25%, #1a1a2e 0% 50%) 50% / 24px 24px;
+    border: 1px solid #333;
+    border-radius: 8px;
+    overflow: auto;
+    max-height: 600px;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+#mainCanvas {
+    background: transparent;
+    border: 1px solid #555;
+    cursor: crosshair;
+    width: 1024px;
+    height: 1024px;
+}
+
+.layers-panel {
+    width: 280px;
+    background: #0d1b2a;
+    border-radius: 8px;
+    padding: 12px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+.layers-list {
+    display: flex; flex-direction: column; gap: 6px;
+}
+.layer-item {
+    background: #1a1a2e;
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 0.8rem;
+    border-left: 3px solid var(--accent);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.layer-item.hidden-layer { opacity: 0.4; border-left-color: #555; }
+.layer-header {
+    display: flex; justify-content: space-between;
+    align-items: center; gap: 6px;
+}
+.layer-name {
+    flex-grow: 1;
+    font-weight: bold;
+    font-size: 0.78rem;
+    color: #ccc;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.layer-controls {
+    display: flex; gap: 3px;
+}
+.layer-controls button {
+    background: none; border: none; cursor: pointer;
+    font-size: 0.9rem; padding: 2px; opacity: 0.7;
+    color: white;
+}
+.layer-controls button:hover { opacity: 1; }
+.layer-thumb {
+    width: 100%;
+    height: 40px;
+    object-fit: contain;
+    background: rgba(0,0,0,0.2);
+    border-radius: 4px;
+}
+.layer-opacity {
+    width: 100%;
+    accent-color: var(--table);
+}
+
 /* Модальное окно */
 .modal-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -507,6 +611,7 @@ body {
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('gen', this)">🎲 Генератор</button>
         <button class="tab-btn" onclick="switchTab('table', this)">📊 Таблица</button>
+        <button class="tab-btn" onclick="switchTab('canvas', this)">🎨 Холст</button>
         <button class="tab-btn" onclick="switchTab('hist', this)">📜 История</button>
         <button class="tab-btn" onclick="switchTab('lists', this)">📋 Списки</button>
         <button class="tab-btn" onclick="switchTab('mod', this)">⚙️ Модули</button>
@@ -541,6 +646,44 @@ body {
             <button class="btn-secondary" onclick="clearTable()">🗑 Очистить</button>
         </div>
         <div id="tableContainer"></div>
+    </div>
+
+    <!-- ХОЛСТ -->
+    <div id="tab-canvas" class="tab-content">
+        <div class="canvas-toolbar">
+            <button class="btn-table" onclick="loadFromLastGeneration()">📥 Из генерации</button>
+            <button class="btn-secondary" onclick="loadFromTable()">📊 Из таблицы</button>
+            <button class="btn-secondary" onclick="clearCanvas()">🗑 Очистить холст</button>
+            <button class="btn-secondary" onclick="undoCanvas()" id="undoBtn" disabled>↶ Undo</button>
+            <button class="btn-secondary" onclick="redoCanvas()" id="redoBtn" disabled>↷ Redo</button>
+            <button class="btn-secondary" onclick="toggleEraser()" id="eraserBtn">🧽 Ластик: ВЫКЛ</button>
+            <button class="btn-secondary" onclick="flipCanvasHorizontal()">↔️ Отразить холст</button>
+            <button class="btn-secondary" onclick="flipCanvasVertical()">↕️ Отразить холст</button>
+            <button class="btn-secondary" onclick="exportPNG()">🖼️ Скачать PNG</button>
+            <button class="btn-secondary" onclick="exportPSD()">📄 Скачать PSD</button>
+        </div>
+
+        <div class="canvas-layout">
+            <div class="canvas-area">
+                <div class="canvas-zoom-bar">
+                    <span style="font-size:0.8rem; color:#888;">Масштаб:</span>
+                    <button class="zoom-btn" onclick="setZoom(0.25, this)">25%</button>
+                    <button class="zoom-btn" onclick="setZoom(0.5, this)">50%</button>
+                    <button class="zoom-btn active" onclick="setZoom(1, this)">100%</button>
+                    <button class="zoom-btn" onclick="setZoom(2, this)">200%</button>
+                    <span id="eraserSizeLabel" style="font-size:0.8rem; color:#888; margin-left:auto; display:none;">
+                        Размер ластика: <input type="range" id="eraserSize" min="10" max="300" value="80" style="vertical-align:middle; width:120px;">
+                    </span>
+                </div>
+                <div class="canvas-scroll" id="canvasScroll">
+                    <canvas id="mainCanvas" width="4096" height="4096"></canvas>
+                </div>
+            </div>
+            <div class="layers-panel">
+                <h4 style="margin-top:0;">📚 Слои</h4>
+                <div id="layersList" class="layers-list"></div>
+            </div>
+        </div>
     </div>
 
     <!-- ИСТОРИЯ -->
@@ -682,10 +825,9 @@ const DEFAULT_MODIFIERS = {
 const DEFAULT_MODULES = {
     appearance: {
         name: "🎨 Модуль базовой внешности", groupClass: "group-appearance", expanded: true,
-        tableGroup: "appearance",
         modules: {
             bangs: {
-                name: "Bangs (чёлка)", enabled: true, expanded: false, tableSection: "appearance",
+                name: "Bangs (чёлка)", enabled: true, expanded: false,
                 subcategories: {
                     shape: { name: "Форма", enabled: true, expanded: false, items: ["Arched bangs", "Asymmetrical bangs", "Blunt bangs", "Crossed", "Curtained bangs", "Diagonal bangs", "Hime cut", "Wispy bangs", "Choppy bangs", "Fanged bangs", "Parted bangs", "Double-parted bangs", "Middle part", "Swept bangs", "Side part", "Bangs pinned back", "Center flap bangs"] },
                     length: { name: "Длина", enabled: true, expanded: false, items: ["Short bangs", "Medium bangs", "Long bangs"] },
@@ -693,7 +835,7 @@ const DEFAULT_MODULES = {
                 }
             },
             sidelocks: {
-                name: "Sidelocks (боковые пряди)", enabled: true, expanded: false, tableSection: "appearance",
+                name: "Sidelocks (боковые пряди)", enabled: true, expanded: false,
                 subcategories: {
                     shape: { name: "Форма", enabled: true, expanded: false, items: ["Single sidelock", "Long single sidelock", "Single braided sidelock", "Ring sidelocks", "Braided sidelock", "Drill sidelocks", "Flipped sidelocks", "Blunt sidelocks", "Wavy sidelocks", "Curly sidelocks", "Blunt tesses"] },
                     length: { name: "Длина", enabled: true, expanded: false, items: ["Medium sidelock", "Long sidelocks", "Very long sidelocks", "Absurdly long sidelocks"] },
@@ -701,19 +843,19 @@ const DEFAULT_MODULES = {
                 }
             },
             backHair: {
-                name: "Back hair", enabled: true, expanded: false, tableSection: "appearance",
+                name: "Back hair", enabled: true, expanded: false,
                 subcategories: { shape: { name: "Форма", enabled: true, expanded: false, items: ["Хвост", "Косички", "Распущенные", "Пучок"] } }
             },
             addHair: {
-                name: "Additional hair", enabled: true, expanded: false, tableSection: "appearance",
+                name: "Additional hair", enabled: true, expanded: false,
                 subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Ахоге", "Пучок", "Хвостик"] } }
             },
             eyeShape: {
-                name: "Форма глаз", enabled: true, expanded: false, tableSection: "appearance",
+                name: "Форма глаз", enabled: true, expanded: false,
                 subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Большие", "Узкие", "Круглые", "Закрытые"] } }
             },
             skinColor: {
-                name: "Цвет кожи", enabled: true, expanded: false, tableSection: "appearance",
+                name: "Цвет кожи", enabled: true, expanded: false,
                 subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Бледная", "Загорелая", "Тёмная", "Оливковая"] } }
             }
         }
@@ -721,32 +863,30 @@ const DEFAULT_MODULES = {
     clothes: {
         name: "👗 Модуль одежды", groupClass: "group-clothes", expanded: true,
         modules: {
-            style:      { name: "Стиль одежды", enabled: true, expanded: false, tableSection: "clothes", subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Casual", "Streetwear", "Gothic Lolita", "Punk", "Techwear", "Y2K"] } } },
-            headwear:   { name: "Headwear",     enabled: true, expanded: false, tableSection: "clothes", subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Шляпа", "Капюшон", "Ободок", "Шапка"] } } },
-            neckwear:   { name: "Neckwear",     enabled: true, expanded: false, tableSection: "clothes", subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Чокер", "Шарф", "Ожерелье"] } } },
-            handwear:   { name: "Handwear",     enabled: true, expanded: false, tableSection: "clothes", subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Перчатки", "Митенки", "Кольца"] } } },
-            topwear1:   { name: "Topwear 1",    enabled: true, expanded: false, tableSection: "clothes", subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Футболка", "Худи", "Кроп-топ", "Куртка", "Свитер"] } } },
-            bottomwear: { name: "Bottomwear",   enabled: true, expanded: false, tableSection: "clothes", subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Юбка", "Джинсы", "Шорты", "Карго"] } } },
-            legwear:    { name: "Legwear",      enabled: true, expanded: false, tableSection: "clothes", subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Чулки", "Носки", "Колготки"] } } },
-            footwear:   { name: "Footwear",     enabled: true, expanded: false, tableSection: "clothes", subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Кроссовки", "Ботинки", "Каблуки", "Сандалии"] } } },
-            acc1:       { name: "Accessory 1",  enabled: true, expanded: false, tableSection: "clothes", subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Серьги", "Очки", "Браслет"] } } },
-            acc2:       { name: "Accessory 2",  enabled: true, expanded: false, tableSection: "clothes", subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Сумка", "Зонт", "Оружие"] } } },
-            acc3:       { name: "Accessory 3",  enabled: true, expanded: false, tableSection: "clothes", subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Шарф", "Платок", "Пояс"] } } },
-            acc4:       { name: "Accessory 4",  enabled: true, expanded: false, tableSection: "clothes", subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Часы", "Кольцо", "Брошь"] } } },
-            acc5:       { name: "Accessory 5",  enabled: true, expanded: false, tableSection: "clothes", subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Корона", "Вуаль", "Маска"] } } }
+            headwear:   { name: "Headwear",     enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Шляпа", "Капюшон", "Ободок", "Шапка"] } } },
+            neckwear:   { name: "Neckwear",     enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Чокер", "Шарф", "Ожерелье"] } } },
+            handwear:   { name: "Handwear",     enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Перчатки", "Митенки", "Кольца"] } } },
+            topwear1:   { name: "Topwear 1",    enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Футболка", "Худи", "Кроп-топ", "Куртка", "Свитер"] } } },
+            bottomwear: { name: "Bottomwear",   enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Юбка", "Джинсы", "Шорты", "Карго"] } } },
+            legwear:    { name: "Legwear",      enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Чулки", "Носки", "Колготки"] } } },
+            footwear:   { name: "Footwear",     enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Кроссовки", "Ботинки", "Каблуки", "Сандалии"] } } },
+            acc1:       { name: "Accessory 1",  enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Серьги", "Очки", "Браслет"] } } },
+            acc2:       { name: "Accessory 2",  enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Сумка", "Зонт", "Оружие"] } } },
+            acc3:       { name: "Accessory 3",  enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Шарф", "Платок", "Пояс"] } } },
+            acc4:       { name: "Accessory 4",  enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Часы", "Кольцо", "Брошь"] } } },
+            acc5:       { name: "Accessory 5",  enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Корона", "Вуаль", "Маска"] } } }
         }
     },
     race: {
         name: "🧬 Модуль расы", groupClass: "group-race", expanded: true,
         modules: {
-            race:    { name: "Раса",          enabled: true, expanded: false, tableSection: "race", subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Cat girl", "Elf", "Demon girl", "Dragon girl", "Vampire girl", "Slime girl", "Zombie girl"] } } },
-            trait1:  { name: "Расовая черта 1", enabled: true, expanded: false, tableSection: "race", subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Animal ears", "Horns", "Tail", "Wings", "Halos"] } } },
-            trait2:  { name: "Расовая черта 2", enabled: true, expanded: false, tableSection: "race", subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Fangs", "Claws", "Glowing eyes", "Scales"] } } },
-            trait3:  { name: "Расовая черта 3", enabled: true, expanded: false, tableSection: "race", subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Magic aura", "Tattoos", "Freckles", "Scars"] } } },
-            trait4:  { name: "Расовая черта 4", enabled: true, expanded: false, tableSection: "race", subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Отсутствует"] } } },
-            trait5:  { name: "Расовая черта 5", enabled: true, expanded: false, tableSection: "race", subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Отсутствует"] } } },
-            trait6:  { name: "Расовая черта 6", enabled: true, expanded: false, tableSection: "race", subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Отсутствует"] } } },
-            trait7:  { name: "Расовая черта 7", enabled: true, expanded: false, tableSection: "race", subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Отсутствует"] } } }
+            trait1:  { name: "Расовая черта 1", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Animal ears", "Horns", "Tail", "Wings", "Halos"] } } },
+            trait2:  { name: "Расовая черта 2", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Fangs", "Claws", "Glowing eyes", "Scales"] } } },
+            trait3:  { name: "Расовая черта 3", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Magic aura", "Tattoos", "Freckles", "Scars"] } } },
+            trait4:  { name: "Расовая черта 4", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Отсутствует"] } } },
+            trait5:  { name: "Расовая черта 5", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Отсутствует"] } } },
+            trait6:  { name: "Расовая черта 6", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Отсутствует"] } } },
+            trait7:  { name: "Расовая черта 7", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Отсутствует"] } } }
         }
     }
 };
@@ -765,7 +905,7 @@ let state = {
     currentItems: {},
     extraText: '',
     genCount: 0,
-    table: {}   // { path: { value: "...", modifier: "..." } }
+    table: {}
 };
 
 let editContext = null;
@@ -776,13 +916,13 @@ let imageContext = null;
 // INIT
 // ============================================================
 function init() {
-    const savedLists = localStorage.getItem('cg_lists_v4');
-    const savedMods = localStorage.getItem('cg_modifiers_v3');
-    const savedModules = localStorage.getItem('cg_modules_v4');
-    const savedRules = localStorage.getItem('cg_rules_v3');
-    const savedHist = localStorage.getItem('cg_history_v3');
-    const savedCount = localStorage.getItem('cg_gen_count_v3');
-    const savedTable = localStorage.getItem('cg_table');
+    const savedLists = localStorage.getItem('cg_lists_v5');
+    const savedMods = localStorage.getItem('cg_modifiers_v4');
+    const savedModules = localStorage.getItem('cg_modules_v5');
+    const savedRules = localStorage.getItem('cg_rules_v4');
+    const savedHist = localStorage.getItem('cg_history_v4');
+    const savedCount = localStorage.getItem('cg_gen_count_v4');
+    const savedTable = localStorage.getItem('cg_table_v2');
 
     state.lists = savedLists ? JSON.parse(savedLists) : null;
     state.modifiers = savedMods ? JSON.parse(savedMods) : null;
@@ -885,13 +1025,13 @@ function sanitizeData() {
 }
 function save() {
     try {
-        localStorage.setItem('cg_lists_v4', JSON.stringify(state.lists));
-        localStorage.setItem('cg_modifiers_v3', JSON.stringify(state.modifiers));
-        localStorage.setItem('cg_modules_v4', JSON.stringify(state.modules));
-        localStorage.setItem('cg_rules_v3', JSON.stringify(state.rules));
-        localStorage.setItem('cg_history_v3', JSON.stringify(state.history));
-        localStorage.setItem('cg_gen_count_v3', state.genCount.toString());
-        localStorage.setItem('cg_table', JSON.stringify(state.table));
+        localStorage.setItem('cg_lists_v5', JSON.stringify(state.lists));
+        localStorage.setItem('cg_modifiers_v4', JSON.stringify(state.modifiers));
+        localStorage.setItem('cg_modules_v5', JSON.stringify(state.modules));
+        localStorage.setItem('cg_rules_v4', JSON.stringify(state.rules));
+        localStorage.setItem('cg_history_v4', JSON.stringify(state.history));
+        localStorage.setItem('cg_gen_count_v4', state.genCount.toString());
+        localStorage.setItem('cg_table_v2', JSON.stringify(state.table));
     } catch (e) {
         if (e.name === 'QuotaExceededError') showToast('⚠️ Память переполнена!');
     }
@@ -904,6 +1044,7 @@ function updateCounter() {
 // ============================================================
 // НАВИГАЦИЯ
 // ============================================================
+let canvasInitialized = false;
 function switchTab(name, btn) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -912,68 +1053,45 @@ function switchTab(name, btn) {
     if (name === 'hist') renderHistory();
     if (name === 'rules') { populateRuleSelects(); renderRules(); }
     if (name === 'table') renderTable();
+    if (name === 'canvas') initCanvasIfNeeded();
 }
 
 // ============================================================
 // ТАБЛИЦА
 // ============================================================
 function getTableRows() {
-    // Возвращает все слоты, сгруппированные по секциям
     const sections = {
+        lists:      { name: "📋 Списки (основное)",     class: "table-section-lists",      rows: [] },
         appearance: { name: "🎨 Модуль базовой внешности", class: "table-section-appearance", rows: [] },
         clothes:    { name: "👗 Модуль одежды",           class: "table-section-clothes",    rows: [] },
         race:       { name: "🧬 Модуль расы",             class: "table-section-race",       rows: [] }
     };
 
-    // Раса
+    sections.lists.rows.push({ path: 'list.races', name: "🧬 Расы", items: state.lists.races.items.filter(i => i.enabled), isClothes: false });
+    sections.lists.rows.push({ path: 'list.styles', name: "👗 Стили одежды", items: state.lists.styles.items.filter(i => i.enabled), isClothes: false });
+
     for (const mKey in state.modules.race.modules) {
         const mod = state.modules.race.modules[mKey];
         const path = `race.${mKey}`;
-        const items = collectItems(path);
-        sections.race.rows.push({
-            path: path,
-            name: mod.name,
-            items: items,
-            isClothes: false
-        });
+        sections.race.rows.push({ path, name: mod.name, items: collectItems(path), isClothes: false });
     }
-
-    // Внешность
     for (const mKey in state.modules.appearance.modules) {
         const mod = state.modules.appearance.modules[mKey];
         const path = `appearance.${mKey}`;
-        const items = collectItems(path);
-        sections.appearance.rows.push({
-            path: path,
-            name: mod.name,
-            items: items,
-            isClothes: false
-        });
+        sections.appearance.rows.push({ path, name: mod.name, items: collectItems(path), isClothes: false });
     }
-
-    // Одежда
-    // Сначала стиль отдельно
     for (const mKey in state.modules.clothes.modules) {
         const mod = state.modules.clothes.modules[mKey];
         const path = `clothes.${mKey}`;
-        const items = collectItems(path);
-        sections.clothes.rows.push({
-            path: path,
-            name: mod.name,
-            items: items,
-            isClothes: true
-        });
+        sections.clothes.rows.push({ path, name: mod.name, items: collectItems(path), isClothes: true });
     }
 
     return sections;
 }
 
 function collectItems(path) {
-    // Собираем все items из всех подкатегорий
     const all = [];
-    if (path.startsWith('list.')) {
-        return state.lists[path.split('.')[1]].items;
-    }
+    if (path.startsWith('list.')) return state.lists[path.split('.')[1]].items;
     const [g, m] = path.split('.');
     if (!state.modules[g] || !state.modules[g].modules[m]) return [];
     for (const sKey in state.modules[g].modules[m].subcategories) {
@@ -1002,23 +1120,18 @@ function renderTable() {
         const table = document.createElement('table');
         table.className = 'table-grid';
 
-        // Шапка
         const thead = document.createElement('thead');
         thead.innerHTML = `<tr><th>Слот</th>${secKey === 'clothes' ? '<th>Модификатор</th>' : ''}<th>Значение</th></tr>`;
         table.appendChild(thead);
 
-        // Тело
         const tbody = document.createElement('tbody');
         sec.rows.forEach(row => {
             const tr = document.createElement('tr');
-
-            // Название слота
             const tdName = document.createElement('td');
             tdName.className = 'slot-name';
             tdName.textContent = row.name;
             tr.appendChild(tdName);
 
-            // Модификатор (только для одежды)
             if (secKey === 'clothes') {
                 const tdMod = document.createElement('td');
                 tdMod.className = 'mod-cell';
@@ -1038,7 +1151,6 @@ function renderTable() {
                 tr.appendChild(tdMod);
             }
 
-            // Значение
             const tdValue = document.createElement('td');
             tdValue.className = 'value-cell';
             const valueWrap = document.createElement('div');
@@ -1058,7 +1170,6 @@ function renderTable() {
             if (input.value) input.classList.add('filled');
             valueWrap.appendChild(input);
 
-            // Если есть картинка — показываем превью
             const currentValue = state.table[row.path] && state.table[row.path].value;
             if (currentValue) {
                 const found = row.items.find(i => i.text === currentValue);
@@ -1073,7 +1184,6 @@ function renderTable() {
 
             tdValue.appendChild(valueWrap);
             tr.appendChild(tdValue);
-
             tbody.appendChild(tr);
         });
 
@@ -1086,7 +1196,8 @@ function renderTable() {
 function generateAndFill() {
     generate();
     fillFromLastGeneration();
-    switchTab('table', document.querySelectorAll('.tab-btn')[1]);
+    const tabs = document.querySelectorAll('.tab-btn');
+    switchTab('table', tabs[1]);
 }
 
 function fillFromLastGeneration() {
@@ -1096,10 +1207,7 @@ function fillFromLastGeneration() {
     }
     state.table = {};
     state.currentPaths.forEach(path => {
-        state.table[path] = {
-            value: state.current[path] || '',
-            modifier: ''
-        };
+        state.table[path] = { value: state.current[path] || '', modifier: '' };
     });
     save();
     renderTable();
@@ -1119,7 +1227,6 @@ function saveTableToHistory() {
         if (entry.modifier) value = `${entry.modifier} ${value}`;
         result[path] = value;
         paths.push(path);
-        // Собираем items с картинками
         const items = collectItems(path);
         const found = items.find(i => i.text === entry.value);
         itemsForHistory[path] = found ? [found] : [{ text: entry.value, image: null }];
@@ -1534,7 +1641,7 @@ function copyShort() {
 const PRESETS = {
     all: null,
     portrait: ['list.races', 'list.styles', 'appearance.bangs', 'appearance.sidelocks', 'appearance.backHair', 'appearance.addHair', 'appearance.eyeShape', 'appearance.skinColor', 'race.trait1', 'race.trait2', 'race.trait3', 'clothes.acc1'],
-    full: ['list.races', 'list.styles', 'appearance.bangs', 'appearance.sidelocks', 'appearance.backHair', 'appearance.addHair', 'appearance.eyeShape', 'appearance.skinColor', 'clothes.style', 'clothes.headwear', 'clothes.neckwear', 'clothes.handwear', 'clothes.topwear1', 'clothes.bottomwear', 'clothes.legwear', 'clothes.footwear', 'clothes.acc1', 'clothes.acc2', 'clothes.acc3', 'clothes.acc4', 'clothes.acc5', 'race.trait1', 'race.trait2', 'race.trait3'],
+    full: ['list.races', 'list.styles', 'appearance.bangs', 'appearance.sidelocks', 'appearance.backHair', 'appearance.addHair', 'appearance.eyeShape', 'appearance.skinColor', 'clothes.headwear', 'clothes.neckwear', 'clothes.handwear', 'clothes.topwear1', 'clothes.bottomwear', 'clothes.legwear', 'clothes.footwear', 'clothes.acc1', 'clothes.acc2', 'clothes.acc3', 'clothes.acc4', 'clothes.acc5', 'race.trait1', 'race.trait2', 'race.trait3'],
     race: ['list.races', 'race.trait1', 'race.trait2', 'race.trait3', 'race.trait4', 'race.trait5', 'race.trait6', 'race.trait7']
 };
 function applyPreset(name) {
@@ -2190,7 +2297,7 @@ function renderRules() {
 function toggleRule(id) { const r = state.rules.find(x => x.id === id); if (r) { r.enabled = !r.enabled; save(); renderRules(); } }
 function deleteRule(id) { state.rules = state.rules.filter(x => x.id !== id); save(); renderRules(); }
 function exportRules() {
-    const data = JSON.stringify({ version: 2, rules: state.rules }, null, 2);
+    const data = JSON.stringify({ version: 3, rules: state.rules }, null, 2);
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -2282,6 +2389,467 @@ function showToast(msg) {
     t.textContent = msg;
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ============================================================
+// ХОЛСТ
+// ============================================================
+const CANVAS_SIZE = 4096;
+
+let canvasState = {
+    layers: [],
+    zoom: 1,
+    eraser: false,
+    history: [],
+    historyIndex: -1
+};
+
+let mainCanvas = null;
+let ctx = null;
+
+const LAYER_ORDER = {
+    'list.races': 1,
+    'list.styles': 2,
+    'race.trait1': 3,
+    'race.trait2': 4,
+    'race.trait3': 5,
+    'race.trait4': 6,
+    'race.trait5': 7,
+    'race.trait6': 8,
+    'race.trait7': 9,
+    'appearance.bangs': 10,
+    'appearance.sidelocks': 11,
+    'appearance.backHair': 12,
+    'appearance.addHair': 13,
+    'appearance.eyeShape': 14,
+    'appearance.skinColor': 15,
+    'clothes.bottomwear': 20,
+    'clothes.legwear': 21,
+    'clothes.topwear1': 22,
+    'clothes.handwear': 23,
+    'clothes.neckwear': 24,
+    'clothes.headwear': 25,
+    'clothes.acc1': 30,
+    'clothes.acc2': 31,
+    'clothes.acc3': 32,
+    'clothes.acc4': 33,
+    'clothes.acc5': 34
+};
+
+function loadImage(src) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+    });
+}
+
+async function buildLayersFromPaths(result, resultItems) {
+    canvasState.layers = [];
+    const paths = Object.keys(result).filter(p => resultItems[p] && resultItems[p].some(i => i.image));
+    paths.sort((a, b) => (LAYER_ORDER[a] || 100) - (LAYER_ORDER[b] || 100));
+
+    for (const path of paths) {
+        const items = resultItems[path].filter(i => i.image);
+        if (items.length === 0) continue;
+        const item = items[0];
+        try {
+            const img = await loadImage(item.image);
+            canvasState.layers.push({
+                path: path,
+                name: getPathName(path),
+                item: item.text,
+                image: img,
+                visible: true,
+                opacity: 1,
+                flipH: false,
+                flipV: false,
+                eraseStrokes: []
+            });
+        } catch (e) {
+            console.warn('Не удалось загрузить изображение для', path);
+        }
+    }
+
+    renderLayers();
+    redrawCanvas();
+    pushHistory();
+}
+
+function loadFromLastGeneration() {
+    if (!state.currentPaths || state.currentPaths.length === 0) {
+        showToast('Сначала сгенерируйте!');
+        return;
+    }
+    buildLayersFromPaths(state.current, state.currentItems).then(() => {
+        showToast('Загружено из генерации');
+    });
+}
+
+function loadFromTable() {
+    const filled = Object.keys(state.table).filter(k => state.table[k].value);
+    if (filled.length === 0) {
+        showToast('Таблица пуста!');
+        return;
+    }
+    const result = {};
+    const resultItems = {};
+    filled.forEach(path => {
+        const entry = state.table[path];
+        let value = entry.value;
+        if (entry.modifier) value = `${entry.modifier} ${value}`;
+        result[path] = value;
+        const items = collectItems(path);
+        const found = items.find(i => i.text === entry.value);
+        resultItems[path] = found ? [found] : [];
+    });
+    buildLayersFromPaths(result, resultItems).then(() => {
+        showToast('Загружено из таблицы');
+    });
+}
+
+function redrawCanvas() {
+    if (!ctx) return;
+    ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    canvasState.layers.forEach(layer => {
+        if (!layer.visible) return;
+        drawLayer(layer);
+    });
+}
+
+function drawLayer(layer) {
+    const img = layer.image;
+    if (!img) return;
+
+    const scale = Math.min(CANVAS_SIZE / img.width, CANVAS_SIZE / img.height);
+    const w = img.width * scale;
+    const h = img.height * scale;
+    const x = (CANVAS_SIZE - w) / 2;
+    const y = (CANVAS_SIZE - h) / 2;
+
+    ctx.save();
+    ctx.globalAlpha = layer.opacity;
+
+    let drawX = x, drawY = y;
+    let drawW = w, drawH = h;
+    if (layer.flipH) { drawX = x + w; drawW = -w; }
+    if (layer.flipV) { drawY = y + h; drawH = -h; }
+
+    ctx.drawImage(img, drawX, drawY, drawW, drawH);
+
+    if (layer.eraseStrokes.length > 0) {
+        ctx.globalCompositeOperation = 'destination-out';
+        layer.eraseStrokes.forEach(stroke => {
+            ctx.beginPath();
+            ctx.arc(stroke.x, stroke.y, stroke.r, 0, Math.PI * 2);
+            ctx.fill();
+        });
+        ctx.globalCompositeOperation = 'source-over';
+    }
+
+    ctx.restore();
+}
+
+function renderLayers() {
+    const container = document.getElementById('layersList');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (canvasState.layers.length === 0) {
+        container.innerHTML = '<p style="color:#666; font-size:0.85rem; text-align:center;">Холст пуст.<br>Загрузи из генерации или таблицы.</p>';
+        return;
+    }
+
+    const reversed = [...canvasState.layers].reverse();
+    reversed.forEach((layer, revIdx) => {
+        const realIdx = canvasState.layers.length - 1 - revIdx;
+        const div = document.createElement('div');
+        div.className = `layer-item ${layer.visible ? '' : 'hidden-layer'}`;
+        div.innerHTML = `
+            <div class="layer-header">
+                <span class="layer-name" title="${layer.name}: ${layer.item}">${layer.name}</span>
+                <div class="layer-controls">
+                    <button onclick="toggleLayerVisibility(${realIdx})" title="Видимость">${layer.visible ? '👁' : '🚫'}</button>
+                    <button onclick="flipLayerH(${realIdx})" title="Отразить по горизонтали">↔️</button>
+                    <button onclick="flipLayerV(${realIdx})" title="Отразить по вертикали">↕️</button>
+                    <button onclick="clearEraseStrokes(${realIdx})" title="Очистить ластик">🧹</button>
+                </div>
+            </div>
+            <img class="layer-thumb" src="${layer.image.src}" alt="${layer.name}">
+            <input type="range" class="layer-opacity" min="0" max="100" value="${Math.round(layer.opacity * 100)}" oninput="setLayerOpacity(${realIdx}, this.value)">
+            <div style="font-size:0.7rem; color:#888;">${layer.item}</div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function toggleLayerVisibility(idx) {
+    canvasState.layers[idx].visible = !canvasState.layers[idx].visible;
+    renderLayers();
+    redrawCanvas();
+}
+
+function flipLayerH(idx) {
+    canvasState.layers[idx].flipH = !canvasState.layers[idx].flipH;
+    redrawCanvas();
+    pushHistory();
+}
+
+function flipLayerV(idx) {
+    canvasState.layers[idx].flipV = !canvasState.layers[idx].flipV;
+    redrawCanvas();
+    pushHistory();
+}
+
+function setLayerOpacity(idx, val) {
+    canvasState.layers[idx].opacity = val / 100;
+    redrawCanvas();
+}
+
+function clearEraseStrokes(idx) {
+    canvasState.layers[idx].eraseStrokes = [];
+    redrawCanvas();
+    pushHistory();
+}
+
+function flipCanvasHorizontal() {
+    canvasState.layers.forEach(l => l.flipH = !l.flipH);
+    redrawCanvas();
+    pushHistory();
+    showToast('Холст отражён по горизонтали');
+}
+
+function flipCanvasVertical() {
+    canvasState.layers.forEach(l => l.flipV = !l.flipV);
+    redrawCanvas();
+    pushHistory();
+    showToast('Холст отражён по вертикали');
+}
+
+function clearCanvas() {
+    if (canvasState.layers.length === 0) return;
+    if (!confirm('Очистить холст? Все слои будут удалены.')) return;
+    canvasState.layers = [];
+    renderLayers();
+    redrawCanvas();
+    pushHistory();
+}
+
+function toggleEraser() {
+    canvasState.eraser = !canvasState.eraser;
+    const btn = document.getElementById('eraserBtn');
+    btn.textContent = `🧽 Ластик: ${canvasState.eraser ? 'ВКЛ' : 'ВЫКЛ'}`;
+    btn.classList.toggle('btn-table', canvasState.eraser);
+    document.getElementById('eraserSizeLabel').style.display = canvasState.eraser ? 'inline' : 'none';
+    if (mainCanvas) mainCanvas.style.cursor = canvasState.eraser ? 'cell' : 'crosshair';
+}
+
+let isDrawingEraser = false;
+let currentEraseLayerIdx = -1;
+
+function attachCanvasEvents() {
+    mainCanvas.addEventListener('mousedown', (e) => {
+        if (!canvasState.eraser) return;
+        if (canvasState.layers.length === 0) return;
+        isDrawingEraser = true;
+        currentEraseLayerIdx = canvasState.layers.length - 1;
+        eraseAt(e, currentEraseLayerIdx);
+    });
+    mainCanvas.addEventListener('mousemove', (e) => {
+        if (!isDrawingEraser) return;
+        eraseAt(e, currentEraseLayerIdx);
+    });
+    mainCanvas.addEventListener('mouseup', () => {
+        if (isDrawingEraser) { isDrawingEraser = false; pushHistory(); }
+    });
+    mainCanvas.addEventListener('mouseleave', () => {
+        if (isDrawingEraser) { isDrawingEraser = false; pushHistory(); }
+    });
+}
+
+function eraseAt(e, layerIdx) {
+    const rect = mainCanvas.getBoundingClientRect();
+    const canvasX = (e.clientX - rect.left) / rect.width * CANVAS_SIZE;
+    const canvasY = (e.clientY - rect.top) / rect.height * CANVAS_SIZE;
+    const size = parseInt(document.getElementById('eraserSize').value);
+    canvasState.layers[layerIdx].eraseStrokes.push({
+        x: canvasX, y: canvasY, r: size / 2
+    });
+    redrawCanvas();
+}
+
+function setZoom(z, btn) {
+    canvasState.zoom = z;
+    const w = CANVAS_SIZE * z / 4;
+    mainCanvas.style.width = w + 'px';
+    mainCanvas.style.height = w + 'px';
+    document.querySelectorAll('.zoom-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+}
+
+function pushHistory() {
+    canvasState.history = canvasState.history.slice(0, canvasState.historyIndex + 1);
+    const snapshot = canvasState.layers.map(l => ({
+        path: l.path,
+        visible: l.visible,
+        opacity: l.opacity,
+        flipH: l.flipH,
+        flipV: l.flipV,
+        eraseStrokes: JSON.parse(JSON.stringify(l.eraseStrokes))
+    }));
+    canvasState.history.push(snapshot);
+    canvasState.historyIndex = canvasState.history.length - 1;
+    if (canvasState.history.length > 30) {
+        canvasState.history.shift();
+        canvasState.historyIndex--;
+    }
+    updateUndoRedoButtons();
+}
+
+function updateUndoRedoButtons() {
+    const u = document.getElementById('undoBtn');
+    const r = document.getElementById('redoBtn');
+    if (u) u.disabled = canvasState.historyIndex <= 0;
+    if (r) r.disabled = canvasState.historyIndex >= canvasState.history.length - 1;
+}
+
+function undoCanvas() {
+    if (canvasState.historyIndex <= 0) return;
+    canvasState.historyIndex--;
+    restoreHistorySnapshot(canvasState.history[canvasState.historyIndex]);
+    showToast('Отменено');
+}
+
+function redoCanvas() {
+    if (canvasState.historyIndex >= canvasState.history.length - 1) return;
+    canvasState.historyIndex++;
+    restoreHistorySnapshot(canvasState.history[canvasState.historyIndex]);
+    showToast('Повторено');
+}
+
+function restoreHistorySnapshot(snapshot) {
+    snapshot.forEach((s, idx) => {
+        if (canvasState.layers[idx]) {
+            canvasState.layers[idx].visible = s.visible;
+            canvasState.layers[idx].opacity = s.opacity;
+            canvasState.layers[idx].flipH = s.flipH;
+            canvasState.layers[idx].flipV = s.flipV;
+            canvasState.layers[idx].eraseStrokes = JSON.parse(JSON.stringify(s.eraseStrokes));
+        }
+    });
+    renderLayers();
+    redrawCanvas();
+    updateUndoRedoButtons();
+}
+
+function exportPNG() {
+    if (canvasState.layers.length === 0) {
+        showToast('Холст пуст!');
+        return;
+    }
+    redrawCanvas();
+    mainCanvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `character_${Date.now()}_4096x4096.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('PNG скачан');
+    }, 'image/png');
+}
+
+function exportPSD() {
+    if (canvasState.layers.length === 0) {
+        showToast('Холст пуст!');
+        return;
+    }
+    if (typeof agPsd === 'undefined') {
+        showToast('Библиотека PSD не загружена');
+        return;
+    }
+
+    try {
+        const psdLayers = canvasState.layers.filter(l => l.visible).map(layer => {
+            const layerCanvas = document.createElement('canvas');
+            layerCanvas.width = CANVAS_SIZE;
+            layerCanvas.height = CANVAS_SIZE;
+            const lctx = layerCanvas.getContext('2d');
+
+            const img = layer.image;
+            const scale = Math.min(CANVAS_SIZE / img.width, CANVAS_SIZE / img.height);
+            const w = img.width * scale;
+            const h = img.height * scale;
+            const x = (CANVAS_SIZE - w) / 2;
+            const y = (CANVAS_SIZE - h) / 2;
+
+            let drawX = x, drawY = y;
+            let drawW = w, drawH = h;
+            if (layer.flipH) { drawX = x + w; drawW = -w; }
+            if (layer.flipV) { drawY = y + h; drawH = -h; }
+
+            lctx.globalAlpha = layer.opacity;
+            lctx.drawImage(img, drawX, drawY, drawW, drawH);
+
+            if (layer.eraseStrokes.length > 0) {
+                lctx.globalCompositeOperation = 'destination-out';
+                layer.eraseStrokes.forEach(stroke => {
+                    lctx.beginPath();
+                    lctx.arc(stroke.x, stroke.y, stroke.r, 0, Math.PI * 2);
+                    lctx.fill();
+                });
+                lctx.globalCompositeOperation = 'source-over';
+            }
+
+            return {
+                name: `${layer.name} - ${layer.item}`.substring(0, 60),
+                canvas: layerCanvas,
+                opacity: layer.opacity
+            };
+        });
+
+        const psd = {
+            width: CANVAS_SIZE,
+            height: CANVAS_SIZE,
+            children: psdLayers
+        };
+
+        agPsd.writePsd(psd, (buffer) => {
+            const blob = new Blob([buffer], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `character_${Date.now()}.psd`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('PSD скачан');
+        });
+    } catch (e) {
+        console.error(e);
+        showToast('Ошибка PSD: ' + e.message);
+    }
+}
+
+function initCanvasIfNeeded() {
+    if (canvasInitialized) {
+        redrawCanvas();
+        return;
+    }
+    canvasInitialized = true;
+    mainCanvas = document.getElementById('mainCanvas');
+    ctx = mainCanvas.getContext('2d');
+    mainCanvas.width = CANVAS_SIZE;
+    mainCanvas.height = CANVAS_SIZE;
+    attachCanvasEvents();
+    setZoom(1, document.querySelector('.zoom-btn.active'));
+    redrawCanvas();
+    renderLayers();
+    updateUndoRedoButtons();
 }
 
 window.onload = init;
