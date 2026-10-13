@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Конструктор Персонажа</title>
 <script src="https://cdn.jsdelivr.net/npm/ag-psd@25.2.1/dist/bundle.js"></script>
 <style>
@@ -20,12 +20,14 @@
     --rules: #9b59b6;
     --mods: #7b68ee;
     --table: #20b2aa;
+    --pos: #f39c12;
 }
-* { box-sizing: border-box; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { overscroll-behavior: none; }
 body {
     font-family: 'Segoe UI', Tahoma, sans-serif;
     background: var(--bg); color: var(--text);
-    margin: 0; padding: 10px;
+    margin: 0; padding: 8px;
     display: flex; justify-content: center; min-height: 100vh;
 }
 .app {
@@ -37,61 +39,62 @@ body {
 }
 .tabs { display: flex; background: var(--header); flex-wrap: wrap; }
 .tab-btn {
-    flex: 1; padding: 12px 6px; background: none; border: none;
-    color: #888; font-size: 0.85rem; cursor: pointer; font-weight: bold;
+    flex: 1; padding: 12px 4px; background: none; border: none;
+    color: #888; font-size: 0.8rem; cursor: pointer; font-weight: bold;
     border-bottom: 3px solid transparent; transition: 0.3s;
-    min-width: 70px;
+    min-width: 60px;
 }
 .tab-btn.active {
     color: var(--text); border-bottom-color: var(--accent);
     background: var(--container);
 }
-.tab-content { padding: 15px; display: none; }
+.tab-content { padding: 12px; display: none; }
 .tab-content.active { display: block; }
 
 /* Кнопки */
 .btn-main {
     background: var(--accent); color: white; border: none;
-    padding: 12px 24px; font-size: 0.9rem; border-radius: 8px;
+    padding: 12px 20px; font-size: 0.9rem; border-radius: 8px;
     cursor: pointer; font-weight: bold; transition: 0.2s;
+    min-height: 40px;
 }
-.btn-main:hover { background: #ff2e63; transform: scale(1.02); }
+.btn-main:active { transform: scale(0.97); }
 .btn-secondary {
     background: var(--secondary); color: white;
-    border: 1px solid #555; padding: 9px 16px;
-    border-radius: 6px; cursor: pointer; font-size: 0.85rem;
-    transition: 0.2s;
+    border: 1px solid #555; padding: 9px 14px;
+    border-radius: 6px; cursor: pointer; font-size: 0.82rem;
+    transition: 0.2s; min-height: 38px;
+    display: inline-flex; align-items: center; gap: 4px;
+    justify-content: center;
 }
-.btn-secondary:hover { background: #1a4a7a; }
-.btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-secondary:active { background: #1a4a7a; }
+.btn-secondary.active {
+    background: var(--pos); border-color: var(--pos); color: #1a1a2e;
+    font-weight: bold;
+}
 .btn-table {
     background: var(--table); color: white; border: none;
-    padding: 9px 16px; border-radius: 6px; cursor: pointer;
-    font-size: 0.85rem; transition: 0.2s; font-weight: bold;
+    padding: 9px 14px; border-radius: 6px; cursor: pointer;
+    font-size: 0.82rem; transition: 0.2s; font-weight: bold;
+    min-height: 38px;
 }
-.btn-table:hover { background: #1a9b95; }
 
 /* ============ КОНСТРУКТОР ============ */
 .builder-layout {
     display: grid;
     grid-template-columns: 1fr 380px;
-    gap: 15px;
+    gap: 12px;
     align-items: start;
-}
-@media (max-width: 900px) {
-    .builder-layout { grid-template-columns: 1fr; }
 }
 
 .builder-canvas-area {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    position: sticky;
-    top: 10px;
+    gap: 8px;
 }
 
 .builder-toolbar {
-    display: flex; gap: 6px; flex-wrap: wrap;
+    display: flex; gap: 5px; flex-wrap: wrap;
     align-items: center;
 }
 
@@ -108,31 +111,52 @@ body {
     justify-content: center;
     align-items: center;
     position: relative;
+    touch-action: none;
 }
 #mainCanvas {
     width: 100%;
     height: 100%;
     display: block;
     cursor: crosshair;
-    image-rendering: auto;
+    touch-action: none;
+}
+.canvas-frame.position-mode #mainCanvas {
+    cursor: move;
 }
 
-/* ============ ПАНЕЛЬ КАТЕГОРИЙ ============ */
+/* Подсказка в режиме позиции */
+.position-hint {
+    position: absolute;
+    top: 10px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--pos); color: #1a1a2e;
+    padding: 6px 12px; border-radius: 20px;
+    font-size: 0.75rem; font-weight: bold;
+    display: none; z-index: 10;
+    pointer-events: none;
+}
+.canvas-frame.position-mode .position-hint { display: block; }
+
+/* Панель категорий */
 .builder-panel {
     background: #0d1b2a;
     border-radius: 10px;
     padding: 10px;
-    max-height: calc(100vh - 120px);
+    max-height: calc(100vh - 100px);
     overflow-y: auto;
 }
-.builder-panel h3 {
-    margin: 0 0 10px 0; font-size: 1rem;
+.builder-panel-header {
+    display: none;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
 }
+.builder-panel h3 { margin: 0 0 10px 0; font-size: 0.95rem; }
 
 .cat-group {
     background: #1a1a2e;
     border-radius: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     overflow: hidden;
     border-left: 3px solid var(--accent);
 }
@@ -144,13 +168,13 @@ body {
 
 .cat-header {
     display: flex; justify-content: space-between;
-    align-items: center; padding: 8px 12px;
+    align-items: center; padding: 10px 12px;
     cursor: pointer; user-select: none;
     font-size: 0.85rem; font-weight: bold;
     background: rgba(255,255,255,0.02);
+    min-height: 40px;
 }
-.cat-header:hover { background: rgba(255,255,255,0.05); }
-.cat-header .counter { font-size: 0.7rem; color: #888; font-weight: normal; }
+.cat-header:active { background: rgba(255,255,255,0.05); }
 
 .cat-body {
     padding: 8px 10px;
@@ -159,20 +183,20 @@ body {
 }
 .cat-group.open .cat-body { display: block; }
 
-/* Слот (модуль) */
+/* Слот */
 .slot {
     background: #0d1b2a;
     border-radius: 6px;
-    margin-bottom: 6px;
+    margin-bottom: 5px;
     overflow: hidden;
 }
 .slot-header {
     display: flex; justify-content: space-between;
-    align-items: center; padding: 6px 10px;
+    align-items: center; padding: 8px 10px;
     cursor: pointer; user-select: none;
     font-size: 0.78rem;
+    min-height: 38px;
 }
-.slot-header:hover { background: rgba(255,255,255,0.03); }
 .slot-name { font-weight: bold; color: #ccc; }
 .slot-current {
     font-size: 0.68rem; color: var(--table);
@@ -190,7 +214,7 @@ body {
 /* Сетка плиток */
 .tiles-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
     gap: 5px;
 }
 
@@ -205,30 +229,26 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 3px;
-    min-height: 70px;
+    min-height: 76px;
     overflow: hidden;
+    position: relative;
 }
-.tile:hover {
-    background: rgba(255,255,255,0.08);
-    border-color: #555;
-}
+.tile:active { background: rgba(255,255,255,0.08); }
 .tile.active {
     border-color: var(--table);
-    background: rgba(32,178,170,0.1);
+    background: rgba(32,178,170,0.12);
 }
-.tile.no-image {
-    opacity: 0.7;
-}
+.tile.no-image { opacity: 0.7; }
 .tile-thumb {
     width: 100%;
-    height: 50px;
+    height: 54px;
     object-fit: contain;
     background: rgba(0,0,0,0.15);
     border-radius: 3px;
 }
 .tile-no-thumb {
     width: 100%;
-    height: 50px;
+    height: 54px;
     display: flex; align-items: center; justify-content: center;
     background: rgba(0,0,0,0.15);
     border-radius: 3px;
@@ -240,81 +260,105 @@ body {
     line-height: 1.1;
     color: #bbb;
     word-break: break-word;
-    max-height: 22px;
+    max-height: 24px;
     overflow: hidden;
     width: 100%;
 }
 .tile.active .tile-text { color: #fff; font-weight: bold; }
 
-/* Кнопка убрать */
+/* Кнопка позиции для значения */
+.tile-pos-btn {
+    position: absolute;
+    top: 2px; right: 2px;
+    background: rgba(243,156,18,0.85);
+    color: #1a1a2e;
+    border: none; border-radius: 4px;
+    padding: 2px 5px;
+    font-size: 0.6rem; cursor: pointer;
+    opacity: 0;
+    transition: 0.2s;
+    z-index: 5;
+}
+.tile:hover .tile-pos-btn,
+.tile.active .tile-pos-btn { opacity: 1; }
+
 .tile-remove-row {
     margin-bottom: 6px;
-    display: flex; gap: 6px;
+    display: flex; gap: 6px; flex-wrap: wrap;
 }
 .tile-remove-btn {
     background: rgba(233,69,96,0.15);
     color: var(--accent);
     border: 1px solid var(--accent);
     border-radius: 5px;
-    padding: 4px 8px;
+    padding: 5px 10px;
     font-size: 0.7rem;
     cursor: pointer;
-    transition: 0.2s;
+    min-height: 32px;
 }
-.tile-remove-btn:hover {
-    background: var(--accent); color: white;
+.tile-remove-btn:active { background: var(--accent); color: white; }
+.tile-pos-default-btn {
+    background: rgba(243,156,18,0.15);
+    color: var(--pos);
+    border: 1px solid var(--pos);
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    min-height: 32px;
 }
+.tile-pos-default-btn:active { background: var(--pos); color: #1a1a2e; }
 
-/* ============ ОСТАЛЬНЫЕ ВКЛАДКИ (сокращённо) ============ */
+/* ============ Остальные вкладки (сокращённо) ============ */
 .result-box {
-    background: var(--secondary); padding: 15px;
-    border-radius: 10px; margin-bottom: 15px;
-    max-height: 500px; overflow-y: auto;
+    background: var(--secondary); padding: 12px;
+    border-radius: 10px; margin-bottom: 12px;
+    max-height: 400px; overflow-y: auto;
 }
 .result-line {
     display: flex; justify-content: space-between;
-    padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.1);
-    font-size: 0.85rem; gap: 10px; align-items: center;
+    padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.1);
+    font-size: 0.82rem; gap: 8px; align-items: center;
+    flex-wrap: wrap;
 }
 .result-line:last-child { border-bottom: none; }
-.result-cat { color: #888; font-weight: bold; font-size: 0.78rem; }
+.result-cat { color: #888; font-weight: bold; font-size: 0.75rem; }
 .result-val { color: #fff; font-weight: bold; text-align: right; flex-grow: 1; }
 .result-value-block {
-    display: flex; align-items: center; gap: 8px;
+    display: flex; align-items: center; gap: 6px;
     justify-content: flex-end; flex-grow: 1; flex-wrap: wrap;
 }
 .result-thumb {
-    width: 36px; height: 36px; border-radius: 5px;
+    width: 32px; height: 32px; border-radius: 5px;
     object-fit: contain; cursor: pointer;
-    border: 1px solid #333;
-    background: rgba(0,0,0,0.2);
+    border: 1px solid #333; background: rgba(0,0,0,0.2);
 }
-.result-thumbs { display: flex; gap: 4px; flex-wrap: wrap; }
+.result-thumbs { display: flex; gap: 3px; flex-wrap: wrap; }
 
 .presets-bar {
-    display: flex; gap: 6px; margin-bottom: 12px;
+    display: flex; gap: 5px; margin-bottom: 10px;
     flex-wrap: wrap; align-items: center;
 }
-.presets-bar span { font-size: 0.8rem; color: #888; }
+.presets-bar span { font-size: 0.78rem; color: #888; }
 .preset-btn {
     padding: 5px 10px; font-size: 0.75rem;
     border-radius: 15px; cursor: pointer;
     background: var(--secondary); color: white;
     border: 1px solid #555;
 }
-.preset-btn:hover { background: var(--accent); border-color: var(--accent); }
 .counter-badge {
-    font-size: 0.72rem; color: #888; margin-left: auto;
+    font-size: 0.7rem; color: #888; margin-left: auto;
     padding: 3px 8px; background: rgba(0,0,0,0.3); border-radius: 10px;
 }
 
-.history-controls { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.history-controls { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
 .search-input {
     flex-grow: 1; padding: 8px; border-radius: 5px;
     border: 1px solid #333; background: #0d1b2a; color: white;
-    font-size: 0.85rem;
+    font-size: 0.85rem; min-height: 38px;
+    min-width: 150px;
 }
-.history-list { display: flex; flex-direction: column; gap: 8px; max-height: 500px; overflow-y: auto; }
+.history-list { display: flex; flex-direction: column; gap: 6px; max-height: 500px; overflow-y: auto; }
 .history-item {
     background: #0d1b2a; padding: 10px 12px;
     border-radius: 8px; border-left: 4px solid var(--secondary);
@@ -322,22 +366,22 @@ body {
 .history-item.fav { border-left-color: gold; }
 .history-header {
     display: flex; justify-content: space-between;
-    align-items: center; margin-bottom: 5px;
+    align-items: center; margin-bottom: 4px;
 }
-.history-date { font-size: 0.7rem; color: #888; }
-.history-details { font-size: 0.8rem; color: #ccc; line-height: 1.4; }
+.history-date { font-size: 0.68rem; color: #888; }
+.history-details { font-size: 0.78rem; color: #ccc; line-height: 1.3; }
 .history-actions { display: flex; gap: 3px; }
 .icon-btn {
     background: none; border: none; cursor: pointer;
-    font-size: 1rem; padding: 3px; opacity: 0.6;
+    font-size: 1rem; padding: 4px; opacity: 0.6;
     color: white; transition: 0.2s;
 }
-.icon-btn:hover { opacity: 1; transform: scale(1.1); }
+.icon-btn:active { opacity: 1; }
 .icon-btn.fav-active { opacity: 1; color: gold; }
 
 .list-block {
     background: #0d1b2a; border-radius: 10px;
-    margin-bottom: 12px; overflow: hidden;
+    margin-bottom: 10px; overflow: hidden;
     border-left: 3px solid var(--lists);
 }
 .list-block.disabled { opacity: 0.5; }
@@ -345,65 +389,81 @@ body {
     display: flex; justify-content: space-between;
     align-items: center; padding: 10px 12px;
     background: var(--header); cursor: pointer; user-select: none;
+    min-height: 44px;
 }
-.list-header h3 { margin: 0; font-size: 0.95rem; }
-.list-counter { font-size: 0.7rem; color: #888; }
+.list-header h3 { margin: 0; font-size: 0.9rem; }
+.list-counter { font-size: 0.68rem; color: #888; }
 .list-controls { display: flex; gap: 6px; align-items: center; }
 .list-body { padding: 10px 12px; display: none; }
 .list-block.open .list-body { display: block; }
 
-.add-row { display: flex; gap: 4px; margin-bottom: 8px; }
+.add-row { display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap; }
 .add-row input {
-    flex-grow: 1; padding: 5px 8px; border-radius: 5px;
+    flex-grow: 1; padding: 6px 8px; border-radius: 5px;
     border: 1px solid #333; background: #1a1a2e;
-    color: white; font-size: 0.8rem;
+    color: white; font-size: 0.8rem; min-height: 36px;
+    min-width: 100px;
 }
 .add-row button {
-    padding: 5px 10px; background: var(--accent);
+    padding: 6px 10px; background: var(--accent);
     color: white; border: none; border-radius: 5px;
-    cursor: pointer; font-size: 0.8rem;
+    cursor: pointer; font-size: 0.8rem; min-height: 36px;
 }
 .add-row button.import-btn { background: var(--clothes); }
 
 .item-list { max-height: 300px; overflow-y: auto; }
 .item {
     display: flex; align-items: center; gap: 6px;
-    padding: 4px 0; border-bottom: 1px solid #1a1a2e;
-    font-size: 0.82rem;
+    padding: 5px 0; border-bottom: 1px solid #1a1a2e;
+    font-size: 0.8rem;
 }
 .item.disabled { opacity: 0.4; text-decoration: line-through; }
-.item-text { flex-grow: 1; cursor: pointer; padding: 3px; border-radius: 3px; word-break: break-word; }
-.item-text:hover { background: rgba(255,255,255,0.1); }
+.item-text { flex-grow: 1; cursor: pointer; padding: 4px; border-radius: 3px; word-break: break-word; }
 .item input[type="text"] {
-    flex-grow: 1; padding: 3px 8px; border-radius: 4px;
+    flex-grow: 1; padding: 4px 8px; border-radius: 4px;
     border: 1px solid var(--accent); background: #1a1a2e;
-    color: white; font-size: 0.82rem;
+    color: white; font-size: 0.8rem; min-height: 32px;
 }
 .item input[type="checkbox"] {
-    cursor: pointer; width: 14px; height: 14px;
+    cursor: pointer; width: 16px; height: 16px;
     accent-color: var(--accent); flex-shrink: 0;
 }
 .item-thumb {
-    width: 30px; height: 30px; border-radius: 4px;
+    width: 32px; height: 32px; border-radius: 4px;
     object-fit: contain; cursor: pointer;
     border: 1px solid #333; flex-shrink: 0;
     background: rgba(0,0,0,0.2);
 }
 .item-thumb-placeholder {
-    width: 30px; height: 30px; border-radius: 4px;
+    width: 32px; height: 32px; border-radius: 4px;
     background: rgba(255,255,255,0.05);
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; font-size: 0.75rem; color: #555;
     border: 1px dashed #333; flex-shrink: 0;
 }
-.item-thumb-placeholder:hover { color: var(--accent); border-color: var(--accent); }
+.item-pos-btn {
+    background: rgba(243,156,18,0.15);
+    color: var(--pos);
+    border: 1px solid var(--pos);
+    border-radius: 4px;
+    padding: 4px 6px;
+    font-size: 0.68rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    min-height: 30px;
+}
+.item-pos-btn:active { background: var(--pos); color: #1a1a2e; }
+.item-pos-btn.has-pos {
+    background: var(--pos); color: #1a1a2e; font-weight: bold;
+}
 
 .group-title {
-    font-size: 0.95rem; font-weight: bold;
-    padding: 10px 12px; margin-top: 12px;
+    font-size: 0.9rem; font-weight: bold;
+    padding: 10px 12px; margin-top: 10px;
     border-radius: 8px; color: white;
     cursor: pointer; user-select: none;
     display: flex; justify-content: space-between; align-items: center;
+    min-height: 42px;
 }
 .group-appearance { background: linear-gradient(90deg, var(--appearance), transparent); }
 .group-clothes { background: linear-gradient(90deg, var(--clothes), transparent); }
@@ -414,7 +474,7 @@ body {
 
 .module {
     background: #0d1b2a; border-radius: 8px;
-    margin-top: 6px; overflow: hidden;
+    margin-top: 5px; overflow: hidden;
     border-left: 3px solid var(--accent);
 }
 .module.disabled { opacity: 0.5; }
@@ -422,15 +482,16 @@ body {
     display: flex; justify-content: space-between;
     align-items: center; padding: 8px 12px;
     background: var(--header); cursor: pointer; user-select: none;
+    min-height: 40px;
 }
-.module-header h4 { margin: 0; font-size: 0.85rem; }
-.module-counter { font-size: 0.68rem; color: #888; }
-.module-controls { display: flex; gap: 6px; align-items: center; }
+.module-header h4 { margin: 0; font-size: 0.82rem; }
+.module-counter { font-size: 0.65rem; color: #888; }
+.module-controls { display: flex; gap: 5px; align-items: center; }
 .module-body { padding: 8px 12px 12px; display: none; }
 .module.open .module-body { display: block; }
 .module-toggle {
     background: none; border: none; color: white;
-    font-size: 0.9rem; cursor: pointer; padding: 3px; transition: 0.2s;
+    font-size: 0.9rem; cursor: pointer; padding: 4px; transition: 0.2s;
 }
 .module.open .module-toggle { transform: rotate(180deg); }
 
@@ -443,11 +504,11 @@ body {
 .subcat-header {
     display: flex; justify-content: space-between;
     align-items: center; padding: 7px 10px;
-    cursor: pointer; user-select: none; font-size: 0.8rem;
+    cursor: pointer; user-select: none; font-size: 0.78rem;
+    min-height: 36px;
 }
-.subcat-header:hover { background: rgba(255,255,255,0.03); }
 .subcat-name { font-weight: bold; }
-.subcat-counter { font-size: 0.68rem; color: #888; margin-left: 6px; }
+.subcat-counter { font-size: 0.65rem; color: #888; margin-left: 6px; }
 .subcat-controls { display: flex; gap: 4px; align-items: center; }
 .subcat-body {
     padding: 6px 10px 10px;
@@ -457,13 +518,13 @@ body {
 .subcat.open .subcat-body { display: block; }
 .subcat-toggle {
     background: none; border: none; color: white;
-    font-size: 0.75rem; cursor: pointer; padding: 3px; transition: 0.2s;
+    font-size: 0.75rem; cursor: pointer; padding: 4px; transition: 0.2s;
 }
 .subcat.open .subcat-toggle { transform: rotate(180deg); }
 
 .simple-module {
     background: #0d1b2a; border-radius: 8px;
-    margin-top: 6px; overflow: hidden;
+    margin-top: 5px; overflow: hidden;
     border-left: 3px solid var(--mods);
 }
 .simple-module.disabled { opacity: 0.5; }
@@ -471,8 +532,9 @@ body {
     display: flex; justify-content: space-between;
     align-items: center; padding: 8px 12px;
     background: var(--header); cursor: pointer; user-select: none;
+    min-height: 40px;
 }
-.simple-header h4 { margin: 0; font-size: 0.85rem; }
+.simple-header h4 { margin: 0; font-size: 0.82rem; }
 .simple-body { padding: 8px 12px 12px; display: none; }
 .simple-module.open .simple-body { display: block; }
 
@@ -489,20 +551,21 @@ body {
     background: var(--header);
 }
 .rule-header .rule-type {
-    font-size: 0.68rem; padding: 2px 8px; border-radius: 10px;
+    font-size: 0.65rem; padding: 2px 8px; border-radius: 10px;
     background: var(--rules); color: white; font-weight: bold;
     text-transform: uppercase;
 }
 .rule-type-replace { background: var(--clothes); }
 .rule-type-exclude { background: var(--accent); }
 .rule-type-add { background: var(--race); color: #1a1a2e; }
-.rule-body { padding: 10px 12px; font-size: 0.82rem; line-height: 1.5; }
+.rule-body { padding: 10px 12px; font-size: 0.78rem; line-height: 1.4; }
 .rule-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; flex-wrap: wrap; }
-.rule-row label { font-size: 0.78rem; color: #888; min-width: 90px; }
+.rule-row label { font-size: 0.75rem; color: #888; min-width: 80px; }
 .rule-row select, .rule-row input[type="text"] {
-    flex-grow: 1; padding: 5px 8px; border-radius: 5px;
+    flex-grow: 1; padding: 6px 8px; border-radius: 5px;
     border: 1px solid #333; background: #1a1a2e;
-    color: white; font-size: 0.82rem; min-width: 110px;
+    color: white; font-size: 0.78rem; min-width: 100px;
+    min-height: 36px;
 }
 .rule-row .arrow { color: var(--rules); font-weight: bold; }
 .condition-block {
@@ -511,7 +574,7 @@ body {
 }
 .condition-header {
     display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 6px; font-size: 0.78rem; color: var(--rules); font-weight: bold;
+    margin-bottom: 6px; font-size: 0.75rem; color: var(--rules); font-weight: bold;
 }
 .condition-header button {
     background: none; border: none; color: var(--accent);
@@ -523,84 +586,221 @@ body {
     margin-bottom: 12px;
 }
 .empty-state {
-    text-align: center; color: #666; padding: 25px; font-size: 0.85rem;
+    text-align: center; color: #666; padding: 25px; font-size: 0.82rem;
 }
 .chain-badge {
-    font-size: 0.62rem; padding: 2px 6px; border-radius: 8px;
+    font-size: 0.6rem; padding: 2px 6px; border-radius: 8px;
     background: var(--race); color: #1a1a2e; font-weight: bold;
     margin-left: 6px;
 }
-
-/* Таблица */
-.table-section { margin-bottom: 20px; border-radius: 8px; overflow: hidden; border: 1px solid #0d1b2a; }
-.table-section-header { padding: 8px 12px; font-weight: bold; font-size: 0.85rem; }
-.table-section-appearance { background: linear-gradient(90deg, var(--appearance), transparent); }
-.table-section-clothes { background: linear-gradient(90deg, var(--clothes), transparent); }
-.table-section-race { background: linear-gradient(90deg, var(--race), transparent); }
-.table-section-lists { background: linear-gradient(90deg, var(--lists), transparent); }
-.table-grid { width: 100%; border-collapse: collapse; background: #0d1b2a; }
-.table-grid th {
-    background: var(--header); padding: 6px 10px; text-align: left;
-    font-size: 0.72rem; color: #888; text-transform: uppercase;
-}
-.table-grid td { padding: 5px 10px; border-top: 1px solid #1a1a2e; font-size: 0.82rem; }
-.table-grid td.slot-name { color: #ccc; font-weight: bold; width: 30%; }
-.table-cell-input {
-    width: 100%; padding: 5px 8px; border-radius: 5px;
-    border: 1px solid #333; background: #1a1a2e;
-    color: white; font-size: 0.82rem;
-}
-.table-cell-input:focus { outline: none; border-color: var(--table); }
-.table-cell-row { display: flex; align-items: center; gap: 6px; }
-.table-cell-thumb {
-    width: 28px; height: 28px; border-radius: 4px;
-    object-fit: contain; cursor: pointer;
-    border: 1px solid var(--table); background: rgba(0,0,0,0.2);
-}
-
-.table-toolbar { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
 
 /* Модалки */
 .modal-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
     background: rgba(0,0,0,0.85); z-index: 1000;
     display: none; justify-content: center; align-items: center;
-    padding: 20px;
+    padding: 15px;
 }
 .modal-overlay.active { display: flex; }
 .modal {
-    background: var(--container); padding: 20px;
+    background: var(--container); padding: 18px;
     border-radius: 12px; max-width: 500px; width: 100%;
     max-height: 85vh; overflow-y: auto;
 }
-.modal h3 { margin-top: 0; }
+.modal h3 { margin-top: 0; font-size: 1rem; }
 .modal textarea {
-    width: 100%; height: 180px; padding: 8px;
+    width: 100%; height: 160px; padding: 8px;
     background: #0d1b2a; color: white;
     border: 1px solid #333; border-radius: 8px;
     font-family: inherit; font-size: 0.85rem; resize: vertical;
 }
-.modal-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+.modal-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; flex-wrap: wrap; }
 .image-viewer-modal {
-    max-width: 90vw; max-height: 90vh;
+    max-width: 95vw; max-height: 95vh;
     background: transparent; padding: 0;
     display: flex; flex-direction: column; align-items: center; gap: 12px;
 }
 .image-viewer-modal img {
-    max-width: 100%; max-height: 75vh;
+    max-width: 100%; max-height: 80vh;
     border-radius: 12px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.7);
     background: repeating-conic-gradient(#2a2a3e 0% 25%, #1a1a2e 0% 50%) 50% / 20px 20px;
 }
 
+/* Позиционная модалка */
+.pos-modal {
+    max-width: 420px;
+}
+.pos-row {
+    display: flex; gap: 10px; align-items: center;
+    margin-bottom: 10px;
+}
+.pos-row label {
+    font-size: 0.82rem; min-width: 80px; color: #ccc;
+}
+.pos-row input[type="range"] {
+    flex-grow: 1; accent-color: var(--pos);
+}
+.pos-row input[type="number"] {
+    width: 70px; padding: 5px 8px; border-radius: 5px;
+    border: 1px solid #333; background: #1a1a2e;
+    color: white; font-size: 0.82rem;
+}
+.pos-preview {
+    background: repeating-conic-gradient(#2a2a3e 0% 25%, #1a1a2e 0% 50%) 50% / 15px 15px;
+    border-radius: 8px;
+    aspect-ratio: 1/1;
+    width: 100%;
+    max-width: 300px;
+    margin: 10px auto;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #333;
+    touch-action: none;
+}
+.pos-preview img {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+    transform-origin: center;
+}
+.pos-preview-tint {
+    position: absolute;
+    inset: 0;
+    background: rgba(243,156,18,0.15);
+    display: none;
+}
+.pos-preview.draggable .pos-preview-tint { display: block; }
+
 .toast {
     position: fixed; bottom: 20px; left: 50%;
     transform: translateX(-50%); background: #333;
-    color: white; padding: 10px 20px; border-radius: 20px;
+    color: white; padding: 10px 18px; border-radius: 20px;
     opacity: 0; transition: 0.3s; pointer-events: none; z-index: 2000;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
+    max-width: 90vw; text-align: center;
 }
 .toast.show { opacity: 1; }
+
+/* ============ МОБИЛЬНАЯ АДАПТАЦИЯ ============ */
+@media (max-width: 800px) {
+    body { padding: 0; }
+
+    .app {
+        border-radius: 0;
+        min-height: 100vh;
+    }
+
+    .tabs { position: sticky; top: 0; z-index: 100; }
+
+    .tab-btn {
+        font-size: 0.72rem; padding: 10px 2px; min-width: 50px;
+    }
+
+    .tab-content { padding: 8px; }
+
+    .builder-layout {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .builder-canvas-area {
+        position: relative;
+    }
+
+    .builder-toolbar {
+        gap: 4px;
+    }
+
+    .builder-toolbar .btn-main,
+    .builder-toolbar .btn-secondary {
+        flex: 1 1 calc(33% - 4px);
+        font-size: 0.72rem;
+        padding: 8px 6px;
+        min-height: 42px;
+        min-width: 0;
+    }
+
+    .canvas-frame {
+        max-width: 100%;
+    }
+
+    /* Панель категорий — как bottom sheet */
+    .builder-panel {
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        max-height: 65vh;
+        border-radius: 15px 15px 0 0;
+        z-index: 200;
+        transform: translateY(100%);
+        transition: transform 0.3s ease;
+        box-shadow: 0 -10px 30px rgba(0,0,0,0.6);
+        padding-bottom: env(safe-area-inset-bottom, 10px);
+    }
+    .builder-panel.open {
+        transform: translateY(0);
+    }
+
+    .builder-panel-header {
+        display: flex;
+    }
+
+    .builder-panel-header button {
+        background: none;
+        border: none;
+        color: var(--accent);
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0 10px;
+    }
+
+    /* Затемнение фона под панелью */
+    .panel-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 150;
+        display: none;
+    }
+    .panel-overlay.active { display: block; }
+
+    /* Кнопка открытия панели */
+    .open-panel-btn {
+        position: fixed;
+        bottom: 20px; right: 20px;
+        z-index: 100;
+        width: 60px; height: 60px;
+        border-radius: 50%;
+        background: var(--accent);
+        color: white;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        box-shadow: 0 5px 20px rgba(233,69,96,0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+
+    .tiles-grid {
+        grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+    }
+
+    .tile-thumb { height: 46px; }
+    .tile-no-thumb { height: 46px; }
+
+    .modal {
+        max-width: 100%;
+        padding: 15px;
+    }
+
+    .item input[type="checkbox"] { width: 20px; height: 20px; }
+
+    .icon-btn { font-size: 1.15rem; padding: 6px; }
+}
 </style>
 </head>
 <body>
@@ -608,44 +808,52 @@ body {
 <div class="app">
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('builder', this)">🎨 Конструктор</button>
-        <button class="tab-btn" onclick="switchTab('gen', this)">🎲 Генератор</button>
-        <button class="tab-btn" onclick="switchTab('hist', this)">📜 История</button>
-        <button class="tab-btn" onclick="switchTab('lists', this)">📋 Списки</button>
-        <button class="tab-btn" onclick="switchTab('mod', this)">⚙️ Модули</button>
-        <button class="tab-btn" onclick="switchTab('rules', this)">🔗 Правила</button>
+        <button class="tab-btn" onclick="switchTab('gen', this)">🎲</button>
+        <button class="tab-btn" onclick="switchTab('hist', this)">📜</button>
+        <button class="tab-btn" onclick="switchTab('lists', this)">📋</button>
+        <button class="tab-btn" onclick="switchTab('mod', this)">⚙️</button>
+        <button class="tab-btn" onclick="switchTab('rules', this)">🔗</button>
     </div>
 
     <!-- ================== КОНСТРУКТОР ================== -->
     <div id="tab-builder" class="tab-content active">
         <div class="builder-layout">
-            <!-- ХОЛСТ -->
             <div class="builder-canvas-area">
                 <div class="builder-toolbar">
                     <button class="btn-main" onclick="randomizeAll()">🎲 Случайно</button>
+                    <button class="btn-secondary" onclick="togglePositionMode()" id="posModeBtn">📐 Позиция</button>
+                    <button class="btn-secondary" onclick="addCustomLayer()">📤 Своя</button>
                     <button class="btn-secondary" onclick="clearCanvas()">🗑 Сброс</button>
-                    <button class="btn-secondary" onclick="saveOutfit()">💾 Сохранить образ</button>
-                    <button class="btn-secondary" onclick="document.getElementById('outfitFileInput').click()">📂 Загрузить</button>
+                    <button class="btn-secondary" onclick="saveOutfit()">💾</button>
+                    <button class="btn-secondary" onclick="document.getElementById('outfitFileInput').click()">📂</button>
                     <input type="file" id="outfitFileInput" accept=".json" style="display:none;" onchange="loadOutfitFromFile(event)">
                     <button class="btn-secondary" onclick="exportPNG()">🖼️ PNG</button>
                     <button class="btn-secondary" onclick="exportPSD()">📄 PSD</button>
                     <button class="btn-secondary" onclick="undoCanvas()" id="undoBtn" disabled>↶</button>
                     <button class="btn-secondary" onclick="redoCanvas()" id="redoBtn" disabled>↷</button>
                     <button class="btn-secondary" onclick="toggleEraser()" id="eraserBtn">🧽</button>
-                    <span id="eraserSizeLabel" style="display:none; align-items:center; gap:6px; font-size:0.78rem;">
-                        <input type="range" id="eraserSize" min="10" max="400" value="80" style="width:90px;">
+                    <span id="eraserSizeLabel" style="display:none; align-items:center; gap:6px; font-size:0.75rem; flex:1 1 100%;">
+                        🧽 Размер: <input type="range" id="eraserSize" min="10" max="400" value="80" style="flex-grow:1;">
                     </span>
                 </div>
-                <div class="canvas-frame">
+                <div class="canvas-frame" id="canvasFrame">
+                    <div class="position-hint">📐 Режим позиции: тяни слой. Клик — выбрать.</div>
                     <canvas id="mainCanvas" width="4096" height="4096"></canvas>
                 </div>
             </div>
 
-            <!-- ПАНЕЛЬ КАТЕГОРИЙ -->
-            <div class="builder-panel">
-                <h3>📚 Категории</h3>
+            <div class="builder-panel" id="builderPanel">
+                <div class="builder-panel-header">
+                    <h3 style="margin:0;">📚 Категории</h3>
+                    <button onclick="closePanel()">✕</button>
+                </div>
+                <h3 class="desktop-title">📚 Категории</h3>
                 <div id="builderCategories"></div>
             </div>
         </div>
+
+        <button class="open-panel-btn" onclick="openPanel()" id="openPanelBtn">📚</button>
+        <div class="panel-overlay" id="panelOverlay" onclick="closePanel()"></div>
     </div>
 
     <!-- ================== ГЕНЕРАТОР ================== -->
@@ -653,44 +861,44 @@ body {
         <div class="presets-bar">
             <span>Пресеты:</span>
             <button class="preset-btn" onclick="applyPreset('portrait')">👤 Портрет</button>
-            <button class="preset-btn" onclick="applyPreset('full')">🧍 Полный рост</button>
-            <button class="preset-btn" onclick="applyPreset('race')">🧬 Только раса</button>
+            <button class="preset-btn" onclick="applyPreset('full')">🧍 Полный</button>
+            <button class="preset-btn" onclick="applyPreset('race')">🧬 Раса</button>
             <button class="preset-btn" onclick="applyPreset('all')">✅ Всё</button>
             <span class="counter-badge" id="genCounter">Создано: 0</span>
         </div>
         <div class="result-box" id="resultBox">
             <p style="text-align:center; color:#888;">Нажмите «Сгенерировать»</p>
         </div>
-        <button class="btn-main" style="width:100%; margin-bottom:8px;" onclick="generate()">Сгенерировать!</button>
-        <button class="btn-secondary" style="width:100%; margin-bottom:6px;" onclick="copyResult()">📋 Скопировать промпт</button>
-        <button class="btn-secondary" style="width:100%;" onclick="copyShort()">📋 Скопировать кратко</button>
+        <button class="btn-main" style="width:100%; margin-bottom:6px;" onclick="generate()">Сгенерировать!</button>
+        <button class="btn-secondary" style="width:100%; margin-bottom:4px;" onclick="copyResult()">📋 Скопировать промпт</button>
+        <button class="btn-secondary" style="width:100%;" onclick="copyShort()">📋 Кратко</button>
     </div>
 
     <!-- ================== ИСТОРИЯ ================== -->
     <div id="tab-hist" class="tab-content">
         <div class="history-controls">
             <input type="text" id="search" class="search-input" placeholder="Поиск..." oninput="renderHistory()">
-            <button class="btn-secondary" onclick="clearHistory()">🗑 Удалить всё</button>
+            <button class="btn-secondary" onclick="clearHistory()">🗑 Всё</button>
         </div>
         <div class="history-list" id="historyList"></div>
     </div>
 
     <!-- ================== СПИСКИ ================== -->
     <div id="tab-lists" class="tab-content">
-        <div class="toolbar" style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
-            <button class="btn-secondary" onclick="sortLists()">🔤 Сортировать</button>
+        <div style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
+            <button class="btn-secondary" onclick="sortLists()">🔤 Сорт.</button>
             <button class="btn-secondary" onclick="resetAll()">↺ Сброс</button>
-            <button class="btn-secondary" onclick="clearAllImages()">🖼️ Очистить все картинки</button>
+            <button class="btn-secondary" onclick="clearAllImages()">🖼️ Очистить картинки</button>
         </div>
         <div id="listsContainer"></div>
     </div>
 
     <!-- ================== МОДУЛИ ================== -->
     <div id="tab-mod" class="tab-content">
-        <div class="toolbar" style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
-            <input type="text" id="moduleSearch" class="search-input" placeholder="🔍 Поиск..." oninput="renderModules()" style="flex-grow:1; min-width:150px;">
-            <button class="btn-secondary" onclick="sortModules()">🔤 Сортировать</button>
-            <button class="btn-secondary" onclick="resetAll()">↺ Сброс</button>
+        <div style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
+            <input type="text" id="moduleSearch" class="search-input" placeholder="🔍 Поиск..." oninput="renderModules()" style="flex-grow:1; min-width:120px;">
+            <button class="btn-secondary" onclick="sortModules()">🔤</button>
+            <button class="btn-secondary" onclick="resetAll()">↺</button>
         </div>
         <div id="modulesContainer"></div>
     </div>
@@ -698,19 +906,19 @@ body {
     <!-- ================== ПРАВИЛА ================== -->
     <div id="tab-rules" class="tab-content">
         <div class="add-rule-form">
-            <h4 style="margin-top:0;">➕ Новое правило</h4>
+            <h4 style="margin-top:0; font-size:0.9rem;">➕ Новое правило</h4>
             <div class="rule-row">
                 <label>Тип:</label>
                 <select id="newRuleType" onchange="onRuleTypeChange()">
-                    <option value="replace">🔵 Замена (если X → Y)</option>
-                    <option value="exclude">🔴 Исключение (если X → убрать Y)</option>
-                    <option value="add">🟡 Добавить текст (если X → +текст)</option>
+                    <option value="replace">🔵 Замена</option>
+                    <option value="exclude">🔴 Исключение</option>
+                    <option value="add">🟡 Текст</option>
                 </select>
             </div>
             <div class="condition-block">
                 <div class="condition-header">
                     <span>Условия (И)</span>
-                    <button onclick="addCondition()" title="Добавить">➕</button>
+                    <button onclick="addCondition()">➕</button>
                 </div>
                 <div id="conditionsContainer"></div>
             </div>
@@ -721,25 +929,25 @@ body {
                 <select id="newRuleActValue"></select>
             </div>
             <div class="rule-row" id="actionExcludeRow" style="display:none;">
-                <label>Убрать из:</label>
+                <label>Убрать:</label>
                 <select id="newRuleExclModule"></select>
                 <input type="text" id="newRuleExclValue" placeholder="через запятую">
             </div>
             <div class="rule-row" id="actionAddRow" style="display:none;">
                 <label>Текст:</label>
-                <input type="text" id="newRuleAddText" placeholder="torn clothes, pale skin">
+                <input type="text" id="newRuleAddText" placeholder="torn clothes">
             </div>
             <div class="rule-row">
                 <label>Цепочка:</label>
-                <label style="display:flex; align-items:center; gap:5px; font-size:0.78rem; cursor:pointer;">
-                    <input type="checkbox" id="newRuleChain"> Может активировать другие
+                <label style="display:flex; align-items:center; gap:5px; font-size:0.75rem; cursor:pointer;">
+                    <input type="checkbox" id="newRuleChain"> Активирует другие
                 </label>
             </div>
-            <button class="btn-main" style="margin-top:10px;" onclick="addRule()">Добавить правило</button>
+            <button class="btn-main" style="margin-top:10px;" onclick="addRule()">Добавить</button>
         </div>
-        <div class="toolbar" style="display:flex; gap:8px; margin-bottom:12px;">
-            <button class="btn-secondary" onclick="exportRules()">💾 Экспорт правил</button>
-            <button class="btn-secondary" onclick="document.getElementById('ruleFileInput').click()">📂 Импорт правил</button>
+        <div style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
+            <button class="btn-secondary" onclick="exportRules()">💾 Экспорт</button>
+            <button class="btn-secondary" onclick="document.getElementById('ruleFileInput').click()">📂 Импорт</button>
             <input type="file" id="ruleFileInput" accept=".json" style="display:none;" onchange="importRules(event)">
         </div>
         <div id="rulesContainer"></div>
@@ -750,7 +958,7 @@ body {
 <div class="modal-overlay" id="editModal">
     <div class="modal">
         <h3 id="editTitle">Редактирование</h3>
-        <p style="color:#888; font-size:0.8rem;">Один элемент на строку (или через запятую).</p>
+        <p style="color:#888; font-size:0.78rem;">Один элемент на строку (или через запятую).</p>
         <textarea id="editTextarea"></textarea>
         <div class="modal-actions">
             <button class="btn-secondary" onclick="closeEdit()">Отмена</button>
@@ -762,7 +970,7 @@ body {
 <div class="modal-overlay" id="bulkImportModal">
     <div class="modal">
         <h3 id="bulkImportTitle">Массовый импорт</h3>
-        <p style="color:#888; font-size:0.8rem;">Один элемент на строку (или через запятую).</p>
+        <p style="color:#888; font-size:0.78rem;">Один элемент на строку (или через запятую).</p>
         <textarea id="bulkImportTextarea"></textarea>
         <div class="modal-actions">
             <button class="btn-secondary" onclick="closeBulkImport()">Отмена</button>
@@ -778,7 +986,45 @@ body {
     </div>
 </div>
 
+<!-- МОДАЛКА ПОЗИЦИИ -->
+<div class="modal-overlay" id="posModal">
+    <div class="modal pos-modal">
+        <h3 id="posTitle">📐 Позиция слоя</h3>
+        <p style="color:#888; font-size:0.78rem;" id="posSubtitle">Тяни картинку — или настрой ползунки.</p>
+        <div class="pos-preview" id="posPreview">
+            <img id="posPreviewImg" src="" alt="">
+            <div class="pos-preview-tint"></div>
+        </div>
+        <div class="pos-row">
+            <label>X (%)</label>
+            <input type="range" id="posXRange" min="-100" max="100" value="0" oninput="document.getElementById('posX').value=this.value;updatePosPreview()">
+            <input type="number" id="posX" value="0" oninput="document.getElementById('posXRange').value=this.value;updatePosPreview()">
+        </div>
+        <div class="pos-row">
+            <label>Y (%)</label>
+            <input type="range" id="posYRange" min="-100" max="100" value="0" oninput="document.getElementById('posY').value=this.value;updatePosPreview()">
+            <input type="number" id="posY" value="0" oninput="document.getElementById('posYRange').value=this.value;updatePosPreview()">
+        </div>
+        <div class="pos-row">
+            <label>Scale (%)</label>
+            <input type="range" id="posScaleRange" min="10" max="300" value="100" oninput="document.getElementById('posScale').value=this.value;updatePosPreview()">
+            <input type="number" id="posScale" value="100" oninput="document.getElementById('posScaleRange').value=this.value;updatePosPreview()">
+        </div>
+        <div class="pos-row">
+            <label>Rotation</label>
+            <input type="range" id="posRotRange" min="-180" max="180" value="0" oninput="document.getElementById('posRot').value=this.value;updatePosPreview()">
+            <input type="number" id="posRot" value="0" oninput="document.getElementById('posRotRange').value=this.value;updatePosPreview()">
+        </div>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="resetPosition()">↺ Сброс</button>
+            <button class="btn-secondary" onclick="closePosModal()">Отмена</button>
+            <button class="btn-main" onclick="savePosition()">Сохранить</button>
+        </div>
+    </div>
+</div>
+
 <input type="file" id="imageFileInput" accept="image/*" style="display:none;">
+<input type="file" id="customLayerInput" accept="image/*" style="display:none;">
 <div class="toast" id="toast"></div>
 
 <script>
@@ -791,13 +1037,13 @@ const DEFAULT_LISTS = {
         items: ["Angel girl", "Arapaima girl", "Bat girl", "Bird girl", "Chimera", "Crocodile girl", "Crow girl", "Cat girl", "Cow girl", "Capybara girl", "Chicken girl", "Demon girl", "Doll girl", "Dragon girl", "Deer girl", "Elf", "Fish girl", "Fox girl", "Gargoyle girl", "Ghost girl", "Horse girl", "Insect girl", "Jackal girl", "Kitsune girl", "Mimic", "Orca girl", "Program girl", "Panda girl", "Rat girl", "Rabbit girl", "Reptile girl", "Snake girl", "Slime girl", "Serval girl", "Shark girl", "Succubus", "Sheep girl", "Tiger girl", "Vampire girl", "Wolf girl", "Wyrm girl", "Zombie girl"]
     },
     styles: {
-        name: "👗 Стили одежды", enabled: true, expanded: true,
+        name: "👗 Стили", enabled: true, expanded: true,
         items: ["Ancient Egyptian", "Boho-chic", "Casual", "Gyaru", "Grunge", "Gothic Lolita", "Jester", "Japanese clothes", "Jirai key", "Maid", "Nun", "Naval", "Punk", "Prison", "Rags", "Sportswear", "Swimsuit", "Streetwear", "Techwear", "Witch", "Winter clothes", "Y2K"]
     }
 };
 
 const DEFAULT_MODIFIERS = {
-    name: "✨ Модификаторы одежды", enabled: true, expanded: true,
+    name: "✨ Модификаторы", enabled: true, expanded: true,
     items: ["Oversized", "Cropped", "Vintage", "Torn", "Formal", "Sporty", "Baggy", "Slim", "Loose", "Tight", "Fitted"]
 };
 
@@ -806,7 +1052,8 @@ const DEFAULT_MODULES = {
         name: "🎨 Внешность", groupClass: "group-appearance", expanded: true,
         modules: {
             bangs: {
-                name: "Bangs (чёлка)", enabled: true, expanded: false,
+                name: "Bangs", enabled: true, expanded: false,
+                position: { x: 0, y: -30, scale: 100, rotation: 0 },
                 subcategories: {
                     shape: { name: "Форма", enabled: true, expanded: false, items: ["Arched bangs", "Asymmetrical bangs", "Blunt bangs", "Crossed", "Curtained bangs", "Diagonal bangs", "Hime cut", "Wispy bangs", "Choppy bangs", "Fanged bangs", "Parted bangs", "Double-parted bangs", "Middle part", "Swept bangs", "Side part", "Bangs pinned back", "Center flap bangs"] },
                     length: { name: "Длина", enabled: true, expanded: false, items: ["Short bangs", "Medium bangs", "Long bangs"] },
@@ -815,44 +1062,32 @@ const DEFAULT_MODULES = {
             },
             sidelocks: {
                 name: "Sidelocks", enabled: true, expanded: false,
+                position: { x: 0, y: 0, scale: 100, rotation: 0 },
                 subcategories: {
-                    shape: { name: "Форма", enabled: true, expanded: false, items: ["Single sidelock", "Long single sidelock", "Single braided sidelock", "Ring sidelocks", "Braided sidelock", "Drill sidelocks", "Flipped sidelocks", "Blunt sidelocks", "Wavy sidelocks", "Curly sidelocks", "Blunt tesses"] },
-                    length: { name: "Длина", enabled: true, expanded: false, items: ["Medium sidelock", "Long sidelocks", "Very long sidelocks", "Absurdly long sidelocks"] }
+                    shape: { name: "Форма", enabled: true, expanded: false, items: ["Single sidelock", "Long single sidelock", "Ring sidelocks", "Drill sidelocks", "Flipped sidelocks", "Wavy sidelocks", "Curly sidelocks"] },
+                    length: { name: "Длина", enabled: true, expanded: false, items: ["Medium sidelock", "Long sidelocks", "Very long sidelocks"] }
                 }
             },
-            backHair: { name: "Back hair", enabled: true, expanded: false, subcategories: { shape: { name: "Форма", enabled: true, expanded: false, items: ["Хвост", "Косички", "Распущенные", "Пучок"] } } },
-            addHair: { name: "Additional hair", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Ахоге", "Пучок", "Хвостик"] } } },
-            eyeShape: { name: "Форма глаз", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Большие", "Узкие", "Круглые", "Закрытые"] } } },
-            skinColor: { name: "Цвет кожи", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Бледная", "Загорелая", "Тёмная", "Оливковая"] } } }
+            backHair: { name: "Back hair", enabled: true, expanded: false, position: { x: 0, y: 20, scale: 100, rotation: 0 }, subcategories: { shape: { name: "Форма", enabled: true, expanded: false, items: ["Хвост", "Косички", "Распущенные", "Пучок"] } } },
+            eyeShape: { name: "Глаза", enabled: true, expanded: false, position: { x: 0, y: -10, scale: 100, rotation: 0 }, subcategories: { type: { name: "Форма", enabled: true, expanded: false, items: ["Большие", "Узкие", "Круглые", "Закрытые"] } } }
         }
     },
     clothes: {
         name: "👗 Одежда", groupClass: "group-clothes", expanded: true,
         modules: {
-            headwear:   { name: "Headwear",     enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Шляпа", "Капюшон", "Ободок", "Шапка"] } } },
-            neckwear:   { name: "Neckwear",     enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Чокер", "Шарф", "Ожерелье"] } } },
-            handwear:   { name: "Handwear",     enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Перчатки", "Митенки", "Кольца"] } } },
-            topwear1:   { name: "Topwear",      enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Футболка", "Худи", "Кроп-топ", "Куртка", "Свитер"] } } },
-            bottomwear: { name: "Bottomwear",   enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Юбка", "Джинсы", "Шорты", "Карго"] } } },
-            legwear:    { name: "Legwear",      enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Чулки", "Носки", "Колготки"] } } },
-            footwear:   { name: "Footwear",     enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Кроссовки", "Ботинки", "Каблуки", "Сандалии"] } } },
-            acc1:       { name: "Accessory 1",  enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Серьги", "Очки", "Браслет"] } } },
-            acc2:       { name: "Accessory 2",  enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Сумка", "Зонт", "Оружие"] } } },
-            acc3:       { name: "Accessory 3",  enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Шарф", "Платок", "Пояс"] } } },
-            acc4:       { name: "Accessory 4",  enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Часы", "Кольцо", "Брошь"] } } },
-            acc5:       { name: "Accessory 5",  enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Корона", "Вуаль", "Маска"] } } }
+            headwear:   { name: "Headwear",   enabled: true, expanded: false, position: { x: 0, y: -50, scale: 100, rotation: 0 }, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Шляпа", "Капюшон", "Ободок", "Шапка"] } } },
+            neckwear:   { name: "Neckwear",   enabled: true, expanded: false, position: { x: 0, y: 10, scale: 100, rotation: 0 }, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Чокер", "Шарф", "Ожерелье"] } } },
+            topwear1:   { name: "Topwear",    enabled: true, expanded: false, position: { x: 0, y: 20, scale: 100, rotation: 0 }, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Футболка", "Худи", "Кроп-топ", "Куртка", "Свитер"] } } },
+            bottomwear: { name: "Bottomwear", enabled: true, expanded: false, position: { x: 0, y: 40, scale: 100, rotation: 0 }, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Юбка", "Джинсы", "Шорты", "Карго"] } } },
+            footwear:   { name: "Footwear",   enabled: true, expanded: false, position: { x: 0, y: 70, scale: 100, rotation: 0 }, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Кроссовки", "Ботинки", "Каблуки", "Сандалии"] } } }
         }
     },
     race: {
         name: "🧬 Раса", groupClass: "group-race", expanded: true,
         modules: {
-            trait1:  { name: "Черта 1", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Animal ears", "Horns", "Tail", "Wings", "Halos"] } } },
-            trait2:  { name: "Черта 2", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Fangs", "Claws", "Glowing eyes", "Scales"] } } },
-            trait3:  { name: "Черта 3", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Magic aura", "Tattoos", "Freckles", "Scars"] } } },
-            trait4:  { name: "Черта 4", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Отсутствует"] } } },
-            trait5:  { name: "Черта 5", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Отсутствует"] } } },
-            trait6:  { name: "Черта 6", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Отсутствует"] } } },
-            trait7:  { name: "Черта 7", enabled: true, expanded: false, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Отсутствует"] } } }
+            trait1:  { name: "Черта 1", enabled: true, expanded: false, position: { x: 0, y: -30, scale: 100, rotation: 0 }, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Animal ears", "Horns", "Tail", "Wings", "Halos"] } } },
+            trait2:  { name: "Черта 2", enabled: true, expanded: false, position: { x: 0, y: 0, scale: 100, rotation: 0 }, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Fangs", "Claws", "Glowing eyes", "Scales"] } } },
+            trait3:  { name: "Черта 3", enabled: true, expanded: false, position: { x: 0, y: 0, scale: 100, rotation: 0 }, subcategories: { type: { name: "Тип", enabled: true, expanded: false, items: ["Отсутствует"] } } }
         }
     }
 };
@@ -861,27 +1096,27 @@ let state = {
     lists: null, modifiers: null, modules: null, rules: [], history: [],
     current: {}, currentPaths: [], currentItems: {}, extraText: '',
     genCount: 0,
-    table: {},
-    // НОВОЕ: выбор в конструкторе: { path: item }
-    outfit: {}
+    outfit: {},        // { path: item }
+    customLayers: []   // [{ id, name, image, position }]
 };
 
 let editContext = null;
 let bulkContext = null;
 let imageContext = null;
+let posContext = null;  // для модалки позиции
 
 // ============================================================
 // INIT
 // ============================================================
 function init() {
-    const savedLists = localStorage.getItem('cg_lists_v7');
-    const savedMods = localStorage.getItem('cg_modifiers_v6');
-    const savedModules = localStorage.getItem('cg_modules_v7');
-    const savedRules = localStorage.getItem('cg_rules_v6');
-    const savedHist = localStorage.getItem('cg_history_v6');
-    const savedCount = localStorage.getItem('cg_gen_count_v6');
-    const savedTable = localStorage.getItem('cg_table_v4');
-    const savedOutfit = localStorage.getItem('cg_outfit');
+    const savedLists = localStorage.getItem('cg_lists_v8');
+    const savedMods = localStorage.getItem('cg_modifiers_v7');
+    const savedModules = localStorage.getItem('cg_modules_v8');
+    const savedRules = localStorage.getItem('cg_rules_v7');
+    const savedHist = localStorage.getItem('cg_history_v7');
+    const savedCount = localStorage.getItem('cg_gen_count_v7');
+    const savedOutfit = localStorage.getItem('cg_outfit_v2');
+    const savedCustom = localStorage.getItem('cg_custom_layers');
 
     state.lists = savedLists ? JSON.parse(savedLists) : null;
     state.modifiers = savedMods ? JSON.parse(savedMods) : null;
@@ -889,24 +1124,40 @@ function init() {
     state.rules = savedRules ? JSON.parse(savedRules) : [];
     state.history = savedHist ? JSON.parse(savedHist) : [];
     state.genCount = savedCount ? parseInt(savedCount) : 0;
-    state.table = savedTable ? JSON.parse(savedTable) : {};
     state.outfit = savedOutfit ? JSON.parse(savedOutfit) : {};
+    state.customLayers = savedCustom ? JSON.parse(savedCustom) : [];
 
     if (!state.lists || !isValidListStructure(state.lists)) state.lists = JSON.parse(JSON.stringify(DEFAULT_LISTS));
     if (!state.modifiers) state.modifiers = JSON.parse(JSON.stringify(DEFAULT_MODIFIERS));
     if (!state.modules || !isValidModuleStructure(state.modules)) state.modules = JSON.parse(JSON.stringify(DEFAULT_MODULES));
+    // Миграция: добавляем position в модули, если их нет
+    migratePositions();
     sanitizeData();
     save();
     renderLists();
     renderModules();
     renderRules();
     renderHistory();
-    renderTable();
     populateRuleSelects();
     updateCounter();
-    // Инициализируем конструктор сразу
     renderBuilder();
     initCanvasIfNeeded();
+}
+
+function migratePositions() {
+    for (const gKey in state.modules) {
+        const group = state.modules[gKey];
+        for (const mKey in group.modules) {
+            const mod = group.modules[mKey];
+            if (!mod.position) mod.position = { x: 0, y: 0, scale: 100, rotation: 0 };
+            for (const sKey in mod.subcategories) {
+                const sub = mod.subcategories[sKey];
+                sub.items.forEach(i => {
+                    if (i && typeof i === 'object' && i.position === undefined) i.position = null;
+                });
+            }
+        }
+    }
 }
 
 function isValidListStructure(lists) {
@@ -924,9 +1175,6 @@ function isValidModuleStructure(modules) {
         for (const mKey in group.modules) {
             const mod = group.modules[mKey];
             if (!mod.subcategories) return false;
-            for (const sKey in mod.subcategories) {
-                if (!Array.isArray(mod.subcategories[sKey].items)) return false;
-            }
         }
     }
     return true;
@@ -936,9 +1184,10 @@ function sanitizeData() {
         const list = state.lists[key];
         if (!Array.isArray(list.items)) { list.items = []; continue; }
         list.items = list.items.map(i => {
-            if (typeof i === 'string') return { text: i, enabled: true, image: null };
+            if (typeof i === 'string') return { text: i, enabled: true, image: null, position: null };
             if (i && typeof i === 'object' && typeof i.text === 'string') {
                 if (i.image === undefined) i.image = null;
+                if (i.position === undefined) i.position = null;
                 return i;
             }
             return null;
@@ -948,9 +1197,10 @@ function sanitizeData() {
     }
     if (state.modifiers) {
         state.modifiers.items = (state.modifiers.items || []).map(i => {
-            if (typeof i === 'string') return { text: i, enabled: true, image: null };
+            if (typeof i === 'string') return { text: i, enabled: true, image: null, position: null };
             if (i && typeof i === 'object' && typeof i.text === 'string') {
                 if (i.image === undefined) i.image = null;
+                if (i.position === undefined) i.position = null;
                 return i;
             }
             return null;
@@ -965,13 +1215,15 @@ function sanitizeData() {
             if (!mod.subcategories) mod.subcategories = {};
             if (mod.enabled === undefined) mod.enabled = true;
             if (mod.expanded === undefined) mod.expanded = false;
+            if (!mod.position) mod.position = { x: 0, y: 0, scale: 100, rotation: 0 };
             for (const sKey in mod.subcategories) {
                 const sub = mod.subcategories[sKey];
                 if (!Array.isArray(sub.items)) { sub.items = []; continue; }
                 sub.items = sub.items.map(i => {
-                    if (typeof i === 'string') return { text: i, enabled: true, image: null };
+                    if (typeof i === 'string') return { text: i, enabled: true, image: null, position: null };
                     if (i && typeof i === 'object' && typeof i.text === 'string') {
                         if (i.image === undefined) i.image = null;
+                        if (i.position === undefined) i.position = null;
                         return i;
                     }
                     return null;
@@ -984,14 +1236,14 @@ function sanitizeData() {
 }
 function save() {
     try {
-        localStorage.setItem('cg_lists_v7', JSON.stringify(state.lists));
-        localStorage.setItem('cg_modifiers_v6', JSON.stringify(state.modifiers));
-        localStorage.setItem('cg_modules_v7', JSON.stringify(state.modules));
-        localStorage.setItem('cg_rules_v6', JSON.stringify(state.rules));
-        localStorage.setItem('cg_history_v6', JSON.stringify(state.history));
-        localStorage.setItem('cg_gen_count_v6', state.genCount.toString());
-        localStorage.setItem('cg_table_v4', JSON.stringify(state.table));
-        localStorage.setItem('cg_outfit', JSON.stringify(state.outfit));
+        localStorage.setItem('cg_lists_v8', JSON.stringify(state.lists));
+        localStorage.setItem('cg_modifiers_v7', JSON.stringify(state.modifiers));
+        localStorage.setItem('cg_modules_v8', JSON.stringify(state.modules));
+        localStorage.setItem('cg_rules_v7', JSON.stringify(state.rules));
+        localStorage.setItem('cg_history_v7', JSON.stringify(state.history));
+        localStorage.setItem('cg_gen_count_v7', state.genCount.toString());
+        localStorage.setItem('cg_outfit_v2', JSON.stringify(state.outfit));
+        localStorage.setItem('cg_custom_layers', JSON.stringify(state.customLayers));
     } catch (e) {
         if (e.name === 'QuotaExceededError') showToast('⚠️ Память переполнена!');
     }
@@ -1020,72 +1272,89 @@ function switchTab(name, btn) {
 }
 
 // ============================================================
-// КОНСТРУКТОР — панель категорий
+// МОБИЛЬНАЯ ПАНЕЛЬ
+// ============================================================
+function openPanel() {
+    document.getElementById('builderPanel').classList.add('open');
+    document.getElementById('panelOverlay').classList.add('active');
+}
+function closePanel() {
+    document.getElementById('builderPanel').classList.remove('open');
+    document.getElementById('panelOverlay').classList.remove('active');
+}
+
+// ============================================================
+// КОНСТРУКТОР
 // ============================================================
 function renderBuilder() {
     const container = document.getElementById('builderCategories');
     if (!container) return;
     container.innerHTML = '';
 
-    // Списки (Расы, Стили) как отдельные группы
+    // Списки
     const listsGroup = document.createElement('div');
-    listsGroup.className = 'cat-group group-lists';
-    listsGroup.innerHTML = `
-        <div class="cat-header">
-            <span>📋 Списки</span>
-            <span class="counter">▼</span>
-        </div>
-    `;
+    listsGroup.className = 'cat-group group-lists open';
+    listsGroup.innerHTML = `<div class="cat-header"><span>📋 Списки</span><span>▼</span></div>`;
     const listsBody = document.createElement('div');
     listsBody.className = 'cat-body';
-    // Расы
-    listsBody.appendChild(createBuilderSlot('list.races', state.lists.races.name, state.lists.races.items));
-    // Стили
-    listsBody.appendChild(createBuilderSlot('list.styles', state.lists.styles.name, state.lists.styles.items));
+    listsBody.appendChild(createBuilderSlot('list.races', state.lists.races.name, state.lists.races.items, null));
+    listsBody.appendChild(createBuilderSlot('list.styles', state.lists.styles.name, state.lists.styles.items, null));
     listsGroup.appendChild(listsBody);
     listsGroup.querySelector('.cat-header').onclick = () => listsGroup.classList.toggle('open');
-    listsGroup.classList.add('open');
     container.appendChild(listsGroup);
 
-    // Модули: группируем по группам
+    // Модули
     for (const gKey in state.modules) {
         const group = state.modules[gKey];
         const groupDiv = document.createElement('div');
-        groupDiv.className = 'cat-group ' + (group.groupClass || '');
-        groupDiv.innerHTML = `
-            <div class="cat-header">
-                <span>${group.name}</span>
-                <span class="counter">▼</span>
-            </div>
-        `;
+        groupDiv.className = 'cat-group ' + (group.groupClass || '') + ' open';
+        groupDiv.innerHTML = `<div class="cat-header"><span>${group.name}</span><span>▼</span></div>`;
         const groupBody = document.createElement('div');
         groupBody.className = 'cat-body';
         for (const mKey in group.modules) {
             const mod = group.modules[mKey];
-            groupBody.appendChild(createBuilderSlot(`${gKey}.${mKey}`, mod.name, collectAllItemsForModule(gKey, mKey)));
+            const items = collectAllItemsForModule(gKey, mKey);
+            groupBody.appendChild(createBuilderSlot(`${gKey}.${mKey}`, mod.name, items, mod));
         }
         groupDiv.appendChild(groupBody);
         groupDiv.querySelector('.cat-header').onclick = () => groupDiv.classList.toggle('open');
-        groupDiv.classList.add('open');
         container.appendChild(groupDiv);
     }
 
     // Модификаторы
     const modsGroup = document.createElement('div');
-    modsGroup.className = 'cat-group group-mods';
-    modsGroup.innerHTML = `
-        <div class="cat-header">
-            <span>✨ ${state.modifiers.name}</span>
-            <span class="counter">▼</span>
-        </div>
-    `;
+    modsGroup.className = 'cat-group group-mods open';
+    modsGroup.innerHTML = `<div class="cat-header"><span>✨ ${state.modifiers.name}</span><span>▼</span></div>`;
     const modsBody = document.createElement('div');
     modsBody.className = 'cat-body';
-    modsBody.appendChild(createBuilderSlot('modifiers', state.modifiers.name, state.modifiers.items));
+    modsBody.appendChild(createBuilderSlot('modifiers', state.modifiers.name, state.modifiers.items, null));
     modsGroup.appendChild(modsBody);
     modsGroup.querySelector('.cat-header').onclick = () => modsGroup.classList.toggle('open');
-    modsGroup.classList.add('open');
     container.appendChild(modsGroup);
+
+    // Свои слои
+    if (state.customLayers.length > 0) {
+        const customGroup = document.createElement('div');
+        customGroup.className = 'cat-group open';
+        customGroup.style.borderLeftColor = 'var(--accent)';
+        customGroup.innerHTML = `<div class="cat-header"><span>📤 Свои слои (${state.customLayers.length})</span><span>▼</span></div>`;
+        const customBody = document.createElement('div');
+        customBody.className = 'cat-body';
+        state.customLayers.forEach((l, idx) => {
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid #1a1a2e;';
+            row.innerHTML = `
+                <img src="${l.image}" style="width:36px;height:36px;object-fit:contain;background:rgba(0,0,0,0.2);border-radius:4px;">
+                <span style="flex-grow:1;font-size:0.78rem;color:#ccc;">${l.name}</span>
+                <button class="icon-btn" onclick="editCustomLayerPos(${idx})" title="Позиция">📐</button>
+                <button class="icon-btn" onclick="removeCustomLayer(${idx})">❌</button>
+            `;
+            customBody.appendChild(row);
+        });
+        customGroup.appendChild(customBody);
+        customGroup.querySelector('.cat-header').onclick = () => customGroup.classList.toggle('open');
+        container.appendChild(customGroup);
+    }
 }
 
 function collectAllItemsForModule(gKey, mKey) {
@@ -1098,7 +1367,7 @@ function collectAllItemsForModule(gKey, mKey) {
     return all;
 }
 
-function createBuilderSlot(path, name, items) {
+function createBuilderSlot(path, name, items, mod) {
     const slot = document.createElement('div');
     slot.className = 'slot';
 
@@ -1115,15 +1384,24 @@ function createBuilderSlot(path, name, items) {
     const body = document.createElement('div');
     body.className = 'slot-body';
 
-    // Кнопка убрать
-    const removeRow = document.createElement('div');
-    removeRow.className = 'tile-remove-row';
+    // Кнопки
+    const btnRow = document.createElement('div');
+    btnRow.className = 'tile-remove-row';
     const removeBtn = document.createElement('button');
     removeBtn.className = 'tile-remove-btn';
-    removeBtn.textContent = '🚫 Убрать слой';
+    removeBtn.textContent = '🚫 Убрать';
     removeBtn.onclick = (e) => { e.stopPropagation(); removeFromOutfit(path); };
-    removeRow.appendChild(removeBtn);
-    body.appendChild(removeRow);
+    btnRow.appendChild(removeBtn);
+
+    // Позиция по умолчанию (если есть mod)
+    if (mod) {
+        const posBtn = document.createElement('button');
+        posBtn.className = 'tile-pos-default-btn';
+        posBtn.textContent = '📐 Позиция слота';
+        posBtn.onclick = (e) => { e.stopPropagation(); openPosModal('module', path); };
+        btnRow.appendChild(posBtn);
+    }
+    body.appendChild(btnRow);
 
     // Сетка плиток
     const grid = document.createElement('div');
@@ -1152,34 +1430,38 @@ function createBuilderSlot(path, name, items) {
         txt.textContent = item.text;
         tile.appendChild(txt);
 
+        // Кнопка позиции для конкретного значения
+        if (item.image) {
+            const posBtn = document.createElement('button');
+            posBtn.className = 'tile-pos-btn';
+            posBtn.textContent = '📐';
+            posBtn.title = 'Позиция этого значения';
+            posBtn.onclick = (e) => { e.stopPropagation(); openPosModal('item', path, item); };
+            tile.appendChild(posBtn);
+        }
+
         tile.onclick = () => selectForOutfit(path, item);
         grid.appendChild(tile);
     });
 
     body.appendChild(grid);
     slot.appendChild(body);
-
-    // Заголовок — раскрытие
     slot.querySelector('.slot-header').onclick = () => slot.classList.toggle('open');
 
     return slot;
 }
 
 // ============================================================
-// КОНСТРУКТОР — выбор слоя
+// ВЫБОР И ОБНОВЛЕНИЕ ХОЛСТА
 // ============================================================
 async function selectForOutfit(path, item) {
-    // Обновляем outfit
     if (state.outfit[path] && state.outfit[path].text === item.text) {
-        // Тот же — убираем
         delete state.outfit[path];
     } else {
         state.outfit[path] = item;
     }
     save();
-    // Обновляем UI плиток
     renderBuilder();
-    // Обновляем холст
     await rebuildCanvasFromOutfit();
 }
 
@@ -1191,8 +1473,6 @@ async function removeFromOutfit(path) {
 }
 
 async function randomizeAll() {
-    // Проходим по всем слотам и выбираем случайное
-    // Списки
     if (state.lists.races.enabled) {
         const active = state.lists.races.items.filter(i => i.enabled);
         if (active.length) state.outfit['list.races'] = active[Math.floor(Math.random() * active.length)];
@@ -1201,26 +1481,21 @@ async function randomizeAll() {
         const active = state.lists.styles.items.filter(i => i.enabled);
         if (active.length) state.outfit['list.styles'] = active[Math.floor(Math.random() * active.length)];
     }
-    // Модули
     for (const gKey in state.modules) {
         const group = state.modules[gKey];
         for (const mKey in group.modules) {
             const mod = group.modules[mKey];
             if (!mod.enabled) continue;
             const path = `${gKey}.${mKey}`;
-            // Собираем активные items из всех подкатегорий
             const all = [];
             for (const sKey in mod.subcategories) {
                 const sub = mod.subcategories[sKey];
                 if (!sub.enabled) continue;
                 all.push(...sub.items.filter(i => i.enabled && i.text !== 'Отсутствует' && i.text !== 'None'));
             }
-            if (all.length) {
-                state.outfit[path] = all[Math.floor(Math.random() * all.length)];
-            }
+            if (all.length) state.outfit[path] = all[Math.floor(Math.random() * all.length)];
         }
     }
-    // Модификатор
     if (state.modifiers && state.modifiers.enabled) {
         const active = state.modifiers.items.filter(i => i.enabled);
         if (active.length) state.outfit['modifiers'] = active[Math.floor(Math.random() * active.length)];
@@ -1234,6 +1509,7 @@ async function randomizeAll() {
 function clearCanvas() {
     if (!confirm('Очистить холст?')) return;
     state.outfit = {};
+    state.customLayers = [];
     save();
     renderBuilder();
     rebuildCanvasFromOutfit();
@@ -1241,18 +1517,55 @@ function clearCanvas() {
 }
 
 // ============================================================
-// ХОЛСТ — построение из outfit
+// СВОИ СЛОИ
+// ============================================================
+function addCustomLayer() {
+    document.getElementById('customLayerInput').click();
+}
+document.getElementById('customLayerInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+        const dataUrl = await compressImage(file);
+        state.customLayers.push({
+            id: Date.now(),
+            name: file.name.replace(/\.[^/.]+$/, ''),
+            image: dataUrl,
+            position: { x: 0, y: 0, scale: 100, rotation: 0 }
+        });
+        save();
+        renderBuilder();
+        await rebuildCanvasFromOutfit();
+        showToast('Свой слой добавлен');
+    } catch (err) {
+        alert('Ошибка: ' + err.message);
+    }
+    e.target.value = '';
+});
+function removeCustomLayer(idx) {
+    state.customLayers.splice(idx, 1);
+    save();
+    renderBuilder();
+    rebuildCanvasFromOutfit();
+}
+function editCustomLayerPos(idx) {
+    openPosModal('custom', null, null, idx);
+}
+
+// ============================================================
+// ХОЛСТ
 // ============================================================
 const CANVAS_SIZE = 4096;
-
 let canvasState = {
     layers: [],
-    zoom: 1,
     eraser: false,
     history: [],
-    historyIndex: -1
+    historyIndex: -1,
+    positionMode: false,
+    selectedLayerIdx: -1,
+    dragging: false,
+    dragStart: null
 };
-
 let mainCanvas = null;
 let ctx = null;
 let canvasInitialized = false;
@@ -1269,8 +1582,21 @@ const LAYER_ORDER = {
     'clothes.neckwear': 24, 'clothes.headwear': 25,
     'clothes.acc1': 30, 'clothes.acc2': 31, 'clothes.acc3': 32,
     'clothes.acc4': 33, 'clothes.acc5': 34,
-    'modifiers': 40
+    'modifiers': 40,
+    'custom': 50
 };
+
+function getEffectivePosition(path, item) {
+    // Приоритет: item.position > mod.position > default {x:0, y:0, scale:100, rot:0}
+    if (item && item.position) return item.position;
+    if (path === 'modifiers') return { x: 0, y: 0, scale: 100, rotation: 0 };
+    if (path.startsWith('list.')) return { x: 0, y: 0, scale: 100, rotation: 0 };
+    const [g, m] = path.split('.');
+    if (state.modules[g] && state.modules[g].modules[m] && state.modules[g].modules[m].position) {
+        return state.modules[g].modules[m].position;
+    }
+    return { x: 0, y: 0, scale: 100, rotation: 0 };
+}
 
 function loadImage(src) {
     return new Promise((resolve, reject) => {
@@ -1283,33 +1609,48 @@ function loadImage(src) {
 
 async function rebuildCanvasFromOutfit() {
     if (!canvasInitialized) initCanvasIfNeeded();
-
-    // Собираем массив слоёв из state.outfit (только те, у которых есть картинка)
     const newLayers = [];
     for (const path in state.outfit) {
         const item = state.outfit[path];
         if (!item || !item.image) continue;
         try {
             const img = await loadImage(item.image);
+            const pos = getEffectivePosition(path, item);
             newLayers.push({
                 path: path,
                 name: getPathName(path),
                 item: item.text,
                 image: img,
+                position: { ...pos },
                 visible: true,
                 opacity: 1,
                 flipH: false,
                 flipV: false,
                 eraseStrokes: []
             });
-        } catch (e) {
-            console.warn('Не удалось загрузить', path);
-        }
+        } catch (e) {}
     }
-    // Сортируем по LAYER_ORDER
+    // Свои слои
+    for (const cl of state.customLayers) {
+        try {
+            const img = await loadImage(cl.image);
+            newLayers.push({
+                path: 'custom',
+                name: '📤 ' + cl.name,
+                item: cl.name,
+                image: img,
+                position: { ...cl.position },
+                visible: true,
+                opacity: 1,
+                flipH: false,
+                flipV: false,
+                eraseStrokes: [],
+                customId: cl.id
+            });
+        } catch (e) {}
+    }
     newLayers.sort((a, b) => (LAYER_ORDER[a.path] || 100) - (LAYER_ORDER[b.path] || 100));
     canvasState.layers = newLayers;
-    renderLayers();
     redrawCanvas();
     pushHistory();
 }
@@ -1317,32 +1658,50 @@ async function rebuildCanvasFromOutfit() {
 function redrawCanvas() {
     if (!ctx) return;
     ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-    canvasState.layers.forEach(layer => {
+    canvasState.layers.forEach((layer, idx) => {
         if (!layer.visible) return;
-        drawLayer(layer);
+        drawLayer(layer, idx === canvasState.selectedLayerIdx);
     });
 }
 
-function drawLayer(layer) {
+function drawLayer(layer, isSelected) {
     const img = layer.image;
     if (!img) return;
-    const scale = Math.min(CANVAS_SIZE / img.width, CANVAS_SIZE / img.height);
+    const pos = layer.position || { x: 0, y: 0, scale: 100, rotation: 0 };
+    const baseScale = Math.min(CANVAS_SIZE / img.width, CANVAS_SIZE / img.height);
+    const scale = baseScale * (pos.scale / 100);
     const w = img.width * scale;
     const h = img.height * scale;
-    const x = (CANVAS_SIZE - w) / 2;
-    const y = (CANVAS_SIZE - h) / 2;
+
+    // Центр холста + смещение в %
+    const offsetX = (pos.x / 100) * CANVAS_SIZE;
+    const offsetY = (pos.y / 100) * CANVAS_SIZE;
+    const cx = CANVAS_SIZE / 2 + offsetX;
+    const cy = CANVAS_SIZE / 2 + offsetY;
+
     ctx.save();
     ctx.globalAlpha = layer.opacity;
-    let drawX = x, drawY = y;
+    ctx.translate(cx, cy);
+    if (pos.rotation) ctx.rotate(pos.rotation * Math.PI / 180);
     let drawW = w, drawH = h;
-    if (layer.flipH) { drawX = x + w; drawW = -w; }
-    if (layer.flipV) { drawY = y + h; drawH = -h; }
-    ctx.drawImage(img, drawX, drawY, drawW, drawH);
-    if (layer.eraseStrokes.length > 0) {
+    if (layer.flipH) drawW = -w;
+    if (layer.flipV) drawH = -h;
+    ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
+
+    // Рамка выделения
+    if (isSelected && canvasState.positionMode) {
+        ctx.strokeStyle = '#f39c12';
+        ctx.lineWidth = 8;
+        ctx.setLineDash([30, 20]);
+        ctx.strokeRect(-Math.abs(drawW) / 2, -Math.abs(drawH) / 2, Math.abs(drawW), Math.abs(drawH));
+        ctx.setLineDash([]);
+    }
+
+    if (layer.eraseStrokes && layer.eraseStrokes.length > 0) {
         ctx.globalCompositeOperation = 'destination-out';
         layer.eraseStrokes.forEach(stroke => {
             ctx.beginPath();
-            ctx.arc(stroke.x, stroke.y, stroke.r, 0, Math.PI * 2);
+            ctx.arc(stroke.x - cx, stroke.y - cy, stroke.r, 0, Math.PI * 2);
             ctx.fill();
         });
         ctx.globalCompositeOperation = 'source-over';
@@ -1350,13 +1709,9 @@ function drawLayer(layer) {
     ctx.restore();
 }
 
-function renderLayers() {
-    // В конструкторе панель слоёв не показываем — только холст.
-    // Функция оставлена для совместимости, ничего не рисует.
-}
-
 function getPathName(path) {
     if (path === 'modifiers') return state.modifiers.name;
+    if (path === 'custom') return '📤 Свой слой';
     if (path.startsWith('list.')) {
         const k = path.split('.')[1];
         return state.lists[k] ? state.lists[k].name : path;
@@ -1381,49 +1736,295 @@ function getItemsByPath(path) {
 }
 
 // ============================================================
+// РЕЖИМ ПОЗИЦИИ (перетаскивание)
+// ============================================================
+function togglePositionMode() {
+    canvasState.positionMode = !canvasState.positionMode;
+    const btn = document.getElementById('posModeBtn');
+    const frame = document.getElementById('canvasFrame');
+    btn.classList.toggle('active', canvasState.positionMode);
+    frame.classList.toggle('position-mode', canvasState.positionMode);
+    canvasState.selectedLayerIdx = -1;
+    redrawCanvas();
+    if (canvasState.positionMode) {
+        showToast('📐 Тяни слой. Кликни — выбрать.');
+    }
+}
+
+function attachCanvasEvents() {
+    let dragging = false;
+    let dragStartPos = null;
+    let dragStartLayerPos = null;
+
+    const getMousePos = (e) => {
+        const rect = mainCanvas.getBoundingClientRect();
+        const x = (e.clientX ?? e.touches?.[0]?.clientX) - rect.left;
+        const y = (e.clientY ?? e.touches?.[0]?.clientY) - rect.top;
+        return {
+            x: (x / rect.width) * CANVAS_SIZE,
+            y: (y / rect.height) * CANVAS_SIZE
+        };
+    };
+
+    const findLayerAt = (pos) => {
+        // Ищем сверху вниз
+        for (let i = canvasState.layers.length - 1; i >= 0; i--) {
+            const layer = canvasState.layers[i];
+            if (!layer.visible) continue;
+            const p = layer.position || { x: 0, y: 0, scale: 100, rotation: 0 };
+            const img = layer.image;
+            const baseScale = Math.min(CANVAS_SIZE / img.width, CANVAS_SIZE / img.height);
+            const scale = baseScale * (p.scale / 100);
+            const w = img.width * scale;
+            const h = img.height * scale;
+            const cx = CANVAS_SIZE / 2 + (p.x / 100) * CANVAS_SIZE;
+            const cy = CANVAS_SIZE / 2 + (p.y / 100) * CANVAS_SIZE;
+            if (pos.x >= cx - w / 2 && pos.x <= cx + w / 2 &&
+                pos.y >= cy - h / 2 && pos.y <= cy + h / 2) {
+                return i;
+            }
+        }
+        return -1;
+    };
+
+    mainCanvas.addEventListener('mousedown', onDown);
+    mainCanvas.addEventListener('touchstart', onDown, { passive: false });
+
+    function onDown(e) {
+        e.preventDefault();
+        const pos = getMousePos(e);
+
+        if (canvasState.positionMode) {
+            // Режим позиции: выбираем слой
+            const idx = findLayerAt(pos);
+            if (idx >= 0) {
+                canvasState.selectedLayerIdx = idx;
+                dragging = true;
+                dragStartPos = pos;
+                dragStartLayerPos = { ...canvasState.layers[idx].position };
+                redrawCanvas();
+            } else {
+                canvasState.selectedLayerIdx = -1;
+                redrawCanvas();
+            }
+        } else if (canvasState.eraser) {
+            if (canvasState.layers.length === 0) return;
+            const idx = canvasState.layers.length - 1;
+            canvasState.selectedLayerIdx = idx;
+            eraseAt(pos, idx);
+            dragging = 'erase';
+        }
+    }
+
+    mainCanvas.addEventListener('mousemove', onMove);
+    mainCanvas.addEventListener('touchmove', onMove, { passive: false });
+
+    function onMove(e) {
+        if (!dragging) return;
+        e.preventDefault();
+        const pos = getMousePos(e);
+
+        if (dragging === true && canvasState.positionMode && canvasState.selectedLayerIdx >= 0) {
+            const dx = pos.x - dragStartPos.x;
+            const dy = pos.y - dragStartPos.y;
+            const layer = canvasState.layers[canvasState.selectedLayerIdx];
+            layer.position = {
+                ...layer.position,
+                x: dragStartLayerPos.x + (dx / CANVAS_SIZE) * 100,
+                y: dragStartLayerPos.y + (dy / CANVAS_SIZE) * 100
+            };
+            redrawCanvas();
+        } else if (dragging === 'erase') {
+            eraseAt(pos, canvasState.selectedLayerIdx);
+        }
+    }
+
+    mainCanvas.addEventListener('mouseup', onUp);
+    mainCanvas.addEventListener('touchend', onUp);
+    mainCanvas.addEventListener('touchcancel', onUp);
+
+    function onUp() {
+        if (dragging === true) {
+            // Сохраняем позицию в outfit для этого слоя
+            saveCurrentLayerPosition();
+        }
+        if (dragging) {
+            dragging = false;
+            dragStartPos = null;
+            dragStartLayerPos = null;
+            pushHistory();
+        }
+    }
+}
+
+function eraseAt(pos, layerIdx) {
+    if (layerIdx < 0 || !canvasState.layers[layerIdx]) return;
+    const size = parseInt(document.getElementById('eraserSize').value);
+    canvasState.layers[layerIdx].eraseStrokes.push({
+        x: pos.x, y: pos.y, r: size / 2
+    });
+    redrawCanvas();
+}
+
+async function saveCurrentLayerPosition() {
+    const layer = canvasState.layers[canvasState.selectedLayerIdx];
+    if (!layer) return;
+    if (layer.path === 'custom') {
+        const cl = state.customLayers.find(c => c.id === layer.customId);
+        if (cl) cl.position = { ...layer.position };
+    } else {
+        // Сохраняем в item (для конкретного значения)
+        const item = state.outfit[layer.path];
+        if (item) item.position = { ...layer.position };
+    }
+    save();
+}
+
+// ============================================================
+// МОДАЛКА ПОЗИЦИИ
+// ============================================================
+function openPosModal(type, path, item, customIdx) {
+    posContext = { type, path, item, customIdx };
+    let position = { x: 0, y: 0, scale: 100, rotation: 0 };
+    let imgSrc = '';
+    let title = '';
+
+    if (type === 'module') {
+        const [g, m] = path.split('.');
+        position = state.modules[g].modules[m].position || { x: 0, y: 0, scale: 100, rotation: 0 };
+        title = `📐 Позиция слота: ${state.modules[g].modules[m].name}`;
+        const items = getItemsByPath(path);
+        const firstImg = items.find(i => i.image);
+        if (firstImg) imgSrc = firstImg.image;
+    } else if (type === 'item') {
+        position = item.position || getEffectivePosition(path, item);
+        title = `📐 Позиция: ${item.text}`;
+        imgSrc = item.image;
+    } else if (type === 'custom') {
+        const cl = state.customLayers[customIdx];
+        position = cl.position;
+        title = `📐 Свой слой: ${cl.name}`;
+        imgSrc = cl.image;
+    }
+
+    document.getElementById('posTitle').textContent = title;
+    document.getElementById('posX').value = Math.round(position.x);
+    document.getElementById('posXRange').value = Math.round(position.x);
+    document.getElementById('posY').value = Math.round(position.y);
+    document.getElementById('posYRange').value = Math.round(position.y);
+    document.getElementById('posScale').value = Math.round(position.scale);
+    document.getElementById('posScaleRange').value = Math.round(position.scale);
+    document.getElementById('posRot').value = Math.round(position.rotation || 0);
+    document.getElementById('posRotRange').value = Math.round(position.rotation || 0);
+
+    const img = document.getElementById('posPreviewImg');
+    img.src = imgSrc || '';
+    img.style.display = imgSrc ? 'block' : 'none';
+
+    // Перетаскивание в превью
+    const preview = document.getElementById('posPreview');
+    preview.classList.add('draggable');
+
+    let previewDragging = false;
+    let startX = 0, startY = 0, startPosX = 0, startPosY = 0;
+
+    const onPreviewDown = (e) => {
+        e.preventDefault();
+        previewDragging = true;
+        const rect = preview.getBoundingClientRect();
+        const p = e.touches ? e.touches[0] : e;
+        startX = p.clientX;
+        startY = p.clientY;
+        startPosX = parseFloat(document.getElementById('posX').value);
+        startPosY = parseFloat(document.getElementById('posY').value);
+    };
+    const onPreviewMove = (e) => {
+        if (!previewDragging) return;
+        e.preventDefault();
+        const p = e.touches ? e.touches[0] : e;
+        const rect = preview.getBoundingClientRect();
+        const dx = (p.clientX - startX) / rect.width * 100;
+        const dy = (p.clientY - startY) / rect.height * 100;
+        const newX = startPosX + dx;
+        const newY = startPosY + dy;
+        document.getElementById('posX').value = Math.round(newX);
+        document.getElementById('posXRange').value = Math.round(newX);
+        document.getElementById('posY').value = Math.round(newY);
+        document.getElementById('posYRange').value = Math.round(newY);
+        updatePosPreview();
+    };
+    const onPreviewUp = () => { previewDragging = false; };
+
+    preview.onmousedown = onPreviewDown;
+    preview.ontouchstart = onPreviewDown;
+    document.addEventListener('mousemove', onPreviewMove);
+    document.addEventListener('touchmove', onPreviewMove, { passive: false });
+    document.addEventListener('mouseup', onPreviewUp);
+    document.addEventListener('touchend', onPreviewUp);
+
+    updatePosPreview();
+    document.getElementById('posModal').classList.add('active');
+}
+
+function updatePosPreview() {
+    const img = document.getElementById('posPreviewImg');
+    const x = parseFloat(document.getElementById('posX').value) || 0;
+    const y = parseFloat(document.getElementById('posY').value) || 0;
+    const s = parseFloat(document.getElementById('posScale').value) || 100;
+    const r = parseFloat(document.getElementById('posRot').value) || 0;
+    img.style.transform = `translate(${x}%, ${y}%) scale(${s / 100}) rotate(${r}deg)`;
+}
+
+function resetPosition() {
+    document.getElementById('posX').value = 0;
+    document.getElementById('posXRange').value = 0;
+    document.getElementById('posY').value = 0;
+    document.getElementById('posYRange').value = 0;
+    document.getElementById('posScale').value = 100;
+    document.getElementById('posScaleRange').value = 100;
+    document.getElementById('posRot').value = 0;
+    document.getElementById('posRotRange').value = 0;
+    updatePosPreview();
+}
+
+function closePosModal() {
+    document.getElementById('posModal').classList.remove('active');
+    posContext = null;
+}
+
+async function savePosition() {
+    if (!posContext) return;
+    const position = {
+        x: parseFloat(document.getElementById('posX').value) || 0,
+        y: parseFloat(document.getElementById('posY').value) || 0,
+        scale: parseFloat(document.getElementById('posScale').value) || 100,
+        rotation: parseFloat(document.getElementById('posRot').value) || 0
+    };
+
+    if (posContext.type === 'module') {
+        const [g, m] = posContext.path.split('.');
+        state.modules[g].modules[m].position = position;
+    } else if (posContext.type === 'item') {
+        posContext.item.position = position;
+    } else if (posContext.type === 'custom') {
+        state.customLayers[posContext.customIdx].position = position;
+    }
+    save();
+    closePosModal();
+    await rebuildCanvasFromOutfit();
+    showToast('Позиция сохранена');
+}
+
+// ============================================================
 // ЛАСТИК
 // ============================================================
-let isDrawingEraser = false;
-let currentEraseLayerIdx = -1;
-
 function toggleEraser() {
     canvasState.eraser = !canvasState.eraser;
     const btn = document.getElementById('eraserBtn');
     btn.textContent = canvasState.eraser ? '🧽 ВКЛ' : '🧽';
     btn.classList.toggle('btn-table', canvasState.eraser);
     document.getElementById('eraserSizeLabel').style.display = canvasState.eraser ? 'inline-flex' : 'none';
-    if (mainCanvas) mainCanvas.style.cursor = canvasState.eraser ? 'cell' : 'crosshair';
-}
-
-function attachCanvasEvents() {
-    mainCanvas.addEventListener('mousedown', (e) => {
-        if (!canvasState.eraser) return;
-        if (canvasState.layers.length === 0) return;
-        isDrawingEraser = true;
-        currentEraseLayerIdx = canvasState.layers.length - 1;
-        eraseAt(e, currentEraseLayerIdx);
-    });
-    mainCanvas.addEventListener('mousemove', (e) => {
-        if (!isDrawingEraser) return;
-        eraseAt(e, currentEraseLayerIdx);
-    });
-    mainCanvas.addEventListener('mouseup', () => {
-        if (isDrawingEraser) { isDrawingEraser = false; pushHistory(); }
-    });
-    mainCanvas.addEventListener('mouseleave', () => {
-        if (isDrawingEraser) { isDrawingEraser = false; pushHistory(); }
-    });
-}
-
-function eraseAt(e, layerIdx) {
-    const rect = mainCanvas.getBoundingClientRect();
-    const canvasX = (e.clientX - rect.left) / rect.width * CANVAS_SIZE;
-    const canvasY = (e.clientY - rect.top) / rect.height * CANVAS_SIZE;
-    const size = parseInt(document.getElementById('eraserSize').value);
-    canvasState.layers[layerIdx].eraseStrokes.push({
-        x: canvasX, y: canvasY, r: size / 2
-    });
-    redrawCanvas();
+    if (canvasState.eraser && canvasState.positionMode) togglePositionMode();
 }
 
 // ============================================================
@@ -1433,9 +2034,11 @@ function pushHistory() {
     canvasState.history = canvasState.history.slice(0, canvasState.historyIndex + 1);
     const snapshot = canvasState.layers.map(l => ({
         path: l.path, item: l.item, image: l.image.src,
+        position: { ...l.position },
         visible: l.visible, opacity: l.opacity,
         flipH: l.flipH, flipV: l.flipV,
-        eraseStrokes: JSON.parse(JSON.stringify(l.eraseStrokes))
+        eraseStrokes: JSON.parse(JSON.stringify(l.eraseStrokes)),
+        customId: l.customId
     }));
     canvasState.history.push(snapshot);
     canvasState.historyIndex = canvasState.history.length - 1;
@@ -1445,25 +2048,21 @@ function pushHistory() {
     }
     updateUndoRedoButtons();
 }
-
 function updateUndoRedoButtons() {
     const u = document.getElementById('undoBtn');
     const r = document.getElementById('redoBtn');
     if (u) u.disabled = canvasState.historyIndex <= 0;
     if (r) r.disabled = canvasState.historyIndex >= canvasState.history.length - 1;
 }
-
 async function undoCanvas() {
     if (canvasState.historyIndex <= 0) return;
     canvasState.historyIndex--;
     await restoreHistorySnapshot(canvasState.history[canvasState.historyIndex]);
-    showToast('Отменено');
 }
 async function redoCanvas() {
     if (canvasState.historyIndex >= canvasState.history.length - 1) return;
     canvasState.historyIndex++;
     await restoreHistorySnapshot(canvasState.history[canvasState.historyIndex]);
-    showToast('Повторено');
 }
 async function restoreHistorySnapshot(snapshot) {
     const newLayers = [];
@@ -1472,10 +2071,11 @@ async function restoreHistorySnapshot(snapshot) {
             const img = await loadImage(s.image);
             newLayers.push({
                 path: s.path, name: getPathName(s.path), item: s.item,
-                image: img,
+                image: img, position: { ...s.position },
                 visible: s.visible, opacity: s.opacity,
                 flipH: s.flipH, flipV: s.flipV,
-                eraseStrokes: JSON.parse(JSON.stringify(s.eraseStrokes))
+                eraseStrokes: JSON.parse(JSON.stringify(s.eraseStrokes)),
+                customId: s.customId
             });
         } catch (e) {}
     }
@@ -1504,34 +2104,14 @@ function exportPNG() {
 
 function exportPSD() {
     if (canvasState.layers.length === 0) { showToast('Холст пуст!'); return; }
-    if (typeof agPsd === 'undefined') { showToast('Библиотека PSD не загружена'); return; }
+    if (typeof agPsd === 'undefined') { showToast('PSD недоступен'); return; }
     try {
         const psdLayers = canvasState.layers.filter(l => l.visible).map(layer => {
             const layerCanvas = document.createElement('canvas');
             layerCanvas.width = CANVAS_SIZE;
             layerCanvas.height = CANVAS_SIZE;
             const lctx = layerCanvas.getContext('2d');
-            const img = layer.image;
-            const scale = Math.min(CANVAS_SIZE / img.width, CANVAS_SIZE / img.height);
-            const w = img.width * scale;
-            const h = img.height * scale;
-            const x = (CANVAS_SIZE - w) / 2;
-            const y = (CANVAS_SIZE - h) / 2;
-            let drawX = x, drawY = y;
-            let drawW = w, drawH = h;
-            if (layer.flipH) { drawX = x + w; drawW = -w; }
-            if (layer.flipV) { drawY = y + h; drawH = -h; }
-            lctx.globalAlpha = layer.opacity;
-            lctx.drawImage(img, drawX, drawY, drawW, drawH);
-            if (layer.eraseStrokes.length > 0) {
-                lctx.globalCompositeOperation = 'destination-out';
-                layer.eraseStrokes.forEach(stroke => {
-                    lctx.beginPath();
-                    lctx.arc(stroke.x, stroke.y, stroke.r, 0, Math.PI * 2);
-                    lctx.fill();
-                });
-                lctx.globalCompositeOperation = 'source-over';
-            }
+            drawLayerOnCtx(lctx, layer, false);
             return {
                 name: `${layer.name} - ${layer.item}`.substring(0, 60),
                 canvas: layerCanvas,
@@ -1555,13 +2135,43 @@ function exportPSD() {
     }
 }
 
+function drawLayerOnCtx(targetCtx, layer, withSelection) {
+    const img = layer.image;
+    if (!img) return;
+    const pos = layer.position || { x: 0, y: 0, scale: 100, rotation: 0 };
+    const baseScale = Math.min(CANVAS_SIZE / img.width, CANVAS_SIZE / img.height);
+    const scale = baseScale * (pos.scale / 100);
+    const w = img.width * scale;
+    const h = img.height * scale;
+    const cx = CANVAS_SIZE / 2 + (pos.x / 100) * CANVAS_SIZE;
+    const cy = CANVAS_SIZE / 2 + (pos.y / 100) * CANVAS_SIZE;
+
+    targetCtx.save();
+    targetCtx.globalAlpha = layer.opacity;
+    targetCtx.translate(cx, cy);
+    if (pos.rotation) targetCtx.rotate(pos.rotation * Math.PI / 180);
+    let dw = w, dh = h;
+    if (layer.flipH) dw = -w;
+    if (layer.flipV) dh = -h;
+    targetCtx.drawImage(img, -dw / 2, -dh / 2, dw, dh);
+    if (layer.eraseStrokes && layer.eraseStrokes.length > 0) {
+        targetCtx.globalCompositeOperation = 'destination-out';
+        layer.eraseStrokes.forEach(stroke => {
+            targetCtx.beginPath();
+            targetCtx.arc(stroke.x - cx, stroke.y - cy, stroke.r, 0, Math.PI * 2);
+            targetCtx.fill();
+        });
+        targetCtx.globalCompositeOperation = 'source-over';
+    }
+    targetCtx.restore();
+}
+
 function saveOutfit() {
-    const data = JSON.stringify({ version: 1, outfit: state.outfit }, null, 2);
+    const data = JSON.stringify({ version: 2, outfit: state.outfit, customLayers: state.customLayers }, null, 2);
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
-    a.download = `outfit_${Date.now()}.json`;
+    a.href = url; a.download = `outfit_${Date.now()}.json`;
     document.body.appendChild(a); a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
@@ -1577,6 +2187,7 @@ function loadOutfitFromFile(event) {
             const data = JSON.parse(e.target.result);
             if (!data.outfit) throw new Error('Неверный формат');
             state.outfit = data.outfit;
+            if (data.customLayers) state.customLayers = data.customLayers;
             save();
             renderBuilder();
             rebuildCanvasFromOutfit();
@@ -1598,304 +2209,11 @@ function initCanvasIfNeeded() {
     mainCanvas.height = CANVAS_SIZE;
     attachCanvasEvents();
     redrawCanvas();
-    renderLayers();
     updateUndoRedoButtons();
 }
 
 // ============================================================
-// ГЕНЕРАЦИЯ (оставлена)
-// ============================================================
-function randItem(items) {
-    const active = items.filter(i => i.enabled && i.text && i.text !== "Отсутствует" && i.text !== "None");
-    if (active.length === 0) return null;
-    return active[Math.floor(Math.random() * active.length)];
-}
-function randItemExcluding(items, excludeList) {
-    const excludeLower = excludeList.map(s => s.toLowerCase());
-    const active = items.filter(i => i.enabled && i.text && !excludeLower.includes(i.text.toLowerCase()) && i.text !== "Отсутствует" && i.text !== "None");
-    if (active.length === 0) return null;
-    return active[Math.floor(Math.random() * active.length)];
-}
-
-function generate() {
-    const result = {};
-    const resultItems = {};
-    const paths = [];
-    const extraTexts = [];
-
-    if (state.lists.races.enabled) {
-        const item = randItem(state.lists.races.items);
-        if (item) { result['list.races'] = item.text; resultItems['list.races'] = [item]; paths.push('list.races'); }
-    }
-    if (state.lists.styles.enabled) {
-        const item = randItem(state.lists.styles.items);
-        if (item) { result['list.styles'] = item.text; resultItems['list.styles'] = [item]; paths.push('list.styles'); }
-    }
-    for (const gKey in state.modules) {
-        const group = state.modules[gKey];
-        for (const mKey in group.modules) {
-            const mod = group.modules[mKey];
-            if (!mod.enabled) continue;
-            const slotItems = [];
-            for (const sKey in mod.subcategories) {
-                const sub = mod.subcategories[sKey];
-                if (!sub.enabled) continue;
-                const item = randItem(sub.items);
-                if (item) slotItems.push(item);
-            }
-            if (slotItems.length > 0) {
-                const path = `${gKey}.${mKey}`;
-                result[path] = slotItems.map(i => i.text).join(', ');
-                resultItems[path] = slotItems;
-                paths.push(path);
-            }
-        }
-    }
-    if (state.modifiers && state.modifiers.enabled) {
-        const modItem = randItem(state.modifiers.items);
-        if (modItem) {
-            const clothesSlots = ['clothes.headwear', 'clothes.neckwear', 'clothes.topwear1', 'clothes.bottomwear', 'clothes.legwear', 'clothes.footwear'];
-            const available = clothesSlots.filter(s => result[s]);
-            if (available.length > 0) {
-                const target = available[Math.floor(Math.random() * available.length)];
-                result[target] = `${modItem.text} ${result[target]}`;
-                if (resultItems[target]) resultItems[target].unshift(modItem);
-            }
-        }
-    }
-
-    const activeRules = state.rules.filter(r => r.enabled);
-    activeRules.filter(r => r.type === 'replace').forEach(rule => {
-        if (checkConditions(rule, result)) {
-            const actPath = rule.action.path;
-            const actVal = rule.action.value;
-            if (actPath) {
-                result[actPath] = actVal;
-                if (!paths.includes(actPath)) paths.push(actPath);
-                const items = getItemsByPath(actPath);
-                const found = items.find(i => i.text === actVal);
-                resultItems[actPath] = found ? [found] : [];
-            }
-        }
-    });
-    activeRules.filter(r => r.type === 'exclude').forEach(rule => {
-        if (checkConditions(rule, result)) {
-            const exclPath = rule.action.path;
-            const exclValues = rule.action.values || [];
-            if (!exclPath) return;
-            if (exclPath.startsWith('list.')) {
-                const listKey = exclPath.split('.')[1];
-                const item = randItemExcluding(state.lists[listKey].items, exclValues);
-                if (item) { result[exclPath] = item.text; resultItems[exclPath] = [item]; }
-            } else {
-                const [gKey, mKey] = exclPath.split('.');
-                const mod = state.modules[gKey] && state.modules[gKey].modules[mKey];
-                if (!mod || !mod.enabled) return;
-                const slotItems = [];
-                for (const sKey in mod.subcategories) {
-                    const sub = mod.subcategories[sKey];
-                    if (!sub.enabled) continue;
-                    const item = randItemExcluding(sub.items, exclValues);
-                    if (item) slotItems.push(item);
-                }
-                if (slotItems.length > 0) {
-                    result[exclPath] = slotItems.map(i => i.text).join(', ');
-                    resultItems[exclPath] = slotItems;
-                }
-            }
-        }
-    });
-    activeRules.filter(r => r.type === 'add').forEach(rule => {
-        if (checkConditions(rule, result)) {
-            if (rule.action.text) extraTexts.push(rule.action.text);
-        }
-    });
-
-    if (paths.length === 0) { showToast("Все списки и модули отключены!"); return; }
-
-    state.current = result;
-    state.currentPaths = paths;
-    state.currentItems = resultItems;
-    state.extraText = extraTexts.join(', ');
-    state.genCount++;
-    save();
-    updateCounter();
-    renderResult(result, paths, extraTexts, resultItems);
-    addHistory(result, paths, extraTexts, resultItems);
-}
-
-function checkConditions(rule, result) {
-    if (!rule.conditions || rule.conditions.length === 0) return false;
-    for (const cond of rule.conditions) {
-        if (!matchesCondition(result, cond.path, cond.value, cond.negate)) return false;
-    }
-    return true;
-}
-function matchesCondition(result, condPath, condVal, negate) {
-    if (!condPath) return false;
-    const currentVal = result[condPath];
-    const isEmpty = !currentVal;
-    const currentParts = currentVal ? currentVal.split(',').map(s => s.trim().toLowerCase()) : [];
-    const match = !isEmpty && currentParts.includes((condVal || '').toLowerCase());
-    if (negate) return isEmpty || !match;
-    return match;
-}
-
-function renderResult(result, paths, extraTexts, resultItems) {
-    const box = document.getElementById('resultBox');
-    box.innerHTML = '';
-    paths.forEach(path => {
-        const name = getPathName(path);
-        const isMain = path === 'list.races' || path === 'list.styles';
-        const isSlot = !path.startsWith('list.');
-        const line = document.createElement('div');
-        line.className = `result-line ${isMain ? 'main' : ''} ${isSlot ? 'slot' : ''}`;
-        line.innerHTML = `<span class="result-cat">${name}</span>`;
-        const valueBlock = document.createElement('div');
-        valueBlock.className = 'result-value-block';
-        const items = resultItems[path] || [];
-        const withImages = items.filter(i => i && i.image);
-        const valueText = document.createElement('span');
-        valueText.className = 'result-val';
-        valueText.textContent = result[path];
-        valueBlock.appendChild(valueText);
-        if (withImages.length > 0) {
-            const thumbs = document.createElement('div');
-            thumbs.className = 'result-thumbs';
-            withImages.forEach(item => {
-                const img = document.createElement('img');
-                img.className = 'result-thumb';
-                img.src = item.image;
-                img.onclick = () => openImageViewer(item.image);
-                thumbs.appendChild(img);
-            });
-            valueBlock.appendChild(thumbs);
-        }
-        line.appendChild(valueBlock);
-        box.appendChild(line);
-    });
-    if (extraTexts && extraTexts.length > 0) {
-        const line = document.createElement('div');
-        line.className = 'result-line extra';
-        line.innerHTML = `<span class="result-cat">🔗 Доп</span><span class="result-val">${extraTexts.join(', ')}</span>`;
-        box.appendChild(line);
-    }
-}
-function addHistory(result, paths, extraTexts, resultItems) {
-    const itemsForHistory = {};
-    for (const path in resultItems) {
-        itemsForHistory[path] = resultItems[path].map(i => ({ text: i.text, image: i.image || null }));
-    }
-    state.history.unshift({
-        id: Date.now(), type: 'generated',
-        result: JSON.parse(JSON.stringify(result)),
-        paths: [...paths], extraTexts: extraTexts || [],
-        items: itemsForHistory,
-        date: new Date().toLocaleString('ru-RU'), favorite: false
-    });
-    if (state.history.length > 200) state.history.pop();
-    save();
-}
-function formatPrompt(result, paths, extraTexts) {
-    let out = paths.map(p => `${getPathName(p)}: ${result[p]}`).join('\n');
-    if (extraTexts && extraTexts.length > 0) out += `\nДополнительно: ${extraTexts.join(', ')}`;
-    return out;
-}
-function formatShort(result, paths, extraTexts) {
-    let out = paths.map(p => result[p]).join(', ');
-    if (extraTexts && extraTexts.length > 0) out += `, ${extraTexts.join(', ')}`;
-    return out;
-}
-function copyResult() {
-    if (!state.currentPaths.length) { showToast('Сначала сгенерируйте!'); return; }
-    navigator.clipboard.writeText(formatPrompt(state.current, state.currentPaths, state.extraText ? [state.extraText] : []));
-    showToast('Скопировано!');
-}
-function copyShort() {
-    if (!state.currentPaths.length) { showToast('Сначала сгенерируйте!'); return; }
-    navigator.clipboard.writeText(formatShort(state.current, state.currentPaths, state.extraText ? [state.extraText] : []));
-    showToast('Скопировано!');
-}
-
-// ============================================================
-// ПРЕСЕТЫ
-// ============================================================
-const PRESETS = {
-    all: null,
-    portrait: ['list.races', 'list.styles', 'appearance.bangs', 'appearance.sidelocks', 'appearance.backHair', 'appearance.addHair', 'appearance.eyeShape', 'appearance.skinColor', 'race.trait1', 'race.trait2', 'race.trait3', 'clothes.acc1'],
-    full: ['list.races', 'list.styles', 'appearance.bangs', 'appearance.sidelocks', 'appearance.backHair', 'appearance.addHair', 'appearance.eyeShape', 'appearance.skinColor', 'clothes.headwear', 'clothes.neckwear', 'clothes.handwear', 'clothes.topwear1', 'clothes.bottomwear', 'clothes.legwear', 'clothes.footwear', 'clothes.acc1', 'clothes.acc2', 'clothes.acc3', 'clothes.acc4', 'clothes.acc5', 'race.trait1', 'race.trait2', 'race.trait3'],
-    race: ['list.races', 'race.trait1', 'race.trait2', 'race.trait3', 'race.trait4', 'race.trait5', 'race.trait6', 'race.trait7']
-};
-function applyPreset(name) {
-    const preset = PRESETS[name];
-    for (const key in state.lists) {
-        if (preset === null) state.lists[key].enabled = true;
-        else state.lists[key].enabled = preset.includes(`list.${key}`);
-    }
-    if (state.modifiers) {
-        if (preset === null) state.modifiers.enabled = true;
-        else state.modifiers.enabled = false;
-    }
-    for (const gKey in state.modules) {
-        const group = state.modules[gKey];
-        for (const mKey in group.modules) {
-            const mod = group.modules[mKey];
-            if (preset === null) mod.enabled = true;
-            else mod.enabled = preset.includes(`${gKey}.${mKey}`);
-        }
-    }
-    if (name === 'full' && state.modifiers) state.modifiers.enabled = true;
-    save(); renderLists(); renderModules();
-    showToast(`Пресет "${name}"`);
-}
-
-// ============================================================
-// ИСТОРИЯ
-// ============================================================
-function renderHistory() {
-    const list = document.getElementById('historyList');
-    const q = document.getElementById('search').value.toLowerCase();
-    list.innerHTML = '';
-    const filtered = state.history.filter(it => formatShort(it.result, it.paths, it.extraTexts || []).toLowerCase().includes(q));
-    if (filtered.length === 0) {
-        list.innerHTML = '<p style="text-align:center; color:#666;">История пуста.</p>';
-        return;
-    }
-    filtered.forEach(it => {
-        const div = document.createElement('div');
-        div.className = `history-item ${it.favorite ? 'fav' : ''}`;
-        div.innerHTML = `
-            <div class="history-header">
-                <span class="history-date">${it.date}</span>
-                <div class="history-actions">
-                    <button class="icon-btn ${it.favorite ? 'fav-active' : ''}" onclick="toggleFav(${it.id})">${it.favorite ? '★' : '☆'}</button>
-                    <button class="icon-btn" onclick="copyHist(${it.id})">📋</button>
-                    <button class="icon-btn" onclick="delHist(${it.id})">❌</button>
-                </div>
-            </div>
-            <div class="history-details">${formatShort(it.result, it.paths, it.extraTexts || [])}</div>
-        `;
-        list.appendChild(div);
-    });
-}
-function toggleFav(id) {
-    const it = state.history.find(i => i.id === id);
-    if (it) { it.favorite = !it.favorite; save(); renderHistory(); }
-}
-function delHist(id) {
-    state.history = state.history.filter(i => i.id !== id);
-    save(); renderHistory();
-}
-function clearHistory() {
-    if (confirm('Удалить всю историю?')) { state.history = []; save(); renderHistory(); }
-}
-function copyHist(id) {
-    const it = state.history.find(i => i.id === id);
-    if (it) { navigator.clipboard.writeText(formatPrompt(it.result, it.paths, it.extraTexts || [])); showToast('Скопировано!'); }
-}
-
-// ============================================================
-// ИЗОБРАЖЕНИЯ
+// ИЗОБРАЖЕНИЯ (привязка)
 // ============================================================
 function pickImage(context) {
     imageContext = context;
@@ -1907,7 +2225,7 @@ document.getElementById('imageFileInput').addEventListener('change', async (e) =
     try {
         const dataUrl = await compressImage(file);
         applyImageToContext(dataUrl);
-    } catch (err) { alert('Ошибка загрузки: ' + err.message); }
+    } catch (err) { alert('Ошибка: ' + err.message); }
     e.target.value = '';
     imageContext = null;
 });
@@ -1936,7 +2254,7 @@ function compressImage(file) {
                 else dataUrl = canvas.toDataURL('image/jpeg', 0.9);
                 resolve(dataUrl);
             };
-            img.onerror = () => reject(new Error('Не удалось загрузить изображение'));
+            img.onerror = () => reject(new Error('Ошибка'));
             img.src = ev.target.result;
         };
         reader.onerror = reject;
@@ -1992,12 +2310,12 @@ function clearAllImages() {
             }
         }
     }
-    save(); renderLists(); renderModules();
-    showToast('Все изображения удалены');
+    save(); renderLists(); renderModules(); renderBuilder();
+    showToast('Картинки очищены');
 }
 
 // ============================================================
-// СПИСКИ (админ-редактор)
+// СПИСКИ (админ)
 // ============================================================
 function renderLists() {
     const container = document.getElementById('listsContainer');
@@ -2014,11 +2332,11 @@ function createListBlock(key, list) {
         <div class="list-header">
             <div>
                 <h3>${list.name}</h3>
-                <span class="list-counter">Активно: ${active} / ${list.items.length}${withImages ? ` · 🖼️ ${withImages}` : ''}</span>
+                <span class="list-counter">${active}/${list.items.length}${withImages ? ` · 🖼️${withImages}` : ''}</span>
             </div>
             <div class="list-controls">
-                <label style="font-size:0.72rem; cursor:pointer;">
-                    <input type="checkbox" ${list.enabled ? 'checked' : ''} onchange="toggleList('${key}')" style="accent-color: var(--accent);"> Вкл
+                <label style="font-size:0.7rem; cursor:pointer;">
+                    <input type="checkbox" ${list.enabled ? 'checked' : ''} onchange="toggleList('${key}')" style="accent-color: var(--accent);">
                 </label>
                 <button class="icon-btn" onclick="event.stopPropagation(); openEditList('${key}')">✏️</button>
                 <span>${list.expanded ? '▼' : '▶'}</span>
@@ -2071,16 +2389,17 @@ function renderListItems(key) {
         const txt = document.createElement('span');
         txt.className = 'item-text'; txt.textContent = item.text;
         txt.onclick = () => startEditListItem(key, idx, txt);
+        // Кнопка позиции
+        const posBtn = document.createElement('button');
+        posBtn.className = 'item-pos-btn' + (item.position ? ' has-pos' : '');
+        posBtn.textContent = '📐';
+        posBtn.onclick = () => openPosModal('item', 'list.' + key, item);
         const del = document.createElement('button');
         del.className = 'icon-btn'; del.textContent = '❌';
         del.onclick = () => { list.items.splice(idx, 1); save(); renderListItems(key); };
-        row.appendChild(cb); row.appendChild(thumbWrap); row.appendChild(txt); row.appendChild(del);
+        row.appendChild(cb); row.appendChild(thumbWrap); row.appendChild(txt); row.appendChild(posBtn); row.appendChild(del);
         container.appendChild(row);
     });
-    const header = container.closest('.list-block').querySelector('.list-counter');
-    const active = list.items.filter(i => i.enabled).length;
-    const withImages = list.items.filter(i => i.image).length;
-    header.textContent = `Активно: ${active} / ${list.items.length}${withImages ? ` · 🖼️ ${withImages}` : ''}`;
 }
 function toggleList(key) { state.lists[key].enabled = !state.lists[key].enabled; save(); renderLists(); renderBuilder(); }
 function startEditListItem(key, idx, span) {
@@ -2095,7 +2414,7 @@ function addListItem(key, inputEl) {
     const v = inputEl.value.trim(); if (!v) return;
     const list = state.lists[key];
     if (list.items.some(i => i.text.toLowerCase() === v.toLowerCase())) { showToast('Уже есть!'); return; }
-    list.items.push({ text: v, enabled: true, image: null }); inputEl.value = '';
+    list.items.push({ text: v, enabled: true, image: null, position: null }); inputEl.value = '';
     save(); renderListItems(key);
 }
 function sortLists() {
@@ -2111,14 +2430,12 @@ function openEditList(key) {
 }
 
 // ============================================================
-// МОДУЛИ (админ-редактор)
+// МОДУЛИ
 // ============================================================
 function renderModules() {
     const container = document.getElementById('modulesContainer');
     if (!container) return;
     container.innerHTML = '';
-    const q = (document.getElementById('moduleSearch').value || '').toLowerCase();
-
     for (const gKey in state.modules) {
         const group = state.modules[gKey];
         const title = document.createElement('div');
@@ -2133,7 +2450,6 @@ function renderModules() {
         }
         container.appendChild(body);
     }
-    // Модификаторы
     if (state.modifiers) {
         const title = document.createElement('div');
         title.className = 'group-title group-mods';
@@ -2153,10 +2469,10 @@ function createSimpleModule() {
     const active = mod.items.filter(i => i.enabled).length;
     div.innerHTML = `
         <div class="simple-header">
-            <div><h4>${mod.name}</h4><span class="module-counter">Активно: ${active} / ${mod.items.length}</span></div>
+            <div><h4>${mod.name}</h4><span class="module-counter">${active}/${mod.items.length}</span></div>
             <div class="module-controls">
-                <label style="font-size:0.72rem; cursor:pointer;">
-                    <input type="checkbox" ${mod.enabled ? 'checked' : ''} onchange="toggleModifiers()" style="accent-color: var(--mods);"> Вкл
+                <label style="font-size:0.7rem; cursor:pointer;">
+                    <input type="checkbox" ${mod.enabled ? 'checked' : ''} onchange="toggleModifiers()" style="accent-color: var(--mods);">
                 </label>
                 <button class="icon-btn" onclick="event.stopPropagation(); openEditModifiers()">✏️</button>
                 <button class="module-toggle">▼</button>
@@ -2210,10 +2526,14 @@ function renderModifierItems() {
         const txt = document.createElement('span');
         txt.className = 'item-text'; txt.textContent = item.text;
         txt.onclick = () => startEditModifierItem(idx, txt);
+        const posBtn = document.createElement('button');
+        posBtn.className = 'item-pos-btn' + (item.position ? ' has-pos' : '');
+        posBtn.textContent = '📐';
+        posBtn.onclick = () => openPosModal('item', 'modifiers', item);
         const del = document.createElement('button');
         del.className = 'icon-btn'; del.textContent = '❌';
         del.onclick = () => { mod.items.splice(idx, 1); save(); renderModifierItems(); };
-        row.appendChild(cb); row.appendChild(thumbWrap); row.appendChild(txt); row.appendChild(del);
+        row.appendChild(cb); row.appendChild(thumbWrap); row.appendChild(txt); row.appendChild(posBtn); row.appendChild(del);
         container.appendChild(row);
     });
 }
@@ -2229,7 +2549,7 @@ function startEditModifierItem(idx, span) {
 function addModifierItem(inputEl) {
     const v = inputEl.value.trim(); if (!v) return;
     if (state.modifiers.items.some(i => i.text.toLowerCase() === v.toLowerCase())) { showToast('Уже есть!'); return; }
-    state.modifiers.items.push({ text: v, enabled: true, image: null });
+    state.modifiers.items.push({ text: v, enabled: true, image: null, position: null });
     inputEl.value = '';
     save(); renderModifierItems();
 }
@@ -2242,20 +2562,19 @@ function openEditModifiers() {
 function createModule(gKey, mKey, mod) {
     const div = document.createElement('div');
     div.className = `module ${mod.enabled ? '' : 'disabled'} ${mod.expanded ? 'open' : ''}`;
-    let activeSubs = 0, totalSubs = 0, totalActive = 0, totalItems = 0;
+    let totalActive = 0, totalItems = 0;
     for (const sKey in mod.subcategories) {
-        const sub = mod.subcategories[sKey];
-        totalSubs++; if (sub.enabled) activeSubs++;
-        totalItems += sub.items.length;
-        totalActive += sub.items.filter(i => i.enabled).length;
+        totalItems += mod.subcategories[sKey].items.length;
+        totalActive += mod.subcategories[sKey].items.filter(i => i.enabled).length;
     }
     div.innerHTML = `
         <div class="module-header">
             <div><h4>${mod.name}</h4><span class="module-counter">${totalActive}/${totalItems}</span></div>
             <div class="module-controls">
-                <label style="font-size:0.72rem; cursor:pointer;">
-                    <input type="checkbox" ${mod.enabled ? 'checked' : ''} onchange="toggleModule('${gKey}','${mKey}')" style="accent-color: var(--accent);"> Вкл
+                <label style="font-size:0.7rem; cursor:pointer;">
+                    <input type="checkbox" ${mod.enabled ? 'checked' : ''} onchange="toggleModule('${gKey}','${mKey}')" style="accent-color: var(--accent);">
                 </label>
+                <button class="item-pos-btn" onclick="event.stopPropagation(); openPosModal('module', '${gKey}.${mKey}')" title="Позиция">📐</button>
                 <button class="module-toggle">▼</button>
             </div>
         </div>
@@ -2336,10 +2655,14 @@ function renderSubcatItems(gKey, mKey, sKey) {
         const txt = document.createElement('span');
         txt.className = 'item-text'; txt.textContent = item.text;
         txt.onclick = () => startEditSubcatItem(gKey, mKey, sKey, idx, txt);
+        const posBtn = document.createElement('button');
+        posBtn.className = 'item-pos-btn' + (item.position ? ' has-pos' : '');
+        posBtn.textContent = '📐';
+        posBtn.onclick = () => openPosModal('item', `${gKey}.${mKey}`, item);
         const del = document.createElement('button');
         del.className = 'icon-btn'; del.textContent = '❌';
         del.onclick = () => { sub.items.splice(idx, 1); save(); renderSubcatItems(gKey, mKey, sKey); };
-        row.appendChild(cb); row.appendChild(thumbWrap); row.appendChild(txt); row.appendChild(del);
+        row.appendChild(cb); row.appendChild(thumbWrap); row.appendChild(txt); row.appendChild(posBtn); row.appendChild(del);
         container.appendChild(row);
     });
 }
@@ -2358,7 +2681,7 @@ function addSubcatItem(gKey, mKey, sKey, inputEl) {
     const v = inputEl.value.trim(); if (!v) return;
     const sub = state.modules[gKey].modules[mKey].subcategories[sKey];
     if (sub.items.some(i => i.text.toLowerCase() === v.toLowerCase())) { showToast('Уже есть!'); return; }
-    sub.items.push({ text: v, enabled: true, image: null });
+    sub.items.push({ text: v, enabled: true, image: null, position: null });
     inputEl.value = '';
     save(); renderSubcatItems(gKey, mKey, sKey);
 }
@@ -2446,7 +2769,7 @@ function createConditionRow(cond) {
     fillValues();
     moduleSelect.onchange = fillValues;
     const negateLabel = document.createElement('label');
-    negateLabel.style.fontSize = '0.72rem';
+    negateLabel.style.fontSize = '0.7rem';
     negateLabel.style.display = 'flex';
     negateLabel.style.alignItems = 'center';
     negateLabel.style.gap = '4px';
@@ -2458,10 +2781,7 @@ function createConditionRow(cond) {
     negateLabel.appendChild(document.createTextNode('НЕ'));
     const removeBtn = document.createElement('button');
     removeBtn.textContent = '❌';
-    removeBtn.style.background = 'none';
-    removeBtn.style.border = 'none';
-    removeBtn.style.color = 'var(--accent)';
-    removeBtn.style.cursor = 'pointer';
+    removeBtn.style.cssText = 'background:none;border:none;color:var(--accent);cursor:pointer;';
     removeBtn.onclick = () => div.remove();
     div.appendChild(moduleSelect); div.appendChild(arrow); div.appendChild(valueSelect);
     div.appendChild(negateLabel); div.appendChild(removeBtn);
@@ -2493,9 +2813,9 @@ function addRule() {
     const conditions = [];
     const condRows = document.querySelectorAll('#conditionsContainer .rule-row');
     condRows.forEach(row => {
-        const path = row.querySelector('.cond-module').value;
-        const value = row.querySelector('.cond-value').value;
-        const negate = row.querySelector('.cond-negate').checked;
+        const path = row.querySelector('.cond-module')?.value;
+        const value = row.querySelector('.cond-value')?.value;
+        const negate = row.querySelector('.cond-negate')?.checked;
         if (path && value) conditions.push({ path, value, negate });
     });
     if (conditions.length === 0) { showToast('Добавьте условие!'); return; }
@@ -2556,8 +2876,8 @@ function renderRules() {
             <div class="rule-header">
                 <span class="rule-type ${typeClass}">${typeLabel}${chainBadge}</span>
                 <div style="display:flex; gap:6px; align-items:center;">
-                    <label style="font-size:0.72rem; cursor:pointer;">
-                        <input type="checkbox" ${rule.enabled ? 'checked' : ''} onchange="toggleRule(${rule.id})" style="accent-color: var(--rules);"> Вкл
+                    <label style="font-size:0.7rem; cursor:pointer;">
+                        <input type="checkbox" ${rule.enabled ? 'checked' : ''} onchange="toggleRule(${rule.id})" style="accent-color: var(--rules);">
                     </label>
                     <button class="icon-btn" onclick="deleteRule(${rule.id})">❌</button>
                 </div>
@@ -2576,8 +2896,8 @@ function exportRules() {
     const a = document.createElement('a');
     a.href = url; a.download = `rules_${Date.now()}.json`;
     document.body.appendChild(a); a.click();
-    document.body.removeChild(a); URL.revokeObjectURL(url);
-    showToast('Экспортировано');
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 }
 function importRules(event) {
     const file = event.target.files[0];
@@ -2598,6 +2918,202 @@ function importRules(event) {
 }
 
 // ============================================================
+// ГЕНЕРАЦИЯ (упрощена)
+// ============================================================
+function randItem(items) {
+    const active = items.filter(i => i.enabled && i.text && i.text !== "Отсутствует" && i.text !== "None");
+    if (active.length === 0) return null;
+    return active[Math.floor(Math.random() * active.length)];
+}
+
+function generate() {
+    const result = {};
+    const resultItems = {};
+    const paths = [];
+    const extraTexts = [];
+
+    if (state.lists.races.enabled) {
+        const item = randItem(state.lists.races.items);
+        if (item) { result['list.races'] = item.text; resultItems['list.races'] = [item]; paths.push('list.races'); }
+    }
+    if (state.lists.styles.enabled) {
+        const item = randItem(state.lists.styles.items);
+        if (item) { result['list.styles'] = item.text; resultItems['list.styles'] = [item]; paths.push('list.styles'); }
+    }
+    for (const gKey in state.modules) {
+        const group = state.modules[gKey];
+        for (const mKey in group.modules) {
+            const mod = group.modules[mKey];
+            if (!mod.enabled) continue;
+            const slotItems = [];
+            for (const sKey in mod.subcategories) {
+                const sub = mod.subcategories[sKey];
+                if (!sub.enabled) continue;
+                const item = randItem(sub.items);
+                if (item) slotItems.push(item);
+            }
+            if (slotItems.length > 0) {
+                const path = `${gKey}.${mKey}`;
+                result[path] = slotItems.map(i => i.text).join(', ');
+                resultItems[path] = slotItems;
+                paths.push(path);
+            }
+        }
+    }
+
+    if (paths.length === 0) { showToast("Все отключено!"); return; }
+
+    state.current = result;
+    state.currentPaths = paths;
+    state.currentItems = resultItems;
+    state.extraText = extraTexts.join(', ');
+    state.genCount++;
+    save();
+    updateCounter();
+    renderResult(result, paths, extraTexts, resultItems);
+    addHistory(result, paths, extraTexts, resultItems);
+}
+function renderResult(result, paths, extraTexts, resultItems) {
+    const box = document.getElementById('resultBox');
+    box.innerHTML = '';
+    paths.forEach(path => {
+        const name = getPathName(path);
+        const line = document.createElement('div');
+        line.className = 'result-line';
+        line.innerHTML = `<span class="result-cat">${name}</span>`;
+        const valueBlock = document.createElement('div');
+        valueBlock.className = 'result-value-block';
+        const valueText = document.createElement('span');
+        valueText.className = 'result-val';
+        valueText.textContent = result[path];
+        valueBlock.appendChild(valueText);
+        const items = resultItems[path] || [];
+        const withImages = items.filter(i => i && i.image);
+        if (withImages.length > 0) {
+            const thumbs = document.createElement('div');
+            thumbs.className = 'result-thumbs';
+            withImages.forEach(item => {
+                const img = document.createElement('img');
+                img.className = 'result-thumb';
+                img.src = item.image;
+                img.onclick = () => openImageViewer(item.image);
+                thumbs.appendChild(img);
+            });
+            valueBlock.appendChild(thumbs);
+        }
+        line.appendChild(valueBlock);
+        box.appendChild(line);
+    });
+    if (extraTexts && extraTexts.length > 0) {
+        const line = document.createElement('div');
+        line.className = 'result-line';
+        line.innerHTML = `<span class="result-cat">🔗 Доп</span><span class="result-val">${extraTexts.join(', ')}</span>`;
+        box.appendChild(line);
+    }
+}
+function addHistory(result, paths, extraTexts, resultItems) {
+    const itemsForHistory = {};
+    for (const path in resultItems) {
+        itemsForHistory[path] = resultItems[path].map(i => ({ text: i.text, image: i.image || null }));
+    }
+    state.history.unshift({
+        id: Date.now(), type: 'generated',
+        result: JSON.parse(JSON.stringify(result)),
+        paths: [...paths], extraTexts: extraTexts || [],
+        items: itemsForHistory,
+        date: new Date().toLocaleString('ru-RU'), favorite: false
+    });
+    if (state.history.length > 200) state.history.pop();
+    save();
+}
+function formatPrompt(result, paths, extraTexts) {
+    let out = paths.map(p => `${getPathName(p)}: ${result[p]}`).join('\n');
+    if (extraTexts && extraTexts.length > 0) out += `\nДоп: ${extraTexts.join(', ')}`;
+    return out;
+}
+function formatShort(result, paths, extraTexts) {
+    let out = paths.map(p => result[p]).join(', ');
+    if (extraTexts && extraTexts.length > 0) out += `, ${extraTexts.join(', ')}`;
+    return out;
+}
+function copyResult() {
+    if (!state.currentPaths.length) { showToast('Сначала сгенерируйте!'); return; }
+    navigator.clipboard.writeText(formatPrompt(state.current, state.currentPaths, state.extraText ? [state.extraText] : []));
+    showToast('Скопировано!');
+}
+function copyShort() {
+    if (!state.currentPaths.length) { showToast('Сначала сгенерируйте!'); return; }
+    navigator.clipboard.writeText(formatShort(state.current, state.currentPaths, state.extraText ? [state.extraText] : []));
+    showToast('Скопировано!');
+}
+const PRESETS = {
+    all: null,
+    portrait: ['list.races', 'list.styles', 'appearance.bangs', 'appearance.sidelocks', 'appearance.backHair', 'appearance.eyeShape', 'race.trait1'],
+    full: null,
+    race: ['list.races', 'race.trait1', 'race.trait2', 'race.trait3']
+};
+function applyPreset(name) {
+    const preset = PRESETS[name];
+    for (const key in state.lists) {
+        if (preset === null) state.lists[key].enabled = true;
+        else state.lists[key].enabled = preset.includes(`list.${key}`);
+    }
+    if (state.modifiers) state.modifiers.enabled = preset === null;
+    for (const gKey in state.modules) {
+        const group = state.modules[gKey];
+        for (const mKey in group.modules) {
+            const mod = group.modules[mKey];
+            if (preset === null) mod.enabled = true;
+            else mod.enabled = preset.includes(`${gKey}.${mKey}`);
+        }
+    }
+    save(); renderLists(); renderModules();
+    showToast(`Пресет`);
+}
+
+function renderHistory() {
+    const list = document.getElementById('historyList');
+    const q = document.getElementById('search').value.toLowerCase();
+    list.innerHTML = '';
+    const filtered = state.history.filter(it => formatShort(it.result, it.paths, it.extraTexts || []).toLowerCase().includes(q));
+    if (filtered.length === 0) {
+        list.innerHTML = '<p style="text-align:center; color:#666;">История пуста.</p>';
+        return;
+    }
+    filtered.forEach(it => {
+        const div = document.createElement('div');
+        div.className = `history-item ${it.favorite ? 'fav' : ''}`;
+        div.innerHTML = `
+            <div class="history-header">
+                <span class="history-date">${it.date}</span>
+                <div class="history-actions">
+                    <button class="icon-btn ${it.favorite ? 'fav-active' : ''}" onclick="toggleFav(${it.id})">${it.favorite ? '★' : '☆'}</button>
+                    <button class="icon-btn" onclick="copyHist(${it.id})">📋</button>
+                    <button class="icon-btn" onclick="delHist(${it.id})">❌</button>
+                </div>
+            </div>
+            <div class="history-details">${formatShort(it.result, it.paths, it.extraTexts || [])}</div>
+        `;
+        list.appendChild(div);
+    });
+}
+function toggleFav(id) {
+    const it = state.history.find(i => i.id === id);
+    if (it) { it.favorite = !it.favorite; save(); renderHistory(); }
+}
+function delHist(id) {
+    state.history = state.history.filter(i => i.id !== id);
+    save(); renderHistory();
+}
+function clearHistory() {
+    if (confirm('Удалить всю историю?')) { state.history = []; save(); renderHistory(); }
+}
+function copyHist(id) {
+    const it = state.history.find(i => i.id === id);
+    if (it) { navigator.clipboard.writeText(formatPrompt(it.result, it.paths, it.extraTexts || [])); showToast('Скопировано!'); }
+}
+
+// ============================================================
 // МОДАЛЬНЫЕ ОКНА
 // ============================================================
 function closeEdit() { document.getElementById('editModal').classList.remove('active'); editContext = null; }
@@ -2610,10 +3126,10 @@ function saveEdit() {
     else if (editContext.type === 'modifier') target = state.modifiers.items;
     else target = state.modules[editContext.gKey].modules[editContext.mKey].subcategories[editContext.sKey].items;
     const oldMap = {};
-    target.forEach(i => { if (i && i.text) oldMap[i.text.toLowerCase()] = { enabled: i.enabled, image: i.image || null }; });
+    target.forEach(i => { if (i && i.text) oldMap[i.text.toLowerCase()] = { enabled: i.enabled, image: i.image || null, position: i.position || null }; });
     const newItems = lines.map(t => {
         const old = oldMap[t.toLowerCase()];
-        return { text: t, enabled: old ? old.enabled : true, image: old ? old.image : null };
+        return { text: t, enabled: old ? old.enabled : true, image: old ? old.image : null, position: old ? old.position : null };
     });
     if (editContext.type === 'list') state.lists[editContext.key].items = newItems;
     else if (editContext.type === 'modifier') state.modifiers.items = newItems;
@@ -2643,14 +3159,14 @@ function confirmBulkImport() {
     let added = 0, skipped = 0;
     lines.forEach(line => {
         if (target.some(i => i.text.toLowerCase() === line.toLowerCase())) skipped++;
-        else { target.push({ text: line, enabled: true, image: null }); added++; }
+        else { target.push({ text: line, enabled: true, image: null, position: null }); added++; }
     });
     save(); renderLists(); renderModules(); renderBuilder();
     closeBulkImport();
-    showToast(`+${added}${skipped ? `, пропущено ${skipped}` : ''}`);
+    showToast(`+${added}${skipped ? `, проп. ${skipped}` : ''}`);
 }
 function resetAll() {
-    if (!confirm('Сбросить списки и модули? Правила, образ и таблица сохранятся.')) return;
+    if (!confirm('Сбросить списки и модули?')) return;
     state.lists = JSON.parse(JSON.stringify(DEFAULT_LISTS));
     state.modifiers = JSON.parse(JSON.stringify(DEFAULT_MODIFIERS));
     state.modules = JSON.parse(JSON.stringify(DEFAULT_MODULES));
@@ -2658,53 +3174,6 @@ function resetAll() {
     showToast('Сброшено');
 }
 
-// ============================================================
-// ТАБЛИЦА
-// ============================================================
-function getTableRows() {
-    const sections = {
-        lists:      { name: "📋 Списки",     class: "table-section-lists",      rows: [] },
-        appearance: { name: "🎨 Внешность",  class: "table-section-appearance", rows: [] },
-        clothes:    { name: "👗 Одежда",     class: "table-section-clothes",    rows: [] },
-        race:       { name: "🧬 Раса",       class: "table-section-race",       rows: [] }
-    };
-    sections.lists.rows.push({ path: 'list.races', name: "🧬 Расы", items: state.lists.races.items.filter(i => i.enabled), isClothes: false });
-    sections.lists.rows.push({ path: 'list.styles', name: "👗 Стили", items: state.lists.styles.items.filter(i => i.enabled), isClothes: false });
-    for (const mKey in state.modules.race.modules) {
-        const mod = state.modules.race.modules[mKey];
-        const path = `race.${mKey}`;
-        sections.race.rows.push({ path, name: mod.name, items: collectItems(path), isClothes: false });
-    }
-    for (const mKey in state.modules.appearance.modules) {
-        const mod = state.modules.appearance.modules[mKey];
-        const path = `appearance.${mKey}`;
-        sections.appearance.rows.push({ path, name: mod.name, items: collectItems(path), isClothes: false });
-    }
-    for (const mKey in state.modules.clothes.modules) {
-        const mod = state.modules.clothes.modules[mKey];
-        const path = `clothes.${mKey}`;
-        sections.clothes.rows.push({ path, name: mod.name, items: collectItems(path), isClothes: true });
-    }
-    return sections;
-}
-function collectItems(path) {
-    const all = [];
-    if (path.startsWith('list.')) return state.lists[path.split('.')[1]].items;
-    const [g, m] = path.split('.');
-    if (!state.modules[g] || !state.modules[g].modules[m]) return [];
-    for (const sKey in state.modules[g].modules[m].subcategories) {
-        all.push(...state.modules[g].modules[m].subcategories[sKey].items);
-    }
-    return all.filter(i => i.enabled);
-}
-function renderTable() {
-    const container = document.getElementById('tableContainer');
-    if (!container) return;
-    container.innerHTML = '';
-    // Таблица не показывается в UI (убрана вкладка), но функция нужна для совместимости
-}
-
-// ============================================================
 function showToast(msg) {
     const t = document.getElementById('toast');
     t.textContent = msg;
